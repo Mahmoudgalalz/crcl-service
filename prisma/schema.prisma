@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,3 +6,136 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model SuperUser {
+  id        String    @id
+  name      String
+  email     String
+  password  String
+  type      String  @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+model User {
+  id          String      @id
+  email       String      
+  number      String      
+  password    String
+  facebook    String?  // Optional
+  instagram   String?  // Optional
+  gender      String?  // Optional (e.g., "Male", "Female", "Other")
+  picture     String?  // Optional URL to user's profile picture
+  type        UserType
+  wallet      Wallet?
+  tickets     TicketPurchase[]
+  status      UserStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([email, number, id])
+  @@index([email, number])
+}
+
+model Event {
+  id          String          @id @unique
+  title       String
+  description String
+  location    String
+  image       String?      // Optional URL to event image
+  date        DateTime
+  time        String       // Optional for storing specific time details if needed
+  status      EventStatus
+  capacity    Int          // Max number of attendees allowed
+  artists     String[]       // Artist or performer name
+  tickets     Ticket[]
+  createdBy   String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([id, status])
+}
+
+model Ticket {
+  id          String          @id
+  title       String
+  description String
+  price       Float
+  capacity    Int
+  status      TicketStatus
+  eventId     String
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+
+  TicketPurchase TicketPurchase[]
+}
+
+model TicketPurchase {
+  id          String          @id
+  ticketId    String
+  ticket      Ticket       @relation(fields: [ticketId], references: [id])
+  userId      String
+  user        User?        @relation(fields: [userId], references: [id])
+  externalEmail     String?   // For storing email of non-user
+  externalPhone     String?   // Phone number for non-user
+  externalFacebook  String?   // Facebook for non-user
+  externalInstagram String?   // Instagram for non-user
+  purchaseDate DateTime @default(now())
+  status      TicketStatus
+
+  @@index([ticketId, userId])
+}
+
+model Wallet {
+  id          Int       @id @default(autoincrement())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+  balance     Float     @default(0.0)
+  tokenPrice  Float     @default(1.0) // Customizable conversion rate
+}
+
+model Newspaper {
+  id          String    @id
+  title       String
+  description String
+  image       String?
+  status      NewsStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum UserType {
+  USER
+  READER
+  BOOTH
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum TicketStatus {
+  BOOKED
+  APPROVED
+  DECLINED
+  ATTENDED
+  PAST_DUE
+}
+
+enum EventStatus {
+  DRAFTED
+  PUBLISHED
+  ENDED
+  CANCLED
+  DELETED
+}
+
+enum NewsStatus {
+  DRAFTED
+  PUBLISHED
+  DELETED
+}
+
