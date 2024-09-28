@@ -12,10 +12,10 @@ model SuperUser {
   name      String
   email     String
   password  String
-  type      String  @default("ADMIN")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([email, id])
 }
 model User {
   id          String      @id

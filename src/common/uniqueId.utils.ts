@@ -1,7 +1,13 @@
-import { customAlphabet } from 'nanoid';
-export const nanoid = customAlphabet(
-  '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
-);
+let nanoid: any;
+import('nanoid')
+  .then(({ customAlphabet }) => {
+    nanoid = customAlphabet(
+      '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
+    );
+  })
+  .catch((error) => {
+    console.error('Error importing nanoid:', error);
+  });
 
 const prefixes = {
   auth: 'auth',
