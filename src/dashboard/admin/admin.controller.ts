@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Delete } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { Roles } from 'src/shared/decorators/roles.decorator';
 
+@Roles('admin')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
