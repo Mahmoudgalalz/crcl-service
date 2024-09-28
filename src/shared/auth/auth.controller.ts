@@ -1,7 +1,6 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserAuthGuard, SuperUserAuthGuard } from './guards';
-import { Public } from '../decorators/roles.decorator';
+import { Public, Roles } from '../decorators/roles.decorator';
 import { SuccessResponse } from 'src/common/success.response';
 
 @Controller('auth')
@@ -34,13 +33,13 @@ export class AuthController {
     return new SuccessResponse('Token', { access_token: user });
   }
 
-  @UseGuards(SuperUserAuthGuard)
-  @Post('superuser/protected')
+  @Roles('admin')
+  @Get('superuser/protected')
   getSuperUserProfile(@Request() req) {
     return req.user;
   }
 
-  @UseGuards(UserAuthGuard)
+  @Roles('user')
   @Post('user/protected')
   getUserProfile(@Request() req) {
     return req.user;

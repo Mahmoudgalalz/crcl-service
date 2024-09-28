@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { jwtConstants } from '../constants';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY, ROLES_KEY } from '../../decorators/roles.decorator';
+import { IS_PUBLIC_KEY } from '../../decorators/roles.decorator';
 import { AdminService } from '../../../dashboard/admin/admin.service';
 
 @Injectable()
@@ -32,16 +32,11 @@ export class SuperUserAuthGuard implements CanActivate {
       return true;
     }
 
-    const role = this.reflector.getAllAndOverride<boolean>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
     const refreshToken = request.cookies['refreshToken'];
 
-    if (!token && !refreshToken) {
+    if (!token) {
       throw new UnauthorizedException('No token provided');
     }
 
@@ -54,8 +49,6 @@ export class SuperUserAuthGuard implements CanActivate {
           secret: jwtConstants.admin,
         });
       }
-
-      if (payload.role !== role) return false;
 
       const user = await this.adminService.findOne(payload.userId);
       request['user'] = user;

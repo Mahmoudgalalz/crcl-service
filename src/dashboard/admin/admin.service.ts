@@ -17,8 +17,8 @@ export class AdminService {
     });
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll() {
+    return await this.prisma.superUser.findMany();
   }
 
   async findOne(id: string) {
