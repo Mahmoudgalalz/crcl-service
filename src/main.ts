@@ -5,6 +5,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { createRootUser } from './common/init.data';
 import { ErrorResponse } from './common/error.response';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import { SpelunkerModule } from 'nestjs-spelunker';
+import * as fs from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,7 +27,7 @@ async function bootstrap() {
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
-    credentials: true,
+    // credentials: true,
   };
 
   await createRootUser('root', process.env.ADMIN, process.env.PASSWORD);
@@ -33,7 +36,31 @@ async function bootstrap() {
   app.enableCors(corsOption);
   app.useGlobalFilters(new ErrorResponse());
   app.useGlobalPipes(new ValidationPipe());
+  if (process.env.NODE_ENV === 'development') {
+    void generateDependencyGraph(app);
+  }
 
   await app.listen(3000, () => Logger.log(`CRCL backend is up on: 3000.`));
 }
 bootstrap();
+
+async function generateDependencyGraph(app: INestApplication) {
+  // Module dependencies graph
+  const tree = SpelunkerModule.explore(app);
+  const root = SpelunkerModule.graph(tree);
+  const edges = SpelunkerModule.findGraphEdges(root);
+  const mermaidEdges = edges
+    .map(({ from, to }) => `  ${from.module.name}-->${to.module.name}`)
+    // filter out modules from the chart if you need
+    .filter(
+      (edge) =>
+        !edge.includes('FilteredModule') && !edge.includes('OtherExample'),
+    )
+    .sort();
+  // write into file
+  fs.writeFileSync(
+    'deps.mermaid',
+    `graph LR
+${mermaidEdges.join('\n')}`,
+  );
+}

@@ -1,0 +1,8 @@
+graph LR
+  AdminModule-->JwtModule
+  AppModule-->AdminModule
+  AppModule-->AuthModule
+  AppModule-->JwtModule
+  AppModule-->UserModule
+  AuthModule-->JwtModule
+  UserModule-->JwtModule

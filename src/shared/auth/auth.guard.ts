@@ -7,18 +7,20 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { jwtConstants } from '../constants';
+import { jwtConstants } from './constants';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../../decorators/roles.decorator';
-import { AdminService } from '../../../dashboard/admin/admin.service';
+import { IS_PUBLIC_KEY } from '../decorators/roles.decorator';
+import { AdminService } from 'src/services/admin/admin.service';
+import { UserService } from 'src/services/user/user.service';
 
 @Injectable()
-export class SuperUserAuthGuard implements CanActivate {
-  private readonly logger = new Logger(SuperUserAuthGuard.name);
+export class AuthGuard implements CanActivate {
+  private readonly logger = new Logger(AuthGuard.name);
 
   constructor(
     private jwtService: JwtService,
     private reflector: Reflector,
+    private userService: UserService,
     private adminService: AdminService,
   ) {}
 
@@ -27,7 +29,6 @@ export class SuperUserAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-
     if (isPublic) {
       return true;
     }
@@ -36,7 +37,7 @@ export class SuperUserAuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
     const refreshToken = request.cookies['refreshToken'];
 
-    if (!token) {
+    if (!token && !refreshToken) {
       throw new UnauthorizedException('No token provided');
     }
 
@@ -46,12 +47,17 @@ export class SuperUserAuthGuard implements CanActivate {
         payload = await this.useRefreshToken(request);
       } else {
         payload = await this.jwtService.verifyAsync(token, {
-          secret: jwtConstants.admin,
+          secret: jwtConstants.secret,
         });
       }
 
-      const user = await this.adminService.findOne(payload.userId);
-      request['user'] = user;
+      if (payload.role === 'admin') {
+        const user = await this.adminService.findOne(payload.userId);
+        request['user'] = user;
+      } else {
+        const user = await this.userService.findOne(payload.userId);
+        request['user'] = user;
+      }
       return true;
     } catch (error) {
       this.logger.error(`Failed to authenticate: ${error.message}`);
@@ -70,7 +76,7 @@ export class SuperUserAuthGuard implements CanActivate {
   private async useRefreshToken(request: Request) {
     const oldRefreshToken = request.cookies['refreshToken'];
     const payload = await this.jwtService.verifyAsync(oldRefreshToken, {
-      secret: jwtConstants.admin,
+      secret: jwtConstants.secret,
     });
     return payload;
   }
