@@ -24,7 +24,7 @@ model User {
   password    String
   facebook    String?  // Optional
   instagram   String?  // Optional
-  gender      String?  // Optional (e.g., "Male", "Female", "Other")
+  gender      Gender?  // Optional (e.g., "Male", "Female", "Other")
   picture     String?  // Optional URL to user's profile picture
   type        UserType
   wallet      Wallet?
@@ -92,8 +92,12 @@ model Wallet {
   id          Int       @id @default(autoincrement())
   userId      String    @unique
   user        User      @relation(fields: [userId], references: [id])
-  balance     Float     @default(0.0)
-  tokenPrice  Float     @default(1.0) // Customizable conversion rate
+  balance     Int       @default(0)
+}
+
+model WalletToken {
+  id         Int      @id @default(autoincrement())
+  tokenPrice Float    @default(0.05)
 }
 
 model Newspaper {
@@ -139,3 +143,7 @@ enum NewsStatus {
   DELETED
 }
 
+enum Gender {
+  Male
+  Female
+}

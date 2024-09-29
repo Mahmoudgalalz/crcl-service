@@ -28,6 +28,9 @@ export class AdminService {
     });
   }
 
+  // root user can delete, update, create users
+  // root user can delete, update, create admins
+  // user himself can update
   async findOne(id: string) {
     return await this.prisma.superUser.findFirst({ where: { id } });
   }

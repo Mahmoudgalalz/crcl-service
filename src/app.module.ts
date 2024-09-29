@@ -7,10 +7,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './shared/auth/auth.guard';
 import { RolesGuard } from './shared/auth/roles.guard';
 import { AdminModule } from './services/admin/admin.module';
-import { UserModule } from './services/user/user.module';
+import { UsersManagmentModule } from './services/users-management/user-management.module';
 
 @Module({
-  imports: [AuthModule, AdminModule, UserModule],
+  imports: [AuthModule, AdminModule, UsersManagmentModule],
   controllers: [AppController],
   providers: [
     AppService,
