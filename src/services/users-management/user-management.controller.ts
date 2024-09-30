@@ -65,18 +65,33 @@ export class UsersManagmentController {
   @Get(':id')
   @SwaggerRoute(UsersSwaggerConfig.findUser)
   async findUser(@Param('id') id: string) {
-    return this.usersService.findUser(id);
+    try {
+      const user = await this.usersService.findUser(id);
+      return new SuccessResponse('User data', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Post('super')
   @SwaggerRoute(SuperUsersSwaggerConfig.createSuperUser)
   async createSuperUser(@Body() data: CreateSuperUserViaAdminDto) {
-    return this.usersService.createSuperUser(data);
+    try {
+      const user = await this.usersService.createSuperUser(data);
+      return new SuccessResponse('Created SuperUser', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Get('super')
   @SwaggerRoute(SuperUsersSwaggerConfig.findAllSuperUsers)
   async findAllSuperUsers() {
-    return this.usersService.findAllSuperUsers();
+    try {
+      const users = await this.usersService.findAllSuperUsers();
+      return new SuccessResponse('All SuperUser data', users);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 }
