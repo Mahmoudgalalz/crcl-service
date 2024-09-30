@@ -1,0 +1,10 @@
+graph LR
+  AdminModule-->JwtModule
+  AppModule-->AdminModule
+  AppModule-->AuthModule
+  AppModule-->EventsManagementModule
+  AppModule-->JwtModule
+  AppModule-->UsersManagmentModule
+  AuthModule-->JwtModule
+  EventsManagementModule-->JwtModule
+  UsersManagmentModule-->JwtModule
