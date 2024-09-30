@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Max, Min } from 'class-validator';
 
 export class CreateSuperUserViaAdminDto {
   @IsEmail()
@@ -9,5 +9,7 @@ export class CreateSuperUserViaAdminDto {
   name: string;
 
   @IsString()
+  @Min(8)
+  @Max(32)
   password: string;
 }

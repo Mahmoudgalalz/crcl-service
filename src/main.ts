@@ -40,7 +40,7 @@ async function bootstrap() {
     void generateDependencyGraph(app);
   }
 
-  await app.listen(3000, () => Logger.log(`CRCL backend is up on: 3000.`));
+  await app.listen(2002, () => Logger.log(`CRCL backend is up on: 2002.`));
 }
 bootstrap();
 

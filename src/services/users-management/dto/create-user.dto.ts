@@ -1,5 +1,12 @@
 import { UserType } from '@prisma/client';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateUserViaAdminDto {
   @IsEmail()
@@ -8,9 +15,12 @@ export class CreateUserViaAdminDto {
 
   @IsNotEmpty()
   @IsString()
+  @IsPhoneNumber()
   number: string;
 
   @IsString()
+  @Min(8)
+  @Max(32)
   password: string;
 
   @IsNotEmpty()

@@ -36,7 +36,7 @@ export class UsersManagmentController {
     return this.usersService.listAllUsers(page, limit, filters);
   }
 
-  @Put(':id/status')
+  @Put(':id')
   @SwaggerRoute(UsersSwaggerConfig.changeUserStatus)
   async changeUserStatus(
     @Param('id') userId: string,
