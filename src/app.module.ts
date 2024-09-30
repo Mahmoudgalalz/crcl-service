@@ -1,34 +1,42 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { MobileModule } from './mobile/mobile.module';
+import { RouteRedirectMiddleware } from './shared/middleware/route.middleware';
+import { RouterModule } from '@nestjs/core';
 import { PrismaService } from './prisma.service';
 import { AuthModule } from './shared/auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './shared/auth/auth.guard';
-import { RolesGuard } from './shared/auth/roles.guard';
-import { AdminModule } from './services/admin/admin.module';
-import { UsersManagmentModule } from './services/users-management/user-management.module';
-import { EventsManagementModule } from './services/event-management/events.module';
 
 @Module({
   imports: [
     AuthModule,
-    AdminModule,
-    UsersManagmentModule,
-    EventsManagementModule,
+    DashboardModule,
+    // MobileModule,
+    RouterModule.register([
+      {
+        path: 'dashboard',
+        module: DashboardModule,
+      },
+      // {
+      //   path: 'mobile',
+      //   module: MobileModule,
+      // },
+    ]),
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    PrismaService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ],
+  providers: [AppService, PrismaService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RouteRedirectMiddleware)
+      .exclude({ path: 'auth', method: RequestMethod.ALL })
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

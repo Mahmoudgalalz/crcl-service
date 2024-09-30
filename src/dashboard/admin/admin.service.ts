@@ -18,28 +18,18 @@ export class AdminService {
   }
 
   async findAll() {
-    return await this.prisma.superUser.findMany({
-      select: {
-        name: true,
-        email: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    return await this.prisma.superUser.findMany();
   }
 
-  // root user can delete, update, create users
-  // root user can delete, update, create admins
-  // user himself can update
   async findOne(id: string) {
     return await this.prisma.superUser.findFirst({ where: { id } });
   }
 
-  async update(id: string, data: Prisma.SuperUserUpdateInput) {
-    return await this.prisma.superUser.update({ where: { id }, data });
+  update(id: number) {
+    return `This action updates a #${id} user`;
   }
 
-  async remove(id: string) {
-    return await this.prisma.superUser.delete({ where: { id } });
+  remove(id: number) {
+    return `This action removes a #${id} user`;
   }
 }

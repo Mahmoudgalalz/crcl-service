@@ -1,10 +1,7 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SuccessResponse } from 'src/common/success.response';
-import { ErrorResponse } from 'src/common/error.response';
 import { Public, Roles } from '../decorators/roles.decorator';
-import { CurrentUser } from '../decorators/user.decorator';
-import { Role } from '../interface/roles';
+import { SuccessResponse } from 'src/common/success.response';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +15,7 @@ export class AuthController {
       loginDto.password,
     );
     if (!superUser) {
-      return new ErrorResponse();
+      return { error: 'Invalid credentials' };
     }
     return new SuccessResponse('Token', { access_token: superUser });
   }
@@ -31,13 +28,20 @@ export class AuthController {
       loginDto.password,
     );
     if (!user) {
-      return new ErrorResponse();
+      return { error: 'Invalid credentials' };
     }
     return new SuccessResponse('Token', { access_token: user });
   }
-  @Get('info')
-  @Roles(Role.Admin)
-  getSuperUserProfile(@CurrentUser() user: any) {
-    return user;
+
+  @Roles('admin')
+  @Get('superuser/protected')
+  getSuperUserProfile(@Request() req) {
+    return req.user;
+  }
+
+  @Roles('user')
+  @Post('user/protected')
+  getUserProfile(@Request() req) {
+    return req.user;
   }
 }

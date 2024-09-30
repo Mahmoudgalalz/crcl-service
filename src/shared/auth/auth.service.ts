@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Prisma } from '@prisma/client';
+import { AdminService } from 'src/dashboard/admin/admin.service';
 import { PrismaService } from 'src/prisma.service';
 import { jwtConstants } from './constants';
 
@@ -8,7 +10,16 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly adminService: AdminService,
   ) {}
+
+  async signUpSuperUser(data: Omit<Prisma.SuperUserCreateInput, 'id'>) {
+    return await this.adminService.create(data);
+  }
+
+  // async signUpUser(data: Omit<Prisma.UserCreateInput, 'id'>) {
+  //   const id = customUUID(20);
+  // }
 
   async validateSuperUser(email: string, pass: string) {
     const user = await this.prisma.superUser.findFirst({ where: { email } });
@@ -40,7 +51,7 @@ export class AuthService {
     role: 'user' | 'admin';
   }) {
     return await this.jwtService.signAsync(payload, {
-      secret: jwtConstants.secret,
+      secret: jwtConstants[payload.role],
       expiresIn: '7d',
     });
   }
@@ -51,7 +62,7 @@ export class AuthService {
     role: 'user' | 'admin';
   }) {
     return this.jwtService.signAsync(payload, {
-      secret: jwtConstants.secret,
+      secret: jwtConstants[payload.role],
       expiresIn: '1d',
     });
   }

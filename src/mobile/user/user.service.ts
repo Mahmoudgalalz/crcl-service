@@ -21,7 +21,7 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  async findOne(id: string) {
+  findOne(id: number) {
     return `This action returns a #${id} user`;
   }
 

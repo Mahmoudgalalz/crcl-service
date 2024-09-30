@@ -7,19 +7,19 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { jwtConstants } from './constants';
+import { jwtConstants } from '../constants';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators/roles.decorator';
-import { PrismaService } from 'src/prisma.service';
+import { IS_PUBLIC_KEY } from '../../decorators/roles.decorator';
+import { AdminService } from '../../../dashboard/admin/admin.service';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
-  private readonly logger = new Logger(AuthGuard.name);
+export class SuperUserAuthGuard implements CanActivate {
+  private readonly logger = new Logger(SuperUserAuthGuard.name);
 
   constructor(
     private jwtService: JwtService,
     private reflector: Reflector,
-    private prisma: PrismaService,
+    private adminService: AdminService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,6 +27,7 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+
     if (isPublic) {
       return true;
     }
@@ -35,7 +36,7 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
     const refreshToken = request.cookies['refreshToken'];
 
-    if (!token && !refreshToken) {
+    if (!token) {
       throw new UnauthorizedException('No token provided');
     }
 
@@ -45,25 +46,12 @@ export class AuthGuard implements CanActivate {
         payload = await this.useRefreshToken(request);
       } else {
         payload = await this.jwtService.verifyAsync(token, {
-          secret: jwtConstants.secret,
+          secret: jwtConstants.admin,
         });
       }
 
-      if (payload.role === 'admin') {
-        const user = await this.prisma.superUser.findFirst({
-          where: {
-            id: payload.userId,
-          },
-        });
-        request['user'] = user;
-      } else {
-        const user = await this.prisma.user.findFirst({
-          where: {
-            id: payload.userId,
-          },
-        });
-        request['user'] = user;
-      }
+      const user = await this.adminService.findOne(payload.userId);
+      request['user'] = user;
       return true;
     } catch (error) {
       this.logger.error(`Failed to authenticate: ${error.message}`);
@@ -82,7 +70,7 @@ export class AuthGuard implements CanActivate {
   private async useRefreshToken(request: Request) {
     const oldRefreshToken = request.cookies['refreshToken'];
     const payload = await this.jwtService.verifyAsync(oldRefreshToken, {
-      secret: jwtConstants.secret,
+      secret: jwtConstants.admin,
     });
     return payload;
   }

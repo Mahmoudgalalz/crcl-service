@@ -14,7 +14,7 @@ model SuperUser {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  type      String   @default("ADMIN")
+
   @@unique([email, id])
 }
 model User {
@@ -24,7 +24,7 @@ model User {
   password    String
   facebook    String?  // Optional
   instagram   String?  // Optional
-  gender      Gender?  // Optional (e.g., "Male", "Female", "Other")
+  gender      String?  // Optional (e.g., "Male", "Female", "Other")
   picture     String?  // Optional URL to user's profile picture
   type        UserType
   wallet      Wallet?
@@ -62,6 +62,7 @@ model Ticket {
   description String
   price       Float
   capacity    Int
+  status      TicketStatus
   eventId     String
   event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   createdAt   DateTime     @default(now())
@@ -91,12 +92,8 @@ model Wallet {
   id          Int       @id @default(autoincrement())
   userId      String    @unique
   user        User      @relation(fields: [userId], references: [id])
-  balance     Int       @default(0)
-}
-
-model WalletToken {
-  id         Int      @id @default(autoincrement())
-  tokenPrice Float    @default(0.05)
+  balance     Float     @default(0.0)
+  tokenPrice  Float     @default(1.0) // Customizable conversion rate
 }
 
 model Newspaper {
@@ -142,7 +139,3 @@ enum NewsStatus {
   DELETED
 }
 
-enum Gender {
-  Male
-  Female
-}

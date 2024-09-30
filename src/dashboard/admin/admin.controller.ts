@@ -1,9 +1,8 @@
-import { Controller, Get, Param, Delete, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Param, Delete } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { Prisma } from '@prisma/client';
 import { Roles } from 'src/shared/decorators/roles.decorator';
-import { Role } from 'src/shared/interface/roles';
 
+@Roles('admin')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
@@ -12,10 +11,10 @@ export class AdminController {
   // create(@Body() ) {
   //   return this.adminService.create(createUserDto);
   // }
-  @Roles(Role.Admin)
+
   @Get()
-  async findAll() {
-    return await this.adminService.findAll();
+  findAll() {
+    return this.adminService.findAll();
   }
 
   @Get(':id')
@@ -23,16 +22,13 @@ export class AdminController {
     return this.adminService.findOne(id);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateUserDto: Prisma.SuperUserUpdateInput,
-  ) {
-    return this.adminService.update(id, updateUserDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  //   return this.adminService.update(+id, updateUserDto);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.adminService.remove(id);
+    return this.adminService.remove(+id);
   }
 }
