@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { User, UserStatus } from '@prisma/client';
 import { customUUID } from 'src/common/uniqueId.utils';
@@ -7,7 +8,7 @@ import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 
 @Injectable()
 export class UsersManagmentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createUser(data: CreateUserViaAdminDto) {
     const id = customUUID(20);
@@ -79,8 +80,8 @@ export class UsersManagmentService {
     });
   }
 
-  findAllSuperUsers() {
-    return this.prisma.superUser.findMany({
+  async findAllSuperUsers() {
+    return await this.prisma.superUser.findMany({
       select: {
         email: true,
         name: true,
@@ -89,5 +90,8 @@ export class UsersManagmentService {
         updatedAt: true,
       },
     });
+  }
+  async removeSuperUser(id: string) {
+    return this.prisma.superUser.delete({ where: { id: id } });
   }
 }

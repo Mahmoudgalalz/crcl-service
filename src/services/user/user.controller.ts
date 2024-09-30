@@ -15,7 +15,7 @@ export class UserController {
   @Get()
   @Roles(Role.Admin)
   async findAll() {
-    return await this.userService.findAll();
+    return this.userService.findAll();
   }
 
   // @Get(':id')
