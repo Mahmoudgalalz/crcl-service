@@ -8,9 +8,10 @@ import { AuthGuard } from './shared/auth/auth.guard';
 import { RolesGuard } from './shared/auth/roles.guard';
 import { AdminModule } from './services/admin/admin.module';
 import { UsersManagmentModule } from './services/users-management/user-management.module';
+import { EventsModule } from './services/event-management/events.module';
 
 @Module({
-  imports: [AuthModule, AdminModule, UsersManagmentModule],
+  imports: [AuthModule, AdminModule, UsersManagmentModule, EventsModule],
   controllers: [AppController],
   providers: [
     AppService,

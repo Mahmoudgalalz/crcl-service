@@ -12,6 +12,8 @@ import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
+import { SuccessResponse } from 'src/common/success.response';
+import { ErrorResponse } from 'src/common/error.response';
 
 @ApiTags('users')
 @Controller('users')
@@ -22,7 +24,12 @@ export class UsersManagmentController {
   @Post()
   @SwaggerRoute(UsersSwaggerConfig.createUser)
   async createUser(@Body() data: CreateUserViaAdminDto) {
-    return this.usersService.createUser(data);
+    try {
+      const user = await this.usersService.createUser(data);
+      return new SuccessResponse('Created User', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Get()
@@ -33,10 +40,16 @@ export class UsersManagmentController {
     @Query('status') status?: UserStatus,
     @Query('gender') gender?: 'Male' | 'Female',
   ) {
-    const pageNumber = parseInt(page, 10) || 1;  // Convert to number and apply default
-    const limitNumber = parseInt(limit, 10) || 10;  // Convert to number and apply default
+    const pageNumber = parseInt(page, 10) || 1;  
+    const limitNumber = parseInt(limit, 10) || 10;  
     const filters = { status, gender };
-    return this.usersService.listAllUsers(pageNumber, limitNumber, filters);
+    try {
+      const users = await this.usersService.listAllUsers(pageNumber, limitNumber, filters);
+      return new SuccessResponse('List of all users', users);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+
   }
 
 
@@ -46,7 +59,12 @@ export class UsersManagmentController {
     @Param('id') userId: string,
     @Body('status') status: UserStatus,
   ) {
-    return this.usersService.changeUserStatus(userId, status);
+    try {
+      const user = await this.usersService.changeUserStatus(userId, status);
+      return new SuccessResponse('Updated User', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Get('super')

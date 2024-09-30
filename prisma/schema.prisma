@@ -62,7 +62,6 @@ model Ticket {
   description String
   price       Float
   capacity    Int
-  status      TicketStatus
   eventId     String
   event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   createdAt   DateTime     @default(now())
