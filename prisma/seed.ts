@@ -86,8 +86,11 @@ async function main() {
       description: 'Access to VIP lounge and front row seats.',
       price: 100.0,
       capacity: 50,
-      status: TicketStatus.BOOKED,
-      eventId: event1.id,
+      event: {
+        connect: {
+          id: event1.id,
+        },
+      },
     },
   });
 

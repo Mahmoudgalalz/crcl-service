@@ -11,6 +11,8 @@ import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
+import { SuccessResponse } from 'src/common/success.response';
+import { ErrorResponse } from 'src/common/error.response';
 
 @ApiTags('users')
 @Controller('users')
@@ -21,7 +23,12 @@ export class UsersManagmentController {
   @Post()
   @SwaggerRoute(UsersSwaggerConfig.createUser)
   async createUser(@Body() data: CreateUserViaAdminDto) {
-    return this.usersService.createUser(data);
+    try {
+      const user = await this.usersService.createUser(data);
+      return new SuccessResponse('Created User', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Get()
@@ -33,7 +40,12 @@ export class UsersManagmentController {
     @Query('gender') gender?: 'Male' | 'Female',
   ) {
     const filters = { status, gender };
-    return this.usersService.listAllUsers(page, limit, filters);
+    try {
+      const users = await this.usersService.listAllUsers(page, limit, filters);
+      return new SuccessResponse('List of all users', users);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Put(':id')
@@ -42,7 +54,12 @@ export class UsersManagmentController {
     @Param('id') userId: string,
     @Body('status') status: UserStatus,
   ) {
-    return this.usersService.changeUserStatus(userId, status);
+    try {
+      const user = await this.usersService.changeUserStatus(userId, status);
+      return new SuccessResponse('Updated User', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Get(':id')
