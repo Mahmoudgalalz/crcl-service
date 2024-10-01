@@ -4,7 +4,11 @@ graph LR
   AppModule-->AuthModule
   AppModule-->EventsManagementModule
   AppModule-->JwtModule
+  AppModule-->UploadModule
   AppModule-->UsersManagmentModule
   AuthModule-->JwtModule
   EventsManagementModule-->JwtModule
+  MulterModule-->JwtModule
+  UploadModule-->JwtModule
+  UploadModule-->MulterModule
   UsersManagmentModule-->JwtModule

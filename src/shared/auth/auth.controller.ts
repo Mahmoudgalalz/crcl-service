@@ -1,4 +1,10 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
@@ -13,14 +19,18 @@ export class AuthController {
   @Public()
   @Post('admin/login')
   async superUserLogin(@Body() loginDto: { email: string; password: string }) {
-    const superUser = await this.authService.validateSuperUser(
-      loginDto.email,
-      loginDto.password,
-    );
-    if (!superUser) {
-      return new ErrorResponse();
+    try {
+      const superUser = await this.authService.validateSuperUser(
+        loginDto.email,
+        loginDto.password,
+      );
+      return new SuccessResponse('Token', { access_token: superUser });
+    } catch (err) {
+      throw new UnauthorizedException(err?.message, {
+        cause: err,
+        description: err,
+      });
     }
-    return new SuccessResponse('Token', { access_token: superUser });
   }
 
   @Public()

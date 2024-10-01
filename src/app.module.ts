@@ -9,6 +9,7 @@ import { RolesGuard } from './shared/auth/roles.guard';
 import { AdminModule } from './services/admin/admin.module';
 import { UsersManagmentModule } from './services/users-management/user-management.module';
 import { EventsManagementModule } from './services/event-management/events.module';
+import { UploadModule } from './shared/upload/upload.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EventsManagementModule } from './services/event-management/events.modul
     AdminModule,
     UsersManagmentModule,
     EventsManagementModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [
