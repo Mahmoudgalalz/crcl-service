@@ -13,11 +13,17 @@ export class AuthService {
   async validateSuperUser(email: string, pass: string) {
     const user = await this.prisma.superUser.findFirst({ where: { email } });
     if (user && user.password === pass) {
-      return await this.createAccessToken({
+      const token = await this.createAccessToken({
         email: user.email,
         userId: user.id,
         role: 'admin',
       });
+      const refresh = await this.createRefreshToken({
+        email: user.email,
+        userId: user.id,
+        role: 'admin',
+      });
+      return { token, refresh };
     }
     throw "Error, couldn't find the user";
   }
