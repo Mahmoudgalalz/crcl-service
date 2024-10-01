@@ -7,6 +7,7 @@ import {
   IsInt,
 } from 'class-validator';
 import { EventStatus } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class CreateEventDto {
   @IsString()
@@ -23,6 +24,7 @@ export class CreateEventDto {
   image?: string;
 
   @IsDate()
+  @Type(() => Date)
   date: Date;
 
   @IsOptional()
