@@ -4,8 +4,8 @@ import {
   IsNotEmpty,
   IsPhoneNumber,
   IsString,
-  Max,
-  Min,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class CreateUserViaAdminDto {
@@ -19,8 +19,12 @@ export class CreateUserViaAdminDto {
   number: string;
 
   @IsString()
-  @Min(8)
-  @Max(32)
+  @MinLength(8, {
+    message: 'password must not be less than 8 characters',
+  })
+  @MaxLength(32, {
+    message: 'password must not be more than 32 characters',
+  })
   password: string;
 
   @IsNotEmpty()
