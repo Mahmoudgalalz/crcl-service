@@ -4,6 +4,10 @@ import { join } from 'path';
 
 @Injectable()
 export class UploadService {
+  private dirPath = (hash: string) => {
+    return join(__dirname, '../../..', '../data', hash);
+  };
+
   constructor() {}
 
   // async uploadAvatar(file: Express.Multer.File, user: User, url: string) {
@@ -24,16 +28,12 @@ export class UploadService {
 
   async uploadAny(file: Express.Multer.File, url: string): Promise<string> {
     const { originalname } = file;
-
     const ext = originalname.split('.').pop();
     const hash = `${crypto.randomUUID().slice(0, 12)}.${ext}`;
     const fileUrl = `${url}/upload/${hash}`;
 
     try {
-      await writeFile(
-        join(__dirname, '../../..', '../data', hash),
-        file.buffer,
-      );
+      await writeFile(this.dirPath(hash), file.buffer);
     } catch (err) {
       Logger.log(err);
       throw new BadRequestException('Failed to upload file. Please try again.');

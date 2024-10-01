@@ -3,16 +3,9 @@ import { UploadController } from './upload.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { PrismaService } from 'src/prisma.service';
-import { join } from 'path';
 
 @Module({
-  imports: [
-    MulterModule.registerAsync({
-      useFactory: () => ({
-        dest: join(__dirname, '../../..', '../data'),
-      }),
-    }),
-  ],
+  imports: [MulterModule],
   providers: [PrismaService, UploadService],
   controllers: [UploadController],
 })

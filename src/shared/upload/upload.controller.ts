@@ -77,13 +77,14 @@ export class UploadController {
     file: Express.Multer.File,
   ) {
     try {
-      const url = `https://${req.get('Host')}/`;
+      const url = `https://${req.get('Host')}`;
+
       const imgUrl = await this.uploadService.uploadAny(file, url);
       if (!imgUrl) {
         throw new BadRequestException('Image upload failed, no URL returned.');
       }
 
-      res.status(HttpStatus.CREATED).json({ message: 'Success', imgUrl });
+      res.status(HttpStatus.CREATED).json({ message: 'Success', url: imgUrl });
     } catch (err) {
       throw new BadRequestException('Failed to upload File', {
         cause: err,
