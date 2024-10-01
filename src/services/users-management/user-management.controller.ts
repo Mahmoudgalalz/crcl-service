@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Put, Param, Body, Query, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
 import { UserStatus } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';

@@ -10,6 +10,7 @@ import { AdminModule } from './services/admin/admin.module';
 import { UsersManagmentModule } from './services/users-management/user-management.module';
 import { EventsManagementModule } from './services/event-management/events.module';
 import { UploadModule } from './shared/upload/upload.module';
+import { NewspaperModule } from './services/newspaper/newspaper.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UploadModule } from './shared/upload/upload.module';
     UsersManagmentModule,
     EventsManagementModule,
     UploadModule,
+    NewspaperModule,
   ],
   controllers: [AppController],
   providers: [

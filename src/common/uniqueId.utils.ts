@@ -15,6 +15,7 @@ const prefixes = {
   event: 'ev',
   ref: 'ref',
   test: 'test',
+  newspaper: 'newspaper',
 } as const;
 
 export function newId(
