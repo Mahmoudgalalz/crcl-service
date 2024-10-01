@@ -10,12 +10,15 @@ import {
   Req,
   Get,
   Param,
+  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
 import { Public, Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from '../interface/roles';
 import { UploadService } from './upload.service';
+import { createReadStream } from 'node:fs';
+import { join } from 'node:path';
 
 @Controller('upload')
 export class UploadController {
@@ -77,13 +80,14 @@ export class UploadController {
     file: Express.Multer.File,
   ) {
     try {
-      const url = `https://${req.get('Host')}/`;
+      const url = `https://${req.get('Host')}`;
+
       const imgUrl = await this.uploadService.uploadAny(file, url);
       if (!imgUrl) {
         throw new BadRequestException('Image upload failed, no URL returned.');
       }
 
-      res.status(HttpStatus.CREATED).json({ message: 'Success', imgUrl });
+      res.status(HttpStatus.CREATED).json({ message: 'Success', url: imgUrl });
     } catch (err) {
       throw new BadRequestException('Failed to upload File', {
         cause: err,
@@ -94,7 +98,23 @@ export class UploadController {
 
   @Public()
   @Get(':imgpath')
-  async seeUploadedFile(@Param('imgpath') image: string, @Res() res: Response) {
-    return res.sendFile(image, { root: './data' });
+  async seeUploadedFile(@Param('imgpath') image: string) {
+    const filePath = join(process.cwd(), './data', image);
+    const file = createReadStream(filePath);
+
+    const ext = image.split('.').pop()?.toLowerCase();
+    const contentType =
+      ext === 'png'
+        ? 'image/png'
+        : ext === 'webp'
+          ? 'image/webp'
+          : ext === 'jpg' || ext === 'jpeg'
+            ? 'image/jpeg'
+            : 'application/octet-stream';
+
+    return new StreamableFile(file, {
+      type: contentType,
+      disposition: 'inline',
+    });
   }
 }
