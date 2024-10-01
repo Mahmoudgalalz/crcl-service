@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { NewsStatus } from '@prisma/client';
 
