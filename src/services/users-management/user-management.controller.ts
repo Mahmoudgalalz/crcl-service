@@ -67,30 +67,37 @@ export class UsersManagmentController {
     }
   }
 
-  @Get('super')
-  @SwaggerRoute(SuperUsersSwaggerConfig.findAllSuperUsers)
-  @Roles(Role.SuperAdmin)
-  async findAllSuperUsers() {
-    return this.usersService.findAllSuperUsers();
-  }
-
   @Get(':id')
   @SwaggerRoute(UsersSwaggerConfig.findUser)
   async findUser(@Param('id') id: string) {
-    return this.usersService.findUser(id);
+    try {
+      const user = await this.usersService.findUser(id);
+      return new SuccessResponse('User data', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
   @Post('super')
   @SwaggerRoute(SuperUsersSwaggerConfig.createSuperUser)
   @Roles(Role.SuperAdmin)
   async createSuperUser(@Body() data: CreateSuperUserViaAdminDto) {
-    return this.usersService.createSuperUser(data);
+    try {
+      const user = await this.usersService.createSuperUser(data);
+      return new SuccessResponse('Created SuperUser', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 
-
-  @Delete('super/:id/delete')
-  @Roles(Role.SuperAdmin)
-  async removeSuperUser(@Param('id') superUserId: string) {
-    return this.usersService.removeSuperUser(superUserId);
+  @Get('super')
+  @SwaggerRoute(SuperUsersSwaggerConfig.findAllSuperUsers)
+  async findAllSuperUsers() {
+    try {
+      const users = await this.usersService.findAllSuperUsers();
+      return new SuccessResponse('All SuperUser data', users);
+    } catch (error) {
+      return new ErrorResponse();
+    }
   }
 }

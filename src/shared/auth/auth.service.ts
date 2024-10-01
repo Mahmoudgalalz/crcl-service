@@ -19,7 +19,7 @@ export class AuthService {
         role: 'admin',
       });
     }
-    return null;
+    throw "Error, couldn't find the user";
   }
 
   async validateUserByEmail(email: string, pass: string): Promise<any> {
@@ -31,7 +31,7 @@ export class AuthService {
         role: 'user',
       });
     }
-    return null;
+    throw "Error, couldn't find the user";
   }
 
   async createRefreshToken(payload: {
