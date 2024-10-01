@@ -20,10 +20,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-doc', app, document);
 
-  Logger.log(`Allowed Origins ${process.env.origins}`);
-
+  Logger.log(process.env.origins.split(','));
   const corsOption = {
-    origin: process.env.origins,
+    origin: process.env.origins.split(','),
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
