@@ -1,10 +1,8 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { Newspaper } from '@prisma/client';
 import { CreateNewspaperDto, UpdateNewspaperDto } from './dto/newspaper.dto';
-import { newId } from 'src/common/uniqueId.utils';
-import { NewsStatus } from '@prisma/client';
+import { customUUID } from 'src/common/uniqueId.utils';
 
 
 @Injectable()
@@ -12,7 +10,7 @@ export class NewspaperService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createNewspaper(data: CreateNewspaperDto): Promise<Newspaper> {
-    const id = newId('newspaper', 16);
+    const id = customUUID(20);
     return await this.prisma.newspaper.create({
       data: {
         id,
@@ -53,11 +51,6 @@ export class NewspaperService {
     return { newspapers, total };
   }
 
-  async updateNewspaperStatus(id: string, data: { status: NewsStatus }): Promise<Newspaper> {
-    return await this.prisma.newspaper.update({
-      where: { id },
-      data,
-    });
-  }
+  
   
 }

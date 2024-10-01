@@ -1,15 +1,13 @@
-/* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query, Delete } from '@nestjs/common';
 import { NewspaperService } from './newspaper.service';
 import { CreateNewspaperDto, UpdateNewspaperDto } from './dto/newspaper.dto';
-import { ApiTags } from '@nestjs/swagger';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
 import { NewsStatus } from '@prisma/client';
 import { Role } from 'src/shared/interface/roles';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 
-@ApiTags('newspaper')
+
 @Controller('newspaper')
 @Roles(Role.Admin)
 export class NewspaperController {
@@ -68,11 +66,11 @@ export class NewspaperController {
     }
   }
 
-  @Put(':id/delete')
+  @Delete(':id')
   async deleteNewspaper(@Param('id') newspaperId: string) {
     try {
       const updateData = { status: NewsStatus.DELETED }; // Set status to DELETED
-      const newspaper = await this.newspaperService.updateNewspaperStatus(newspaperId, updateData);
+      const newspaper = await this.newspaperService.updateNewspaper(newspaperId, updateData);
       return new SuccessResponse('Marked as DELETED', newspaper);
     } catch (error) {
       return new ErrorResponse();

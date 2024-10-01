@@ -3,5 +3,4 @@ export enum Role {
   User = 'USER',
   Reader = 'READER',
   Booth = 'BOOTH',
-  SuperAdmin = 'SUPER_ADMIN',
 }
