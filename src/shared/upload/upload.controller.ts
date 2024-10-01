@@ -80,7 +80,10 @@ export class UploadController {
     file: Express.Multer.File,
   ) {
     try {
-      const url = `https://${req.get('Host')}`;
+      const url =
+        process.env.NODE_ENV != 'Development'
+          ? `https://${req.get('Host')}`
+          : `http://${req.get('Host')}`;
 
       const imgUrl = await this.uploadService.uploadAny(file, url);
       if (!imgUrl) {
