@@ -23,7 +23,7 @@ async function bootstrap() {
   Logger.log(`Allowed Origins ${process.env.origins}`);
 
   const corsOption = {
-    origin: process.env.origins,
+    origin: JSON.parse(process.env.origins),
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
