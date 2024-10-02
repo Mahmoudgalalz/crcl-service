@@ -1,9 +1,9 @@
+/* eslint-disable prettier/prettier */
 import {
   Controller,
   Post,
   Body,
   Get,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from 'src/common/success.response';
@@ -14,7 +14,7 @@ import { Role } from '../interface/roles';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Public()
   @Post('admin/login')
@@ -26,25 +26,24 @@ export class AuthController {
       );
       return new SuccessResponse('Token', { access_token: superUser });
     } catch (err) {
-      throw new UnauthorizedException(err?.message, {
-        cause: err,
-        description: err,
-      });
+      return new ErrorResponse().catch(err, null);
     }
   }
 
   @Public()
   @Post('user/login')
-  async userLogin(@Body() loginDto: any) {
-    const user = await this.authService.validateUserByEmail(
-      loginDto.email,
-      loginDto.password,
-    );
-    if (!user) {
-      return new ErrorResponse();
+  async userLogin(@Body() loginDto: { email: string; password: string }) {
+    try {
+      const user = await this.authService.validateUserByEmail(
+        loginDto.email,
+        loginDto.password,
+      );
+      return new SuccessResponse('Token', { access_token: user });
+    } catch (err) {
+      return new ErrorResponse().catch(err, null);
     }
-    return new SuccessResponse('Token', { access_token: user });
   }
+
   @Get('info')
   @Roles(Role.Admin)
   getSuperUserProfile(@CurrentUser() user: any) {
