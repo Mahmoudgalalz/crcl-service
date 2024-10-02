@@ -64,6 +64,7 @@ export class UpdateEventDto {
 
   @IsOptional()
   @IsDate()
+  @Type(() => Date)
   date?: Date;
 
   @IsOptional()
