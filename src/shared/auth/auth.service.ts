@@ -5,6 +5,8 @@ import { PrismaService } from 'src/prisma.service';
 import { jwtConstants } from './constants';
 import * as bcrypt from 'bcrypt';
 
+
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -23,6 +25,7 @@ export class AuthService {
 
   async validateSuperUser(email: string, pass: string) {
     const user = await this.prisma.superUser.findFirst({ where: { email } });
+    console.log(user);
     if (user && (await this.comparePassword(pass, user.password))) {
       return await this.createAccessToken({
         email: user.email,
@@ -37,7 +40,6 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: { email },
     });
-    
     if (user && (await this.comparePassword(pass, user.password))) {
       return await this.createAccessToken({
         email: user.email,
@@ -67,4 +69,6 @@ export class AuthService {
   decodeRefreshToken(token: string) {
     return this.jwtService.decode(token);
   }
+  
+  
 }
