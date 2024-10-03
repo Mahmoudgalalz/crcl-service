@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 import { jwtConstants } from './constants';
 import * as bcrypt from 'bcrypt';
+import { OTPService } from './../../shared/otp/otp.service';
 
 
 
@@ -11,6 +12,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly otpService: OTPService
   ) { }
 
   async hashPassword(password: string): Promise<string> {
@@ -38,18 +40,18 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: { email },
     });
-    const validPassword= await this.comparePassword(pass, user.password);
-    if (user &&validPassword ) {
+    const validPassword = await this.comparePassword(pass, user.password);
+    if (user && validPassword) {
       return await this.createAccessToken({
         email: user.email,
         userId: user.id,
         role: 'user',
       });
     }
-    
+
     throw new Error("Error, couldn't find the user");
   }
-  
+
 
   async createRefreshToken(payload: { email: string; userId: string; role: 'user' | 'admin'; }) {
     return await this.jwtService.signAsync(payload, {
@@ -68,6 +70,21 @@ export class AuthService {
   decodeRefreshToken(token: string) {
     return this.jwtService.decode(token);
   }
-  
-  
+
+  async validateUserByNumber(number: string, otp: string): Promise<any> {
+    const user = await this.prisma.user.findFirst({
+      where: { number },
+    });
+
+    if (user && await this.otpService.verifyOtp(number, otp)) {
+      return await this.createAccessToken({
+        email: user.email,
+        userId: user.id,
+        role: 'user',
+      });
+    }
+    throw new Error("Error, couldn't verify the user with OTP");
+  }
+
+
 }

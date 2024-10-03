@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Controller,
   Post,
@@ -74,11 +73,11 @@ export class AuthController {
   @Post('user/verify-otp')
   async verifyOtp(@Body() { number, otp }: { number: string; otp: string }) {
     try {
-      const isVerified = await this.otpService.verifyOtp(number, otp);
-      if (isVerified) {
-        return new SuccessResponse('OTP verified successfully');
-      }
-      throw 'Invalid or expired OTP';
+      const user = await this.authService.validateUserByNumber(
+        number,
+        otp,
+      );
+      return new SuccessResponse('Token', { access_token: user });
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
