@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaService } from 'src/prisma.service';
 import { jwtConstants } from './constants';
-import { OtpModule } from './../../shared/otp/otp.module';
+import { OTPService } from './../otp/otp.service';
 
 @Module({
   imports: [
@@ -13,9 +13,8 @@ import { OtpModule } from './../../shared/otp/otp.module';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1d' },
     }),
-    OtpModule,
   ],
   controllers: [AuthController],
-  providers: [PrismaService, AuthService],
+  providers: [PrismaService, AuthService, OTPService],
 })
 export class AuthModule {}

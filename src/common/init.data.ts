@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { customUUID } from './uniqueId.utils';
@@ -23,16 +22,18 @@ export async function createRootUser(
         email,
       },
     });
-    if (user && (await comparePassword(password, user.password))) {
+    const validPassword = await comparePassword(password, user.password);
+    if (user && validPassword) {
       Logger.log('Root User Exists');
       return;
     }
 
+    const hashedPassword = await hashPassword(password);
     await prisma.superUser.create({
       data: {
         id: customUUID(20),
         email,
-        password: await hashPassword(password),
+        password: hashedPassword,
         name,
       },
     });

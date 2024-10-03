@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, Inject } from '@nestjs/common';
 import * as crypto from 'crypto';
 import Redis from 'ioredis'; 

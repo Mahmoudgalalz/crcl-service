@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
@@ -25,7 +24,6 @@ export class AuthService {
 
   async validateSuperUser(email: string, pass: string) {
     const user = await this.prisma.superUser.findFirst({ where: { email } });
-    console.log(user);
     if (user && (await this.comparePassword(pass, user.password))) {
       return await this.createAccessToken({
         email: user.email,
@@ -40,7 +38,8 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: { email },
     });
-    if (user && (await this.comparePassword(pass, user.password))) {
+    const validPassword= await this.comparePassword(pass, user.password);
+    if (user &&validPassword ) {
       return await this.createAccessToken({
         email: user.email,
         userId: user.id,

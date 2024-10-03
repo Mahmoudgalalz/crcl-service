@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
@@ -11,9 +11,9 @@ import { NewspaperModule } from 'src/services/newspaper/newspaper.module';
 import { UsersManagmentModule } from './services/users-management/user-management.module';
 import { EventsManagementModule } from './services/event-management/events.module';
 import { UploadModule } from './shared/upload/upload.module';
-import { RedisModule } from './shared/redis/redis.module';
-import { OtpModule } from './shared/otp/otp.module';
-
+import { OTPService } from './shared/otp/otp.service';
+import Redis from 'ioredis';
+@Global()
 @Module({
   imports: [
     AuthModule,
@@ -22,8 +22,6 @@ import { OtpModule } from './shared/otp/otp.module';
     UsersManagmentModule,
     EventsManagementModule,
     UploadModule,
-    OtpModule,
-    RedisModule,
   ],
   controllers: [AppController],
   providers: [
@@ -37,6 +35,18 @@ import { OtpModule } from './shared/otp/otp.module';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
+    {
+      provide: 'REDIS_CLIENT',
+      useFactory: async () => {
+        const redis = new Redis({
+          host: 'localhost',
+          port: 6379,
+        });
+        return redis;
+      },
+    },
+    OTPService,
   ],
+  exports: ['REDIS_CLIENT'],
 })
 export class AppModule {}
