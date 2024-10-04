@@ -7,9 +7,7 @@ async function hashPassword(password: string): Promise<string> {
   const saltRounds = 10;
   return await bcrypt.hash(password, saltRounds);
 }
-async function comparePassword(password: string, hash: string): Promise<boolean> {
-  return await bcrypt.compare(password, hash);
-}
+
 export async function createRootUser(
   name: string,
   email: string,
@@ -22,8 +20,7 @@ export async function createRootUser(
         email,
       },
     });
-    const validPassword = await comparePassword(password, user.password);
-    if (user && validPassword) {
+    if (user) {
       Logger.log('Root User Exists');
       return;
     }

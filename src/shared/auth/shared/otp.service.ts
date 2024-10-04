@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import * as crypto from 'crypto';
 import Redis from 'ioredis'; 
+import { generateUniqueOtp } from 'src/common/uniqueId.utils';
 @Injectable()
 export class OTPService {
   constructor(
@@ -8,7 +8,7 @@ export class OTPService {
   ) {}
 
   async generateOtp(number: string): Promise<string> {
-    const otp = crypto.randomInt(100000, 999999).toString();
+    const otp = generateUniqueOtp();
     await this.redisClient.set(`otp:${number}`, otp, 'EX', 4 * 60); 
     return otp;
   }

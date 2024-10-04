@@ -7,8 +7,6 @@ import { jwtConstants } from './shared/constants';
 import { OTPService } from './shared/otp.service';
 import { JWTService } from './shared/jwt.service';
 import { BcryptService } from './shared/bcrypt.service';
-import { RegistrationController } from './registration.contoller';
-import { RegistrationService } from './registration.service';
 
 @Module({
   imports: [
@@ -18,7 +16,7 @@ import { RegistrationService } from './registration.service';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  controllers: [AuthController,RegistrationController],
-  providers: [PrismaService, AuthService, OTPService,JWTService,BcryptService,RegistrationService],
+  controllers: [AuthController],
+  providers: [PrismaService, AuthService, OTPService, JWTService, BcryptService],
 })
 export class AuthModule { }

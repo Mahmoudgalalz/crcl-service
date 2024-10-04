@@ -21,6 +21,21 @@ export class JWTService {
             expiresIn: '1d',
         });
     }
+    async createTokens(payload: { email: string; id: string; role: 'user' | 'admin'; }) {
+        const access_token = await this.createAccessToken({
+            email: payload.email,
+            userId: payload.id,
+            role: 'user',
+        });
+
+        const refresh_token  = await this.createRefreshToken({
+            email: payload.email,
+            userId: payload.id,
+            role: 'user',
+        });
+
+        return { access_token, refresh_token  };
+    }
 
     decodeRefreshToken(token: string) {
         return this.jwtService.decode(token);

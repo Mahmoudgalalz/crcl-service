@@ -1,9 +1,11 @@
-let nanoid: any;
+let nanoid: any, generateOtp: any;
+
 import('nanoid')
   .then(({ customAlphabet }) => {
     nanoid = customAlphabet(
       '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
     );
+    generateOtp = customAlphabet('0123456789', 4);
   })
   .catch((error) => {
     console.error('Error importing nanoid:', error);
@@ -26,4 +28,8 @@ export function newId(
 
 export function customUUID(length: number = 16): string {
   return nanoid(length);
+}
+
+export function generateUniqueOtp(): string {
+  return generateOtp();
 }
