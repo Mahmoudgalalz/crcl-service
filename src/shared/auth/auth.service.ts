@@ -1,33 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
-import { jwtConstants } from './constants';
-import * as bcrypt from 'bcrypt';
-import { OTPService } from './../../shared/otp/otp.service';
+import { OTPService } from './shared/otp.service';
+import { JWTService } from './shared/jwt.service';
+import { BcryptService } from './shared/bcrypt.service';
 
 
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JWTService,
     private readonly prisma: PrismaService,
-    private readonly otpService: OTPService
+    private readonly otpService: OTPService,
+    private readonly bycrptService: BcryptService
   ) { }
 
-  async hashPassword(password: string): Promise<string> {
-    const saltRounds = 10;
-    return await bcrypt.hash(password, saltRounds);
-  }
-
-  async comparePassword(password: string, hash: string): Promise<boolean> {
-    return await bcrypt.compare(password, hash);
-  }
 
   async validateSuperUser(email: string, pass: string) {
     const user = await this.prisma.superUser.findFirst({ where: { email } });
-    if (user && (await this.comparePassword(pass, user.password))) {
-      return await this.createAccessToken({
+    if (user && (await this.bycrptService.comparePassword(pass, user.password))) {
+      return await this.jwtService.createAccessToken({
         email: user.email,
         userId: user.id,
         role: 'admin',
@@ -40,9 +32,9 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: { email },
     });
-    const validPassword = await this.comparePassword(pass, user.password);
+    const validPassword = await this.bycrptService.comparePassword(pass, user.password);
     if (user && validPassword) {
-      return await this.createAccessToken({
+      return await this.jwtService.createAccessToken({
         email: user.email,
         userId: user.id,
         role: 'user',
@@ -53,31 +45,13 @@ export class AuthService {
   }
 
 
-  async createRefreshToken(payload: { email: string; userId: string; role: 'user' | 'admin'; }) {
-    return await this.jwtService.signAsync(payload, {
-      secret: jwtConstants.secret,
-      expiresIn: '7d',
-    });
-  }
-
-  async createAccessToken(payload: { email: string; userId: string; role: 'user' | 'admin'; }) {
-    return this.jwtService.signAsync(payload, {
-      secret: jwtConstants.secret,
-      expiresIn: '1d',
-    });
-  }
-
-  decodeRefreshToken(token: string) {
-    return this.jwtService.decode(token);
-  }
-
   async validateUserByNumber(number: string, otp: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: { number },
     });
 
     if (user && await this.otpService.verifyOtp(number, otp)) {
-      return await this.createAccessToken({
+      return await this.jwtService.createAccessToken({
         email: user.email,
         userId: user.id,
         role: 'user',

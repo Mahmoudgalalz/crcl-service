@@ -11,7 +11,7 @@ import { ErrorResponse } from 'src/common/error.response';
 import { Public, Roles } from '../decorators/roles.decorator';
 import { CurrentUser } from '../decorators/user.decorator';
 import { Role } from '../interface/roles';
-import { OTPService } from './../../shared/otp/otp.service';
+import { OTPService } from './shared/otp.service';
 
 @Controller('auth')
 export class AuthController {

@@ -11,7 +11,6 @@ import { NewspaperModule } from 'src/services/newspaper/newspaper.module';
 import { UsersManagmentModule } from './services/users-management/user-management.module';
 import { EventsManagementModule } from './services/event-management/events.module';
 import { UploadModule } from './shared/upload/upload.module';
-import { OTPService } from './shared/otp/otp.service';
 import Redis from 'ioredis';
 @Global()
 @Module({
@@ -45,7 +44,6 @@ import Redis from 'ioredis';
         return redis;
       },
     },
-    OTPService,
   ],
   exports: ['REDIS_CLIENT'],
 })
