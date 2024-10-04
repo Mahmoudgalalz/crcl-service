@@ -3,7 +3,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaService } from 'src/prisma.service';
-import { jwtConstants } from './constants';
+import { jwtConstants } from './shared/constants';
+import { OTPService } from './shared/otp.service';
+import { JWTService } from './shared/jwt.service';
+import { BcryptService } from './shared/bcrypt.service';
 
 @Module({
   imports: [
@@ -14,6 +17,6 @@ import { jwtConstants } from './constants';
     }),
   ],
   controllers: [AuthController],
-  providers: [PrismaService, AuthService],
+  providers: [PrismaService, AuthService, OTPService, JWTService, BcryptService],
 })
-export class AuthModule {}
+export class AuthModule { }
