@@ -20,6 +20,7 @@ export class AdminService {
   async findAll() {
     return await this.prisma.superUser.findMany({
       select: {
+        id: true,
         name: true,
         email: true,
         createdAt: true,
