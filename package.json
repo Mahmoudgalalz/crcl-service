@@ -33,7 +33,6 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
-    "crcl-service": "file:",
     "ioredis": "^5.4.1",
     "nanoid": "^5.0.7",
     "passport": "^0.7.0",

@@ -29,6 +29,9 @@ importers:
       '@prisma/client':
         specifier: ^5.20.0
         version: 5.20.0(prisma@5.20.0)
+      '@types/bcrypt':
+        specifier: ^5.0.2
+        version: 5.0.2
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
@@ -41,9 +44,6 @@ importers:
       cookie-parser:
         specifier: ^1.4.6
         version: 1.4.6
-      crcl-service:
-        specifier: 'file:'
-        version: file:(prisma@5.20.0)
       ioredis:
         specifier: ^5.4.1
         version: 5.4.1
@@ -693,6 +693,9 @@ packages:
   '@types/babel__traverse@7.20.6':
     resolution: {integrity: sha512-r1bzfrm0tomOI8g1SzvCaQHo6Lcv6zu0EA+W2kHrt8dyrHQxGzBBL4kdkzIS+jBMV+EYcMAEAqXqYaLJq5rOZg==}
 
+  '@types/bcrypt@5.0.2':
+    resolution: {integrity: sha512-6atioO8Y75fNcbmj0G7UjI9lXN2pQ/IGJ2FWT4a/btd0Lk9lQalHLKhkgKVZ3r+spnmWUKfbMi1GEe9wyHQfNQ==}
+
   '@types/body-parser@1.19.5':
     resolution: {integrity: sha512-fB3Zu92ucau0iQ0JMCFQE7b/dv8Ot07NI3KaZIkIUNXq82k4eBAqUaneXfleGY9JWskeS9y+u0nXMyspcuQrCg==}
 
@@ -1310,9 +1313,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  'crcl-service@file:':
-    resolution: {directory: '', type: directory}
 
   create-jest@29.7.0:
     resolution: {integrity: sha512-Adz2bdH0Vq3F53KEMJOoftQFutWCukm6J24wbPWRO4k1kMY7gS7ds/uoJkNuV8wDCtWWnuwGcJwpWcih+zEW1Q==}
@@ -3884,6 +3884,10 @@ snapshots:
     dependencies:
       '@babel/types': 7.25.6
 
+  '@types/bcrypt@5.0.2':
+    dependencies:
+      '@types/node': 20.16.9
+
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
@@ -4592,33 +4596,6 @@ snapshots:
       path-type: 4.0.0
     optionalDependencies:
       typescript: 5.3.3
-
-  crcl-service@file:(prisma@5.20.0):
-    dependencies:
-      '@nestjs/common': 10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1)
-      '@nestjs/core': 10.4.4(@nestjs/common@10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.1.14)(rxjs@7.8.1)
-      '@nestjs/jwt': 10.2.0(@nestjs/common@10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1))
-      '@nestjs/passport': 10.0.3(@nestjs/common@10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1))(passport@0.7.0)
-      '@nestjs/platform-express': 10.4.4(@nestjs/common@10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.4.4)
-      '@nestjs/swagger': 7.4.2(@nestjs/common@10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/core@10.4.4(@nestjs/common@10.4.4(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)(rxjs@7.8.1))(@nestjs/platform-express@10.4.4)(reflect-metadata@0.1.14)(rxjs@7.8.1))(class-transformer@0.5.1)(class-validator@0.14.1)(reflect-metadata@0.1.14)
-      '@prisma/client': 5.20.0(prisma@5.20.0)
-      bcrypt: 5.1.1
-      class-transformer: 0.5.1
-      class-validator: 0.14.1
-      cookie-parser: 1.4.6
-      ioredis: 5.4.1
-      nanoid: 5.0.7
-      passport: 0.7.0
-      passport-jwt: 4.0.1
-      reflect-metadata: 0.1.14
-      rxjs: 7.8.1
-    transitivePeerDependencies:
-      - '@fastify/static'
-      - '@nestjs/microservices'
-      - '@nestjs/websockets'
-      - encoding
-      - prisma
-      - supports-color
 
   create-jest@29.7.0(@types/node@20.16.9)(ts-node@10.9.2(@types/node@20.16.9)(typescript@5.6.2)):
     dependencies:
