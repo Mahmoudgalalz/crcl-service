@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
 import { UserStatus, UserType } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
