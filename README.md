@@ -1,4 +1,3 @@
-
 ## Installation
 
 ```bash
@@ -13,9 +12,11 @@ docker compose up -d
 ```
 
 ## running the Migration to the database
+
 ```bash
 npx prisma migrate dev
 ```
+
 ## Running the app
 
 ```bash
