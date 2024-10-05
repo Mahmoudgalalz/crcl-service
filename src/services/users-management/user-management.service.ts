@@ -79,7 +79,7 @@ export class UsersManagmentService {
     });
   }
 
-  findAllSuperUsers() {
+  async findAllSuperUsers() {
     return this.prisma.superUser.findMany({
       select: {
         email: true,

@@ -84,7 +84,7 @@ export class UsersManagmentController {
     }
   }
 
-  @Get('super')
+  @Get('super/users')
   @SwaggerRoute(SuperUsersSwaggerConfig.findAllSuperUsers)
   async findAllSuperUsers() {
     try {
