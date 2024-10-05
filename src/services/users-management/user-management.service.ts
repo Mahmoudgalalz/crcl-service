@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User, UserStatus } from '@prisma/client';
+import { User, UserStatus, UserType } from '@prisma/client';
 import { customUUID } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
@@ -25,6 +25,7 @@ export class UsersManagmentService {
     filters?: {
       status?: UserStatus;
       gender?: 'Male' | 'Female';
+      type?: UserType;
     },
   ): Promise<Omit<User, 'password'>[]> {
     const users = await this.prisma.user.findMany({

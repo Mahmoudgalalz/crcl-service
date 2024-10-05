@@ -34,7 +34,11 @@ async function bootstrap() {
   app.use(cookieParser());
   app.enableCors(corsOption);
   app.useGlobalFilters(new ErrorResponse());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   if (process.env.NODE_ENV === 'development') {
     void generateDependencyGraph(app);
   }

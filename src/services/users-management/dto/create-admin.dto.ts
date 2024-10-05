@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
@@ -7,6 +8,7 @@ import {
 } from 'class-validator';
 
 export class CreateSuperUserViaAdminDto {
+  @Transform(({ value }) => value.toLowerCase())
   @IsEmail()
   @IsNotEmpty()
   email: string;

@@ -1,4 +1,5 @@
 import { UserType } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
@@ -9,6 +10,7 @@ import {
 } from 'class-validator';
 
 export class CreateUserViaAdminDto {
+  @Transform(({ value }) => value.toLowerCase())
   @IsEmail()
   @IsNotEmpty()
   email: string;
