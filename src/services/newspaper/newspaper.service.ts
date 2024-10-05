@@ -4,7 +4,6 @@ import { Newspaper } from '@prisma/client';
 import { CreateNewspaperDto, UpdateNewspaperDto } from './dto/newspaper.dto';
 import { customUUID } from 'src/common/uniqueId.utils';
 
-
 @Injectable()
 export class NewspaperService {
   constructor(private readonly prisma: PrismaService) {}
@@ -19,7 +18,10 @@ export class NewspaperService {
     });
   }
 
-  async updateNewspaper(id: string, data: UpdateNewspaperDto): Promise<Newspaper> {
+  async updateNewspaper(
+    id: string,
+    data: UpdateNewspaperDto,
+  ): Promise<Newspaper> {
     const newspaper = await this.prisma.newspaper.update({
       where: { id },
       data,
@@ -40,7 +42,10 @@ export class NewspaperService {
     return newspaper;
   }
 
-  async listNewspapers(page: number, limit: number): Promise<{ newspapers: Newspaper[]; total: number }> {
+  async listNewspapers(
+    page: number,
+    limit: number,
+  ): Promise<{ newspapers: Newspaper[]; total: number }> {
     const [newspapers, total] = await this.prisma.$transaction([
       this.prisma.newspaper.findMany({
         skip: (page - 1) * limit,
@@ -50,7 +55,4 @@ export class NewspaperService {
     ]);
     return { newspapers, total };
   }
-
-  
-  
 }
