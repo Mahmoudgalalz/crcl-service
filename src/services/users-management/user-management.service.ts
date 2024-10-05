@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { User, UserStatus, UserType } from '@prisma/client';
 import { customUUID } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
@@ -25,35 +25,53 @@ export class UsersManagmentService {
     filters?: {
       status?: UserStatus;
       gender?: 'Male' | 'Female';
-      type?: UserType;
+      types?: UserType[] | UserType;
     },
   ): Promise<Omit<User, 'password'>[]> {
-    const users = await this.prisma.user.findMany({
-      where: {
-        ...filters,
-      },
-      select: {
-        id: true,
-        email: true,
-        number: true,
-        facebook: true,
-        instagram: true,
-        gender: true,
-        picture: true,
-        type: true,
-        wallet: {
-          select: {
-            balance: true,
-          },
+    try {
+      const { types, ...filter } = filters || {};
+      const skip = (page - 1) * limit || 0;
+      const take = limit || 10;
+
+      let typeFilter;
+      if (types) {
+        typeFilter = Array.isArray(types) ? types : [types];
+      }
+      const users = await this.prisma.user.findMany({
+        where: {
+          ...(filter?.status ? { status: filter.status } : {}),
+          ...(filter?.gender ? { gender: filter.gender } : {}),
+          ...(typeFilter && typeFilter.length > 0
+            ? { type: { in: typeFilter } }
+            : {}),
         },
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-    return users;
+        select: {
+          id: true,
+          email: true,
+          number: true,
+          facebook: true,
+          instagram: true,
+          gender: true,
+          picture: true,
+          type: true,
+          wallet: {
+            select: {
+              balance: true,
+            },
+          },
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        skip,
+        take,
+      });
+
+      return users;
+    } catch (error) {
+      Logger.error('Error fetching users:', error);
+      throw new Error('Unable to fetch users at the moment.');
+    }
   }
 
   async changeUserStatus(userId: string, status: UserStatus): Promise<User> {

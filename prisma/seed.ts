@@ -15,7 +15,7 @@ async function main() {
   // Create SuperUser
   const superUser = await prisma.superUser.create({
     data: {
-      id: 'superuser-1',
+      id: 'superusers-x1',
       name: 'Admin User',
       email: 'admin@example.com',
       password: 'password123', // Replace with a hashed password in production
@@ -27,7 +27,7 @@ async function main() {
   // Create Users
   const user1 = await prisma.user.create({
     data: {
-      id: 'user-1',
+      id: 'user-x',
       email: 'user1@example.com',
       number: '123456789',
       password: 'password123',
@@ -47,7 +47,7 @@ async function main() {
 
   const user2 = await prisma.user.create({
     data: {
-      id: 'user-2',
+      id: 'user-a',
       email: 'user2@example.com',
       number: '987654321',
       password: 'password123',
@@ -62,7 +62,7 @@ async function main() {
   // Create Events
   const event1 = await prisma.event.create({
     data: {
-      id: 'event-1',
+      id: 'event-x',
       title: 'Music Concert',
       description: 'A grand music concert featuring top artists.',
       location: 'Main Auditorium',
@@ -81,7 +81,7 @@ async function main() {
   // Create Tickets for the Event
   const ticket1 = await prisma.ticket.create({
     data: {
-      id: 'ticket-1',
+      id: 'ticket-2',
       title: 'VIP Ticket',
       description: 'Access to VIP lounge and front row seats.',
       price: 100.0,
@@ -99,7 +99,7 @@ async function main() {
   // Create Ticket Purchases
   const ticketPurchase1 = await prisma.ticketPurchase.create({
     data: {
-      id: 'purchase-1',
+      id: 'purchase-12',
       ticketId: ticket1.id,
       userId: user1.id,
       status: TicketStatus.APPROVED,
@@ -113,7 +113,7 @@ async function main() {
   // Create a Newspaper
   const newspaper1 = await prisma.newspaper.create({
     data: {
-      id: 'news-1',
+      id: 'news-1x',
       title: 'Weekly Updates',
       description: 'All the updates from last week.',
       status: NewsStatus.PUBLISHED,

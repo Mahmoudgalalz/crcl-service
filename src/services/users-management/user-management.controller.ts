@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query, Logger } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
-import { UserStatus } from '@prisma/client';
+import { UserStatus, UserType } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { SwaggerRoute } from 'src/shared/decorators/swagger.decorator';
 import {
@@ -38,8 +38,9 @@ export class UsersManagmentController {
     @Query('limit') limit: number = 10,
     @Query('status') status?: UserStatus,
     @Query('gender') gender?: 'Male' | 'Female',
+    @Query('types') types?: UserType[],
   ) {
-    const filters = { status, gender };
+    const filters = { types, status, gender };
     try {
       const users = await this.usersService.listAllUsers(page, limit, filters);
       return new SuccessResponse('List of all users', users);
