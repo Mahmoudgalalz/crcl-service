@@ -38,7 +38,7 @@ export class UsersManagmentController {
     @Query('limit') limit: number = 10,
     @Query('status') status?: UserStatus,
     @Query('gender') gender?: 'Male' | 'Female',
-    @Query('types') types?: UserType[],
+    @Query('types') types?: UserType[] | UserType,
   ) {
     const filters = { types, status, gender };
     try {
