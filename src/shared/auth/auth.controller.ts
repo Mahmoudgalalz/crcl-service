@@ -45,7 +45,15 @@ export class AuthController {
             ? process.env.domain
             : 'localhost',
       });
-      res.send({ status: 'success', access_token }).status(HttpStatus.ACCEPTED);
+      res
+        .send({
+          status: 'success',
+          message: 'Tokens',
+          data: {
+            access_token,
+          },
+        })
+        .status(HttpStatus.ACCEPTED);
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
@@ -56,14 +64,33 @@ export class AuthController {
 
   @Public()
   @Post('user/login')
-  async userLogin(@Body() loginDto: { email: string; password: string }) {
+  async userLogin(
+    @Body() loginDto: { email: string; password: string },
+    @Res() res: Response,
+  ) {
     try {
       const { access_token, refresh_token } =
         await this.authService.validateUserByEmail(
           loginDto.email,
           loginDto.password,
         );
-      return new SuccessResponse('Token', { access_token, refresh_token });
+      res.cookie('refreshToken', refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
+        domain:
+          process.env.NODE_ENV !== 'development'
+            ? process.env.domain
+            : 'localhost',
+      });
+      res
+        .send({
+          status: 'success',
+          message: 'Tokens',
+          data: {
+            access_token,
+          },
+        })
+        .status(HttpStatus.ACCEPTED);
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
@@ -92,11 +119,30 @@ export class AuthController {
 
   @Public()
   @Post('user/verify-otp')
-  async verifyOtp(@Body() { number, otp }: { number: string; otp: string }) {
+  async verifyOtp(
+    @Body() { number, otp }: { number: string; otp: string },
+    @Res() res: Response,
+  ) {
     try {
       const { access_token, refresh_token } =
         await this.authService.validateUserByNumber(number, otp);
-      return new SuccessResponse('Token', { access_token, refresh_token });
+      res.cookie('refreshToken', refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
+        domain:
+          process.env.NODE_ENV !== 'development'
+            ? process.env.domain
+            : 'localhost',
+      });
+      res
+        .send({
+          status: 'success',
+          message: 'Tokens',
+          data: {
+            access_token,
+          },
+        })
+        .status(HttpStatus.ACCEPTED);
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
@@ -134,7 +180,15 @@ export class AuthController {
             ? process.env.domain
             : 'localhost',
       });
-      res.send({ status: 'success', access_token }).status(HttpStatus.ACCEPTED);
+      res
+        .send({
+          status: 'success',
+          message: 'Tokens',
+          data: {
+            access_token,
+          },
+        })
+        .status(HttpStatus.ACCEPTED);
     } catch (err) {
       throw new UnauthorizedException(err?.message || 'Verification failed');
     }
