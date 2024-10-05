@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-
 @Injectable()
 export class BcryptService {
-  constructor(
-  ) { }
+  constructor() {}
 
   async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;

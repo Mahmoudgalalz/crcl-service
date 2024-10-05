@@ -7,8 +7,6 @@ import Redis from 'ioredis';
 import { RegisterDto } from './dto/register.dto';
 import { customUUID } from 'src/common/uniqueId.utils';
 
-
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -17,30 +15,38 @@ export class AuthService {
     private readonly otpService: OTPService,
     private readonly bycrptService: BcryptService,
     @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
-  ) { }
-
+  ) {}
 
   async validateSuperUser(email: string, pass: string) {
     const user = await this.prisma.superUser.findFirst({ where: { email } });
-    if (user && (await this.bycrptService.comparePassword(pass, user.password))) {
-      return await this.jwtService.createTokens({
-        email: user.email,
-        id: user.id,
-        role: 'user',
-      });
+    if (user) {
+      const isCorrect = await this.bycrptService.comparePassword(
+        pass,
+        user.password,
+      );
+      if (user && isCorrect) {
+        return await this.jwtService.createTokens({
+          email: user.email,
+          userId: user.id,
+          role: 'admin',
+        });
+      }
+      throw "Error, couldn't find the user";
     }
-    throw "Error, couldn't find the user";
   }
 
   async validateUserByEmail(email: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: { email },
     });
-    const validPassword = await this.bycrptService.comparePassword(pass, user.password);
+    const validPassword = await this.bycrptService.comparePassword(
+      pass,
+      user.password,
+    );
     if (user && validPassword) {
       return await this.jwtService.createTokens({
         email: user.email,
-        id: user.id,
+        userId: user.id,
         role: 'user',
       });
     }
@@ -48,33 +54,42 @@ export class AuthService {
     throw new Error("Error, couldn't find the user");
   }
 
-
   async validateUserByNumber(number: string, otp: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: { number },
     });
 
-    if (user && await this.otpService.verifyOtp(number, otp)) {
+    if (user && (await this.otpService.verifyOtp(number, otp))) {
       return await this.jwtService.createTokens({
         email: user.email,
-        id: user.id,
+        userId: user.id,
         role: 'user',
       });
     }
     throw new Error("Error, couldn't verify the user with OTP");
   }
+
   async register(registerDto: RegisterDto) {
     const existingUser = await this.prisma.user.findFirst({
-      where: { OR: [{ email: registerDto.email }, { number: registerDto.number }] },
+      where: {
+        OR: [{ email: registerDto.email }, { number: registerDto.number }],
+      },
     });
 
     if (existingUser) {
       throw new UnauthorizedException('Email or Number already in use');
     }
 
-    const hashedPassword = await this.bycrptService.hashPassword(registerDto.password);
+    const hashedPassword = await this.bycrptService.hashPassword(
+      registerDto.password,
+    );
     const cachedData = { ...registerDto, password: hashedPassword };
-    await this.redisClient.set(`${registerDto.number}`, JSON.stringify(cachedData), 'EX', 300);
+    await this.redisClient.set(
+      `${registerDto.number}`,
+      JSON.stringify(cachedData),
+      'EX',
+      300,
+    );
 
     const otp = await this.otpService.generateOtp(registerDto.number);
     await this.otpService.sendOtpToUser(registerDto.number, otp);
@@ -92,7 +107,7 @@ export class AuthService {
     }
 
     await this.redisClient.del(`${number}`);
-    
+
     const cachedData = JSON.parse(cachedDataString);
 
     const id = customUUID(20);
@@ -112,10 +127,8 @@ export class AuthService {
 
     return await this.jwtService.createTokens({
       email: user.email,
-      id: user.id,
+      userId: user.id,
       role: 'user',
     });
   }
-
-
 }

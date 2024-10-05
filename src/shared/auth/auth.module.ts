@@ -17,6 +17,12 @@ import { BcryptService } from './shared/bcrypt.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [PrismaService, AuthService, OTPService, JWTService, BcryptService],
+  providers: [
+    PrismaService,
+    AuthService,
+    OTPService,
+    JWTService,
+    BcryptService,
+  ],
 })
-export class AuthModule { }
+export class AuthModule {}
