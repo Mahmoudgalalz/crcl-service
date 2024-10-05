@@ -81,7 +81,7 @@ export class UploadController {
   ) {
     try {
       const url =
-        process.env.NODE_ENV != 'Development'
+        process.env.NODE_ENV != 'development'
           ? `https://${req.get('Host')}`
           : `http://${req.get('Host')}`;
 
