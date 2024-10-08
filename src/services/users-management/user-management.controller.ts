@@ -22,6 +22,7 @@ import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
+import { UpadteUserViaAdminDto } from './dto/update-user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -62,10 +63,13 @@ export class UsersManagmentController {
   @SwaggerRoute(UsersSwaggerConfig.changeUserStatus)
   async changeUserStatus(
     @Param('id') userId: string,
-    @Body('status') status: UserStatus,
+    @Body('status') data: UpadteUserViaAdminDto,
   ) {
     try {
-      const user = await this.usersService.changeUserStatus(userId, status);
+      const user = await this.usersService.changeUserStatus(
+        userId,
+        data.status,
+      );
       return new SuccessResponse('Updated User', user);
     } catch (error) {
       return new ErrorResponse();
