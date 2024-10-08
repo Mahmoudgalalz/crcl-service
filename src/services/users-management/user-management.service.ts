@@ -47,6 +47,7 @@ export class UsersManagmentService {
         },
         select: {
           id: true,
+          name: true,
           email: true,
           number: true,
           facebook: true,
