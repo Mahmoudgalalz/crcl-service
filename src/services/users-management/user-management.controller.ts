@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  Query,
+  Delete,
+} from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
 import { UserStatus, UserType } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
@@ -58,6 +67,16 @@ export class UsersManagmentController {
     try {
       const user = await this.usersService.changeUserStatus(userId, status);
       return new SuccessResponse('Updated User', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
+  @Delete(':id')
+  async deleteUser(@Param('id') userId: string) {
+    try {
+      const user = await this.usersService.deleteUser(userId);
+      return new SuccessResponse('Deleted user', user);
     } catch (error) {
       return new ErrorResponse();
     }
