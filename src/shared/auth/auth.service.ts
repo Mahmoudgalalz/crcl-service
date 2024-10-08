@@ -35,6 +35,24 @@ export class AuthService {
     }
   }
 
+  async validateSuperUserByRefresh(token: string) {
+    const payload = await this.jwtService.decodeRefreshToken(token);
+    if (payload) {
+      const user = await this.prisma.superUser.findFirst({
+        where: { id: payload.userId },
+      });
+      if (user) {
+        return await this.jwtService.createTokens({
+          email: user.email,
+          userId: user.id,
+          role: 'admin',
+        });
+      }
+      throw "Error, couldn't find the user";
+    }
+    throw 'Error, invalid token';
+  }
+
   async validateUserByEmail(email: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: { email },

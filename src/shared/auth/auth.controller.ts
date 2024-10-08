@@ -7,6 +7,7 @@ import {
   Res,
   HttpStatus,
   HttpCode,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from 'src/common/success.response';
@@ -18,7 +19,7 @@ import { OTPService } from './shared/otp.service';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginAdminDto } from './dto/login-admin.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -52,6 +53,47 @@ export class AuthController {
           data: {
             access_token,
           },
+        })
+        .status(HttpStatus.ACCEPTED);
+    } catch (err) {
+      throw new UnauthorizedException(err?.message, {
+        cause: err,
+        description: err,
+      });
+    }
+  }
+
+  @Post('admin/verify')
+  @HttpCode(HttpStatus.OK)
+  async superUserVerify(@Req() req: Request, @Res() res: Response) {
+    try {
+      const token = req.cookies['refreshToken'];
+      if (token) {
+        const { refresh_token, access_token } =
+          await this.authService.validateSuperUserByRefresh(token);
+        res.cookie('refreshToken', refresh_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          domain:
+            process.env.NODE_ENV !== 'development'
+              ? process.env.domain
+              : 'localhost',
+        });
+        res
+          .send({
+            status: 'success',
+            message: 'Tokens',
+            data: {
+              access_token,
+            },
+          })
+          .status(HttpStatus.ACCEPTED);
+      }
+      res
+        .send({
+          status: 'error',
+          message: "Refresh token isn't provided within the cookies",
+          data: {},
         })
         .status(HttpStatus.ACCEPTED);
     } catch (err) {
