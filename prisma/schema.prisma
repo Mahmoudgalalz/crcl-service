@@ -19,6 +19,7 @@ model SuperUser {
 }
 model User {
   id          String      @id
+  name        String
   email       String      
   number      String      
   password    String
@@ -29,6 +30,7 @@ model User {
   type        UserType
   wallet      Wallet?
   tickets     TicketPurchase[]
+  requests    EventRequest[]
   status      UserStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -53,6 +55,7 @@ model Event {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
+  requests   EventRequest[]
   @@index([id, status])
 }
 
@@ -63,28 +66,38 @@ model Ticket {
   price       Float
   capacity    Int
   eventId     String
-  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@index([eventId])
   TicketPurchase TicketPurchase[]
+}
+
+model EventRequest {
+  id          String        @id
+  userId      String
+  eventId     String
+  meta        Json          // this have the ticket info
+  status      RequestStatus @default(BOOKED)
+  event       Event         @relation(fields: [eventId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+
+  @@index([eventId])
 }
 
 model TicketPurchase {
   id          String          @id
-  ticketId    String
-  ticket      Ticket       @relation(fields: [ticketId], references: [id])
   userId      String
-  user        User?        @relation(fields: [userId], references: [id])
-  externalEmail     String?   // For storing email of non-user
-  externalPhone     String?   // Phone number for non-user
-  externalFacebook  String?   // Facebook for non-user
-  externalInstagram String?   // Instagram for non-user
-  purchaseDate DateTime @default(now())
+  ticketId    String
+  createdAt   DateTime @default(now())
+  updateAt    DateTime @updatedAt
+  payment     PaymentStatus?
   status      TicketStatus
-
-  @@index([ticketId, userId])
+  ticket          Ticket          @relation(fields: [ticketId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  @@index([userId, ticketId])
 }
 
 model Wallet {
@@ -121,11 +134,21 @@ enum UserStatus {
 }
 
 enum TicketStatus {
+  UPCOMMING
+  ATTENDED
+  PAST_DUE
+}
+
+enum RequestStatus {
   BOOKED
   APPROVED
   DECLINED
-  ATTENDED
-  PAST_DUE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  UN_PAID
 }
 
 enum EventStatus {

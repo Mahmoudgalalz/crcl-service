@@ -21,6 +21,9 @@ export class CreateUserViaAdminDto {
   number: string;
 
   @IsString()
+  name: string;
+
+  @IsString()
   @MinLength(8, {
     message: 'password must not be less than 8 characters',
   })
