@@ -20,9 +20,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-doc', app, document);
 
-  Logger.log(process.env.origins.split(','));
+  const origins = process.env.origins.replace(' ', '').split(',');
+  Logger.log(origins);
   const corsOption = {
-    origin: process.env.origins.split(','),
+    origin: origins,
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -39,9 +40,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  if (process.env.NODE_ENV === 'development') {
-    void generateDependencyGraph(app);
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  //   void generateDependencyGraph(app);
+  // }
 
   await app.listen(2002, () => Logger.log(`CRCL backend is up on: 2002.`));
 }
