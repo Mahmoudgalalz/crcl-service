@@ -12,9 +12,11 @@ import { EventsManagementModule } from './services/event-management/events.modul
 import { UploadModule } from './shared/upload/upload.module';
 import Redis from 'ioredis';
 import { ClientModule } from './client/consumer/client.module';
+import { ConfigModule } from '@nestjs/config';
 @Global()
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     AuthModule,
     NewspaperModule,
     UsersManagmentModule,
