@@ -20,7 +20,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-doc', app, document);
 
-  const origins = process.env.origins.replace(' ', '').split(',');
+  const origins = process.env.origins
+    ? process.env.origins.replace(' ', '').split(',')
+    : [];
   Logger.log(origins);
   const corsOption = {
     origin: origins,
