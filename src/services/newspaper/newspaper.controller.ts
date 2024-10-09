@@ -15,7 +15,7 @@ import { ErrorResponse } from 'src/common/error.response';
 import { NewsStatus } from '@prisma/client';
 import { Role } from 'src/shared/interface/roles';
 import { Roles } from 'src/shared/decorators/roles.decorator';
-import { PaginationQueryDto } from 'src/common/pagination-query-dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination-query-dto';
 
 @Controller('newspaper')
 @Roles(Role.Admin)

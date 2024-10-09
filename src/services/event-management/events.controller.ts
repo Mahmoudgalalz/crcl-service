@@ -7,7 +7,7 @@ import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
-import { PaginationQueryDto } from 'src/common/pagination-query-dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination-query-dto';
 
 @ApiTags('events')
 @Controller('events')
@@ -26,13 +26,10 @@ export class EventsManagementController {
   }
 
   @Get()
-  async getAllEventsWithTickets(@Query()query: PaginationQueryDto) {
+  async getAllEventsWithTickets(@Query() query: PaginationQueryDto) {
     try {
       const { page, limit } = query;
-      const events = await this.eventsService.listAllEvents(
-        page,
-        limit,
-      );
+      const events = await this.eventsService.listAllEvents(page, limit);
       return new SuccessResponse('all events', events);
     } catch (error) {
       return new ErrorResponse();

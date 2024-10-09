@@ -1,7 +1,7 @@
 import { IntersectionType } from '@nestjs/swagger';
 import { UserStatus, UserType } from '@prisma/client';
 import { IsOptional } from 'class-validator';
-import { PaginationQueryDto } from 'src/common/pagination-query-dto';
+import { PaginationQueryDto } from 'src/common/pagination/pagination-query-dto';
 
 export class getUsersDtoBase {
   @IsOptional()
