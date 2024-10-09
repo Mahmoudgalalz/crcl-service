@@ -33,28 +33,36 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async superUserLogin(@Body() loginDto: LoginAdminDto, @Res() res: Response) {
     try {
-      const { access_token, refresh_token } =
-        await this.authService.validateSuperUser(
-          loginDto.email,
-          loginDto.password,
-        );
-      res.cookie('refreshToken', refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV !== 'development',
-        domain:
-          process.env.NODE_ENV !== 'development'
-            ? process.env.domain
-            : 'localhost',
-      });
+      const payload = await this.authService.validateSuperUser(
+        loginDto.email,
+        loginDto.password,
+      );
+      if (payload.access_token) {
+        res.cookie('refreshToken', payload.refresh_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV !== 'development',
+          domain:
+            process.env.NODE_ENV !== 'development'
+              ? process.env.domain
+              : 'localhost',
+        });
+        res
+          .send({
+            status: 'success',
+            message: 'Tokens',
+            data: {
+              access_token: payload.access_token,
+            },
+          })
+          .status(HttpStatus.ACCEPTED);
+      }
       res
         .send({
-          status: 'success',
-          message: 'Tokens',
-          data: {
-            access_token,
-          },
+          status: 'error',
+          message: "Couldn't find the user",
+          data: {},
         })
-        .status(HttpStatus.ACCEPTED);
+        .status(HttpStatus.NOT_FOUND);
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
