@@ -4,10 +4,15 @@ import { Event, Ticket } from '@prisma/client';
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import { newId } from 'src/common/uniqueId.utils';
 import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
+import { PaginationProvider } from 'src/common/pagination/pagination.provider';
+import { Paginated } from 'src/common/pagination/paginated.interface';
 
 @Injectable()
 export class EventsManagementService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationProvider: PaginationProvider,
+  ) {}
 
   async createEvent(data: CreateEventDto): Promise<Event> {
     const id = newId('event', 16);
@@ -26,18 +31,14 @@ export class EventsManagementService {
     });
   }
 
-  async listAllEvents(
-    page: number,
-    limit: number,
-  ): Promise<{ events: Event[]; total: number }> {
-    const [events, total] = await this.prisma.$transaction([
-      this.prisma.event.findMany({
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.event.count(),
-    ]);
-    return { events, total };
+  async listAllEvents(page: number, limit: number): Promise<Paginated<Event>> {
+    const result = await this.paginationProvider.paginateQuery<Event>(
+      page,
+      limit,
+      'event',
+      {},
+    );
+    return result;
   }
 
   async getEventWithTickets(id: string): Promise<{ event: Event }> {

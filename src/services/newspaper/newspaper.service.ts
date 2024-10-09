@@ -3,10 +3,15 @@ import { PrismaService } from 'src/prisma.service';
 import { Newspaper } from '@prisma/client';
 import { CreateNewspaperDto, UpdateNewspaperDto } from './dto/newspaper.dto';
 import { customUUID } from 'src/common/uniqueId.utils';
+import { PaginationProvider } from 'src/common/pagination/pagination.provider';
+import { Paginated } from 'src/common/pagination/paginated.interface';
 
 @Injectable()
 export class NewspaperService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationProvider: PaginationProvider,
+  ) {}
 
   async createNewspaper(data: CreateNewspaperDto): Promise<Newspaper> {
     const id = customUUID(20);
@@ -45,14 +50,13 @@ export class NewspaperService {
   async listNewspapers(
     page: number,
     limit: number,
-  ): Promise<{ newspapers: Newspaper[]; total: number }> {
-    const [newspapers, total] = await this.prisma.$transaction([
-      this.prisma.newspaper.findMany({
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.newspaper.count(),
-    ]);
-    return { newspapers, total };
+  ): Promise<Paginated<Newspaper>> {
+    const result = await this.paginationProvider.paginateQuery<Newspaper>(
+      page,
+      limit,
+      'newspaper',
+      {},
+    );
+    return result;
   }
 }

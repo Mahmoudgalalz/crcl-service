@@ -37,6 +37,9 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
   if (process.env.NODE_ENV === 'development') {
