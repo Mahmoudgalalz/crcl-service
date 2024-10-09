@@ -15,6 +15,7 @@ import { ErrorResponse } from 'src/common/error.response';
 import { NewsStatus } from '@prisma/client';
 import { Role } from 'src/shared/interface/roles';
 import { Roles } from 'src/shared/decorators/roles.decorator';
+import { PaginationQueryDto } from 'src/common/pagination-query-dto';
 
 @Controller('newspaper')
 @Roles(Role.Admin)
@@ -32,18 +33,12 @@ export class NewspaperController {
   }
 
   @Get()
-  async getAllNewspapers(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
+  async getAllNewspapers(@Query() query: PaginationQueryDto) {
     try {
-      const { pageNumber, limitNumber } = {
-        pageNumber: parseInt(page),
-        limitNumber: parseInt(limit),
-      };
+      const { page, limit } = query;
       const newspapers = await this.newspaperService.listNewspapers(
-        pageNumber,
-        limitNumber,
+        page,
+        limit,
       );
       return new SuccessResponse('All Newspapers', newspapers);
     } catch (error) {

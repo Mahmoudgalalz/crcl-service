@@ -7,6 +7,7 @@ import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
+import { PaginationQueryDto } from 'src/common/pagination-query-dto';
 
 @ApiTags('events')
 @Controller('events')
@@ -25,18 +26,12 @@ export class EventsManagementController {
   }
 
   @Get()
-  async getAllEventsWithTickets(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
+  async getAllEventsWithTickets(@Query()query: PaginationQueryDto) {
     try {
-      const { pageNumber, limitNumber } = {
-        pageNumber: parseInt(page),
-        limitNumber: parseInt(limit),
-      };
+      const { page, limit } = query;
       const events = await this.eventsService.listAllEvents(
-        pageNumber,
-        limitNumber,
+        page,
+        limit,
       );
       return new SuccessResponse('all events', events);
     } catch (error) {

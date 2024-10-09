@@ -9,7 +9,6 @@ import {
   Delete,
 } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
-import { UserStatus, UserType } from '@prisma/client';
 import { ApiTags } from '@nestjs/swagger';
 import { SwaggerRoute } from 'src/shared/decorators/swagger.decorator';
 import {
@@ -23,6 +22,7 @@ import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
 import { UpadteUserViaAdminDto } from './dto/update-user.dto';
+import { getUsersDto } from './dto/get-user-dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -43,16 +43,15 @@ export class UsersManagmentController {
 
   @Get()
   @SwaggerRoute(UsersSwaggerConfig.listAllUsers)
-  async listAllUsers(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('status') status?: UserStatus,
-    @Query('gender') gender?: 'Male' | 'Female',
-    @Query('types') types?: UserType[] | UserType,
-  ) {
-    const filters = { types, status, gender };
+  async listAllUsers(@Query() query: getUsersDto) {
+    const { types, status, gender } = query;
+    const { page, limit } = query;
     try {
-      const users = await this.usersService.listAllUsers(page, limit, filters);
+      const users = await this.usersService.listAllUsers(page, limit, {
+        types,
+        status,
+        gender,
+      });
       return new SuccessResponse('List of all users', users);
     } catch (error) {
       return new ErrorResponse();
