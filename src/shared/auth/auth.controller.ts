@@ -142,11 +142,12 @@ export class AuthController {
   }
 
   @Get('info')
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Booth, Role.Reader, Role.User)
   getSuperUserProfile(@CurrentUser() user: any) {
     return user;
   }
 
+  //! need to validate if the user exist or not
   @Public()
   @Post('user/send-otp')
   async sendOtp(@Body() { number }: { number: string }) {

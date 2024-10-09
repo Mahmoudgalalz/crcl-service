@@ -6,21 +6,21 @@ import { AuthModule } from './shared/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './shared/auth/auth.guard';
 import { RolesGuard } from './shared/auth/roles.guard';
-import { AdminModule } from './services/admin/admin.module';
 import { NewspaperModule } from 'src/services/newspaper/newspaper.module';
 import { UsersManagmentModule } from './services/users-management/user-management.module';
 import { EventsManagementModule } from './services/event-management/events.module';
 import { UploadModule } from './shared/upload/upload.module';
 import Redis from 'ioredis';
+import { ClientModule } from './client/consumer/client.module';
 @Global()
 @Module({
   imports: [
     AuthModule,
     NewspaperModule,
-    AdminModule,
     UsersManagmentModule,
     EventsManagementModule,
     UploadModule,
+    ClientModule,
   ],
   controllers: [AppController],
   providers: [
