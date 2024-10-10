@@ -11,6 +11,7 @@ export class JWTService {
     role: 'user' | 'admin';
   }) {
     return await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_SECRET,
       expiresIn: '7d',
     });
   }
@@ -21,6 +22,7 @@ export class JWTService {
     role: 'user' | 'admin';
   }) {
     return this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_SECRET,
       expiresIn: '1d',
     });
   }
