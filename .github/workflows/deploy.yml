@@ -1,0 +1,24 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+      name: Build
+      runs-on: ubuntu-latest
+      steps:
+      - name: Deploying to Server
+        uses: appleboy/ssh-action@v1.0.0
+        if: github.ref == 'refs/heads/main'
+        with:
+          host: ${{ secrets.SERVER }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            cd /root/apps/crcl-service
+            git pull origin main
+            pnpm install
+            pnpm build
+            pm2 restart ecosystem.config.js
