@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './constants';
 
 @Injectable()
 export class JWTService {
@@ -12,7 +11,6 @@ export class JWTService {
     role: 'user' | 'admin';
   }) {
     return await this.jwtService.signAsync(payload, {
-      secret: jwtConstants.secret,
       expiresIn: '7d',
     });
   }
@@ -23,7 +21,6 @@ export class JWTService {
     role: 'user' | 'admin';
   }) {
     return this.jwtService.signAsync(payload, {
-      secret: jwtConstants.secret,
       expiresIn: '1d',
     });
   }

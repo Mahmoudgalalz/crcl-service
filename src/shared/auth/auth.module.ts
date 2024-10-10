@@ -13,6 +13,7 @@ import { BcryptService } from './shared/bcrypt.service';
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
+      secretOrPrivateKey: jwtConstants.secret,
       signOptions: { expiresIn: '1d' },
     }),
   ],
