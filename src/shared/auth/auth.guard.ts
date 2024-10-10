@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { jwtConstants } from './shared/constants';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/roles.decorator';
 import { PrismaService } from 'src/prisma.service';
@@ -45,7 +44,7 @@ export class AuthGuard implements CanActivate {
         payload = await this.useRefreshToken(request);
       } else {
         payload = await this.jwtService.verifyAsync(token, {
-          secret: jwtConstants.secret,
+          secret: process.env.JWT_SECRET,
         });
       }
 
@@ -82,7 +81,7 @@ export class AuthGuard implements CanActivate {
   private async useRefreshToken(request: Request) {
     const oldRefreshToken = request.cookies['refreshToken'];
     const payload = await this.jwtService.verifyAsync(oldRefreshToken, {
-      secret: jwtConstants.secret,
+      secret: process.env.JWT_SECRET,
     });
     return payload;
   }

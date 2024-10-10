@@ -46,23 +46,19 @@ export class AuthController {
               ? process.env.domain
               : 'localhost',
         });
-        res
-          .send({
-            status: 'success',
-            message: 'Tokens',
-            data: {
-              access_token: payload.access_token,
-            },
-          })
-          .status(HttpStatus.ACCEPTED);
+        res.status(HttpStatus.ACCEPTED).send({
+          status: 'success',
+          message: 'Tokens',
+          data: {
+            access_token: payload.access_token,
+          },
+        });
       }
-      res
-        .send({
-          status: 'error',
-          message: "Couldn't find the user",
-          data: {},
-        })
-        .status(HttpStatus.NOT_FOUND);
+      res.status(HttpStatus.NOT_FOUND).send({
+        status: 'error',
+        message: "Couldn't find the user",
+        data: {},
+      });
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
