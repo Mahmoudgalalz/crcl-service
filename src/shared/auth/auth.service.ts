@@ -87,6 +87,17 @@ export class AuthService {
     throw new Error("Error, couldn't verify the user with OTP");
   }
 
+  async userExist(number: string): Promise<any> {
+    const user = await this.prisma.user.findFirst({
+      where: { number },
+    });
+
+    if (user) {
+      return true;
+    }
+    return false;
+  }
+
   async register(registerDto: RegisterDto) {
     const existingUser = await this.prisma.user.findFirst({
       where: {

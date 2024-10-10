@@ -8,6 +8,7 @@ import {
   HttpStatus,
   HttpCode,
   Req,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from 'src/common/success.response';
@@ -16,7 +17,7 @@ import { Public, Roles } from '../decorators/roles.decorator';
 import { CurrentUser } from '../decorators/user.decorator';
 import { Role } from '../interface/roles';
 import { OTPService } from './shared/otp.service';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { NumberDto, VerifyOtpDto } from './dto/verify-otp.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { Request, Response } from 'express';
@@ -159,11 +160,15 @@ export class AuthController {
   //! need to validate if the user exist or not
   @Public()
   @Post('user/send-otp')
-  async sendOtp(@Body() { number }: { number: string }) {
+  async sendOtp(@Body() { number }: NumberDto) {
     try {
-      const otp = await this.otpService.generateOtp(number);
-      await this.otpService.sendOtpToUser(number, otp);
-      return new SuccessResponse('OTP sent successfully');
+      const exist = await this.authService.userExist(number);
+      if (exist) {
+        const otp = await this.otpService.generateOtp(number);
+        await this.otpService.sendOtpToUser(number, otp);
+        return new SuccessResponse('OTP sent successfully');
+      }
+      return new NotFoundException('User Not Exist');
     } catch (err) {
       return new ErrorResponse();
     }
@@ -171,10 +176,7 @@ export class AuthController {
 
   @Public()
   @Post('user/verify-otp')
-  async verifyOtp(
-    @Body() { number, otp }: { number: string; otp: string },
-    @Res() res: Response,
-  ) {
+  async verifyOtp(@Body() { number, otp }: VerifyOtpDto, @Res() res: Response) {
     try {
       const { access_token, refresh_token } =
         await this.authService.validateUserByNumber(number, otp);
