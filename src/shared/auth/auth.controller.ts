@@ -53,12 +53,14 @@ export class AuthController {
             access_token: payload.access_token,
           },
         });
+        return;
       }
       res.status(HttpStatus.NOT_FOUND).send({
         status: 'error',
         message: "Couldn't find the user",
         data: {},
       });
+      return;
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
@@ -92,6 +94,7 @@ export class AuthController {
             },
           })
           .status(HttpStatus.ACCEPTED);
+        return;
       }
       res
         .send({
@@ -100,6 +103,7 @@ export class AuthController {
           data: {},
         })
         .status(HttpStatus.ACCEPTED);
+      return;
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
@@ -137,6 +141,7 @@ export class AuthController {
           },
         })
         .status(HttpStatus.ACCEPTED);
+      return;
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
@@ -190,6 +195,7 @@ export class AuthController {
           },
         })
         .status(HttpStatus.ACCEPTED);
+      return;
     } catch (err) {
       throw new UnauthorizedException(err?.message, {
         cause: err,
@@ -236,6 +242,7 @@ export class AuthController {
           },
         })
         .status(HttpStatus.ACCEPTED);
+      return;
     } catch (err) {
       throw new UnauthorizedException(err?.message || 'Verification failed');
     }
