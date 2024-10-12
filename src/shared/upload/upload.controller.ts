@@ -61,7 +61,7 @@ export class UploadController {
   //   }
   // }
 
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Booth, Role.User)
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async uploadImages(
