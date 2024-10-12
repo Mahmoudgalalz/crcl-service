@@ -63,7 +63,7 @@ export class UsersManagmentController {
   @SwaggerRoute(UsersSwaggerConfig.changeUserStatus)
   async changeUserStatus(
     @Param('id') userId: string,
-    @Body('status') data: UpadteUserViaAdminDto,
+    @Body() data: UpadteUserViaAdminDto,
   ) {
     try {
       const user = await this.usersService.changeUserStatus(
