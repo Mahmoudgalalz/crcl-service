@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { newId } from 'src/common/uniqueId.utils';
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,7 @@ async function main() {
       status: 'ACTIVE',
       wallet: {
         create: {
+          id: newId('wallet', 14),
           balance: 100,
         },
       },

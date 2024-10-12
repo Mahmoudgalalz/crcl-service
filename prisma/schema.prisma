@@ -101,7 +101,7 @@ model TicketPurchase {
 }
 
 model Wallet {
-  id          Int       @id @default(autoincrement())
+  id          String       @id
   userId      String    @unique
   user        User      @relation(fields: [userId], references: [id])
   balance     Int       @default(0)
