@@ -13,6 +13,7 @@ import('nanoid')
 
 const prefixes = {
   auth: 'auth',
+  wallet: 'wal',
   ticket: 'tic',
   event: 'ev',
   ref: 'ref',

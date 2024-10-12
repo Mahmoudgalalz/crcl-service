@@ -13,6 +13,7 @@ import { UploadModule } from './shared/upload/upload.module';
 import Redis from 'ioredis';
 import { ClientModule } from './client/consumer/client.module';
 import { ConfigModule } from '@nestjs/config';
+import { UserModule } from './client/user.module';
 @Global()
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ConfigModule } from '@nestjs/config';
     EventsManagementModule,
     UploadModule,
     ClientModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [
