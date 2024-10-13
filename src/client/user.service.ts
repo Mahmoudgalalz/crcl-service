@@ -28,10 +28,11 @@ export class UserService {
       },
       select: {
         wallet: true,
+        type: true,
       },
     });
-
-    if (user?.wallet?.id) {
+    if (user) throw new Error();
+    if (user.wallet?.id && user.type === 'USER') {
       return await this.prisma.wallet.update({
         where: { id: user.wallet.id },
         data: {
