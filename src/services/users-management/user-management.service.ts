@@ -77,7 +77,7 @@ export class UsersManagmentService {
 
   async topUpOrDownWallet(
     userId: string,
-    data: { up?: number; down?: number },
+    data: { top?: number; down?: number },
   ) {
     try {
       const wallet = await this.prisma.user.findFirst({
@@ -95,11 +95,11 @@ export class UsersManagmentService {
         });
         return down;
       }
-      if (data.up > 0) {
+      if (data.top > 0) {
         const up = await this.prisma.wallet.update({
           where: { userId },
           data: {
-            balance: wallet.wallet.balance + data.up,
+            balance: wallet.wallet.balance + data.top,
           },
         });
         return up;
