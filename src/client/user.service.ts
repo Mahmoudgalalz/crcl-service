@@ -24,7 +24,7 @@ export class UserService {
   // transaction details, Booth name, amount, dates and so on
 
   async UserWallet(id: string) {
-    const user = await this.prisma.$transaction([
+    const [user, token] = await this.prisma.$transaction([
       this.prisma.user.findFirstOrThrow({
         where: {
           id,
@@ -41,11 +41,11 @@ export class UserService {
           type: true,
         },
       }),
-      this.prisma.wallet
-    ])
+      this.prisma.walletToken.findFirst({ where: { id: 1 } }),
+    ]);
     if (!user) throw 'User not found';
     if (user.wallet?.id) {
-      return await this.prisma.wallet.create({
+      const wallet = await this.prisma.wallet.create({
         data: {
           id: newId('wallet', 14),
           balance: 0,
@@ -54,6 +54,7 @@ export class UserService {
           },
         },
       });
+      return { wallet, token };
     }
   }
 
@@ -150,6 +151,12 @@ export class UserService {
     }
   }
 
+  private async tokenPrice() {
+    const token = await this.prisma.walletToken.findFirst({
+      where: { id: 1 },
+    });
+    return token.tokenPrice;
+  }
   async BoothInitTransaction(id: string, amount: number) {
     try {
       const boothWallet = await this.prisma.user.findFirst({
@@ -160,11 +167,25 @@ export class UserService {
           },
         },
         select: {
+          id: true,
+          name: true,
           wallet: true,
         },
       });
       if (boothWallet.wallet.id) {
-        const transaction = await this.prisma.walletTransactions.create()
+        const tokenPrice = await this.tokenPrice();
+        const transaction = await this.prisma.walletTransactions.create({
+          data: {
+            id: newId('transaction', 14),
+            from: 'USER',
+            to: `${boothWallet.name}@${boothWallet.id}`,
+            status: 'PENDING',
+            amount,
+            tokenPrice,
+            walletId: boothWallet.wallet.id,
+          },
+        });
+        return transaction;
       }
     } catch (error) {
       Logger.error('Payment Error in wallet', error);
@@ -172,9 +193,13 @@ export class UserService {
     }
   }
 
-  async userCompeleteTransaction(id: string, transactionId: string){
+  async userCompeleteTransaction(
+    id: string,
+    transactionId: string,
+    amount: number,
+  ) {
     try {
-      const boothWallet = await this.prisma.user.findFirst({
+      const userWallet = await this.prisma.user.findFirst({
         where: {
           id,
           type: {
@@ -182,11 +207,56 @@ export class UserService {
           },
         },
         select: {
+          id: true,
+          name: true,
           wallet: true,
         },
       });
-      if (boothWallet.wallet.id) {
-        const transaction = await this.prisma.walletTransactions.create()
+      if (userWallet.wallet.balance >= amount) {
+        const updateBoothTransaction =
+          await this.prisma.walletTransactions.update({
+            where: {
+              id: transactionId,
+            },
+            include: {
+              Wallet: true,
+            },
+            data: {
+              from: `${userWallet.name}@${userWallet.id}`,
+              status: 'PAID',
+            },
+          });
+        const [userTransaction, userWalletUpdate] =
+          await this.prisma.$transaction([
+            this.prisma.walletTransactions.create({
+              data: {
+                id: newId('transaction', 14),
+                from: 'self',
+                to: updateBoothTransaction.from,
+                status: 'PAID',
+                tokenPrice: updateBoothTransaction.tokenPrice,
+                amount,
+                walletId: userWallet.wallet.id,
+              },
+            }),
+            this.prisma.wallet.update({
+              where: {
+                id: userWallet.wallet.id,
+              },
+              data: {
+                balance: userWallet.wallet.balance - amount,
+              },
+            }),
+            this.prisma.wallet.update({
+              where: {
+                id: updateBoothTransaction.walletId,
+              },
+              data: {
+                balance: updateBoothTransaction.Wallet.balance + amount,
+              },
+            }),
+          ]);
+        return { userTransaction, userWalletUpdate };
       }
     } catch (error) {
       Logger.error('Payment Error in wallet', error);

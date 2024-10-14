@@ -18,6 +18,7 @@ const prefixes = {
   event: 'ev',
   ref: 'ref',
   test: 'test',
+  transaction: 'tr',
 } as const;
 
 export function newId(
