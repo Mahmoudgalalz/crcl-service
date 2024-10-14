@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { newId } from 'src/common/uniqueId.utils';
@@ -24,18 +24,25 @@ export class UserService {
   // transaction details, Booth name, amount, dates and so on
 
   async UserWallet(id: string) {
-    const user = await this.prisma.user.findFirstOrThrow({
-      where: {
-        id,
-        type: {
-          in: ['BOOTH', 'USER'],
+    const user = await this.prisma.$transaction([
+      this.prisma.user.findFirstOrThrow({
+        where: {
+          id,
+          type: {
+            in: ['BOOTH', 'USER'],
+          },
         },
-      },
-      select: {
-        wallet: true,
-        type: true,
-      },
-    });
+        select: {
+          wallet: {
+            include: {
+              transactions: true,
+            },
+          },
+          type: true,
+        },
+      }),
+      this.prisma.wallet
+    ])
     if (!user) throw 'User not found';
     if (user.wallet?.id) {
       return await this.prisma.wallet.create({
@@ -97,22 +104,93 @@ export class UserService {
     return tickets;
   }
 
-  // async BoothInitTransaction(id: string, amount: number) {
-  //   try {
-  //     const boothWallet = await this.prisma.user.findFirst({
-  //       where: {
-  //         id,
-  //         type: {
-  //           in: ['BOOTH'],
-  //         },
-  //       },
-  //       select: {
-  //         wallet: true,
-  //       },
-  //     });
-  //     if (boothWallet.wallet.id) {
-  //       const transaction = await this.prisma
-  //     }
-  //   } catch (error) {}
-  // }
+  //? This need to synced with payment
+  async userPayTickets(id: string, ticketIds: string[]) {
+    try {
+      const ticketsToBuy = await this.prisma.ticketPurchase.findMany({
+        where: {
+          userId: id,
+          ticketId: {
+            in: ticketIds,
+          },
+        },
+        include: {
+          ticket: {
+            select: {
+              price: true,
+            },
+          },
+        },
+      });
+      //! caclulate payment and procced here, then switch
+      const totalResults = ticketsToBuy.reduce(
+        (acc, ticket) => {
+          acc.totalPrice += ticket.ticket.price;
+          acc.ticketIds.push(ticket.ticketId);
+          return acc;
+        },
+        { totalPrice: 0, ticketIds: [] as string[] },
+      );
+      //! assume its paid
+      const flipStatus = await this.prisma.ticketPurchase.updateMany({
+        where: {
+          userId: id,
+          ticketId: {
+            in: totalResults.ticketIds,
+          },
+        },
+        data: {
+          payment: 'PAID',
+        },
+      });
+      return flipStatus;
+    } catch (err) {
+      Logger.error('Payment Error in tickets', err);
+      throw err;
+    }
+  }
+
+  async BoothInitTransaction(id: string, amount: number) {
+    try {
+      const boothWallet = await this.prisma.user.findFirst({
+        where: {
+          id,
+          type: {
+            in: ['BOOTH'],
+          },
+        },
+        select: {
+          wallet: true,
+        },
+      });
+      if (boothWallet.wallet.id) {
+        const transaction = await this.prisma.walletTransactions.create()
+      }
+    } catch (error) {
+      Logger.error('Payment Error in wallet', error);
+      throw error;
+    }
+  }
+
+  async userCompeleteTransaction(id: string, transactionId: string){
+    try {
+      const boothWallet = await this.prisma.user.findFirst({
+        where: {
+          id,
+          type: {
+            in: ['USER'],
+          },
+        },
+        select: {
+          wallet: true,
+        },
+      });
+      if (boothWallet.wallet.id) {
+        const transaction = await this.prisma.walletTransactions.create()
+      }
+    } catch (error) {
+      Logger.error('Payment Error in wallet', error);
+      throw error;
+    }
+  }
 }

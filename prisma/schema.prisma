@@ -111,10 +111,13 @@ model Wallet {
 }
 
 model walletTransactions {
-  id        Int       @id @default(autoincrement())
+  id        Int       @id
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   from      String
   to        String
+  status    PaymentStatus
+  amount    Int
   walletId  String
   Wallet    Wallet @relation(fields: [walletId], references: [id])
 }
@@ -122,6 +125,8 @@ model walletTransactions {
 model WalletToken {
   id         Int      @id @default(autoincrement())
   tokenPrice Float    @default(0.05)
+  createdAt  DateTime @default(now())
+  updateAt   DateTime 
 }
 
 model Newspaper {
