@@ -75,6 +75,41 @@ export class UsersManagmentService {
     }
   }
 
+  async topUpOrDownWallet(
+    userId: string,
+    data: { up?: number; down?: number },
+  ) {
+    try {
+      const wallet = await this.prisma.user.findFirst({
+        where: { id: userId },
+        select: {
+          wallet: true,
+        },
+      });
+      if (data.down > 0 && wallet.wallet.balance >= data.down) {
+        const down = await this.prisma.wallet.update({
+          where: { userId },
+          data: {
+            balance: wallet.wallet.balance - data.down,
+          },
+        });
+        return down;
+      }
+      if (data.up > 0) {
+        const up = await this.prisma.wallet.update({
+          where: { userId },
+          data: {
+            balance: wallet.wallet.balance + data.up,
+          },
+        });
+        return up;
+      }
+    } catch (error) {
+      Logger.error('Error in Wallet:', error);
+      throw new Error('Unable to top up wallet for user at the moment.');
+    }
+  }
+
   async changeUserStatus(userId: string, status: UserStatus): Promise<User> {
     const user = await this.prisma.user.update({
       where: { id: userId },

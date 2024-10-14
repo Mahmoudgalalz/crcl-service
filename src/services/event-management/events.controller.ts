@@ -1,6 +1,19 @@
-import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { EventsManagementService } from './events.service';
-import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
+import {
+  ChangeRequestDto,
+  CreateEventDto,
+  UpdateEventDto,
+} from './dto/event.dto';
 import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/shared/decorators/roles.decorator';
@@ -75,6 +88,35 @@ export class EventsManagementController {
     try {
       const ticket = await this.eventsService.createTicket(eventId, data);
       return new SuccessResponse('Ticket data', ticket);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
+  @Get(':eventId/requests')
+  async getRequest(@Param('eventId') id: string) {
+    try {
+      const requests = await this.eventsService.getEventRequests(id);
+      return new SuccessResponse('All Event Requests', requests);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
+  @Patch('requests/:id')
+  async changeRequestStatus(
+    @Param('id') id: string,
+    @Body() data: ChangeRequestDto,
+  ) {
+    try {
+      const changeStatus = await this.eventsService.changeRequest(
+        id,
+        data.userId,
+        data.status,
+      );
+      if (changeStatus)
+        return new SuccessResponse('Request Status Changed', changeStatus);
+      return new ErrorResponse();
     } catch (error) {
       return new ErrorResponse();
     }

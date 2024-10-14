@@ -84,6 +84,8 @@ model EventRequest {
   event       Event         @relation(fields: [eventId], references: [id])
   user        User          @relation(fields: [userId], references: [id])
 
+  createdAt   DateTime @default(now())
+  updateAt    DateTime @updatedAt
   @@index([eventId])
 }
 
@@ -105,6 +107,16 @@ model Wallet {
   userId      String    @unique
   user        User      @relation(fields: [userId], references: [id])
   balance     Int       @default(0)
+  transactions  walletTransactions[]
+}
+
+model walletTransactions {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  from      String
+  to        String
+  walletId  String
+  Wallet    Wallet @relation(fields: [walletId], references: [id])
 }
 
 model WalletToken {

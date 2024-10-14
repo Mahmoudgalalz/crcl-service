@@ -7,6 +7,7 @@ import {
   Body,
   Query,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
 import { UserStatus, UserType } from '@prisma/client';
@@ -22,7 +23,7 @@ import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
-import { UpadteUserViaAdminDto } from './dto/update-user.dto';
+import { TopUpDto, UpadteUserViaAdminDto } from './dto/update-user.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -92,6 +93,17 @@ export class UsersManagmentController {
     try {
       const user = await this.usersService.findUser(id);
       return new SuccessResponse('User data', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
+  @Patch('wallet/:id')
+  @SwaggerRoute(UsersSwaggerConfig.findUser)
+  async topUpWallet(@Param('id') id: string, @Body() data: TopUpDto) {
+    try {
+      const topUp = await this.usersService.topUpOrDownWallet(id, data);
+      return new SuccessResponse('Alter user wallet balance', topUp);
     } catch (error) {
       return new ErrorResponse();
     }
