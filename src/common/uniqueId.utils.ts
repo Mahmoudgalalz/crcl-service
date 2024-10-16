@@ -13,10 +13,12 @@ import('nanoid')
 
 const prefixes = {
   auth: 'auth',
+  wallet: 'wal',
   ticket: 'tic',
   event: 'ev',
   ref: 'ref',
   test: 'test',
+  transaction: 'tr',
 } as const;
 
 export function newId(

@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { createRootUser } from './common/init.data';
+import { createRootUser, creatRootTokenPrice } from './common/init.data';
 import { ErrorResponse } from './common/error.response';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { INestApplication } from '@nestjs/common';
@@ -33,6 +33,7 @@ async function bootstrap() {
   };
 
   await createRootUser('root', process.env.ADMIN, process.env.PASSWORD);
+  await creatRootTokenPrice(Number(process.env.TOKEN_PRICE));
 
   app.use(cookieParser());
   app.enableCors(corsOption);

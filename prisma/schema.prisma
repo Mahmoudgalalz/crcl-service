@@ -84,6 +84,8 @@ model EventRequest {
   event       Event         @relation(fields: [eventId], references: [id])
   user        User          @relation(fields: [userId], references: [id])
 
+  createdAt   DateTime @default(now())
+  updateAt    DateTime @updatedAt
   @@index([eventId])
 }
 
@@ -101,15 +103,31 @@ model TicketPurchase {
 }
 
 model Wallet {
-  id          Int       @id @default(autoincrement())
+  id          String       @id
   userId      String    @unique
   user        User      @relation(fields: [userId], references: [id])
   balance     Int       @default(0)
+  transactions  walletTransactions[]
+}
+
+model walletTransactions {
+  id        String       @id
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  from      String
+  to        String
+  status    PaymentStatus
+  amount    Int
+  tokenPrice Float // referance for the token price in the time of the transaction
+  walletId  String
+  Wallet    Wallet @relation(fields: [walletId], references: [id])
 }
 
 model WalletToken {
   id         Int      @id @default(autoincrement())
   tokenPrice Float    @default(0.05)
+  createdAt  DateTime @default(now())
+  updateAt   DateTime @updatedAt
 }
 
 model Newspaper {

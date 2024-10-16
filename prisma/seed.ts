@@ -8,7 +8,7 @@ async function main() {
     where: { id: 'superuser1' },
     update: {},
     create: {
-      id: 'superuser1',
+      id: 'superuser12',
       name: 'Admin',
       email: 'admin@site.com',
       password: 'securepassword123',
@@ -18,15 +18,16 @@ async function main() {
   // Seed for Users
   const user1 = await prisma.user.create({
     data: {
-      id: 'user1',
+      id: 'user1s2',
       name: 'John Doe',
-      email: 'john.doe@example.com',
-      number: '1234567890',
+      email: 'johnas.doe@example.com',
+      number: '1134567890',
       password: 'password123',
       type: 'USER',
       status: 'ACTIVE',
       wallet: {
         create: {
+          id: 'asdsad',
           balance: 100,
         },
       },
@@ -35,10 +36,10 @@ async function main() {
 
   const user2 = await prisma.user.create({
     data: {
-      id: 'user2',
+      id: 'user2s2',
       name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      number: '0987654321',
+      email: 'janea.smith@example.com',
+      number: '09876a4321',
       password: 'password456',
       type: 'USER',
       status: 'ACTIVE',
@@ -48,7 +49,7 @@ async function main() {
   // Seed for Events
   const event1 = await prisma.event.create({
     data: {
-      id: 'event1',
+      id: 'event12',
       title: 'Music Concert',
       description: 'An amazing music concert featuring various artists.',
       location: 'Central Park, NY',
@@ -64,18 +65,22 @@ async function main() {
   // Seed for Tickets
   const ticket1 = await prisma.ticket.create({
     data: {
-      id: 'ticket1',
+      id: 'ticket12',
       title: 'General Admission',
       description: 'Basic entry ticket',
       price: 50.0,
       capacity: 200,
-      eventId: event1.id,
+      event: {
+        connect: {
+          id: event1.id,
+        },
+      },
     },
   });
 
   const ticket2 = await prisma.ticket.create({
     data: {
-      id: 'ticket2',
+      id: 'ticket22',
       title: 'VIP Ticket',
       description: 'VIP access with backstage pass',
       price: 150.0,
@@ -87,7 +92,7 @@ async function main() {
   // Seed for Ticket Purchases
   await prisma.ticketPurchase.create({
     data: {
-      id: 'purchase1',
+      id: 'purchase12',
       userId: user1.id,
       ticketId: ticket1.id,
       payment: 'PAID',
@@ -98,7 +103,7 @@ async function main() {
   // Seed for Event Requests
   await prisma.eventRequest.create({
     data: {
-      id: 'request1',
+      id: 'request12',
       userId: user2.id,
       eventId: event1.id,
       meta: {

@@ -5,8 +5,9 @@ import {
   IsDate,
   IsEnum,
   IsInt,
+  IsNotEmpty,
 } from 'class-validator';
-import { EventStatus } from '@prisma/client';
+import { EventStatus, RequestStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateEventDto {
@@ -83,4 +84,14 @@ export class UpdateEventDto {
   @IsArray()
   @IsString({ each: true })
   artists?: string[];
+}
+
+export class ChangeRequestDto {
+  @IsNotEmpty()
+  @IsEnum(RequestStatus)
+  status: RequestStatus;
+
+  @IsNotEmpty()
+  @IsString()
+  userId: string;
 }

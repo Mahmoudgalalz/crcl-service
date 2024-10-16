@@ -4,17 +4,24 @@ import { customUUID } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
+import { BcryptService } from 'src/shared/auth/shared/bcrypt.service';
 
 @Injectable()
 export class UsersManagmentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bycrptService: BcryptService,
+  ) {}
 
   async createUser(data: CreateUserViaAdminDto) {
     const id = customUUID(20);
+    const { password, ...rest } = data;
+    const hashedPassword = await this.bycrptService.hashPassword(password);
     return await this.prisma.user.create({
       data: {
         id,
-        ...data,
+        password: hashedPassword,
+        ...rest,
       },
     });
   }
@@ -72,6 +79,41 @@ export class UsersManagmentService {
     } catch (error) {
       Logger.error('Error fetching users:', error);
       throw new Error('Unable to fetch users at the moment.');
+    }
+  }
+
+  async topUpOrDownWallet(
+    userId: string,
+    data: { top?: number; down?: number },
+  ) {
+    try {
+      const wallet = await this.prisma.user.findFirst({
+        where: { id: userId },
+        select: {
+          wallet: true,
+        },
+      });
+      if (data.down > 0 && wallet.wallet.balance >= data.down) {
+        const down = await this.prisma.wallet.update({
+          where: { userId },
+          data: {
+            balance: wallet.wallet.balance - data.down,
+          },
+        });
+        return down;
+      }
+      if (data.top > 0) {
+        const up = await this.prisma.wallet.update({
+          where: { userId },
+          data: {
+            balance: wallet.wallet.balance + data.top,
+          },
+        });
+        return up;
+      }
+    } catch (error) {
+      Logger.error('Error in Wallet:', error);
+      throw new Error('Unable to top up wallet for user at the moment.');
     }
   }
 
