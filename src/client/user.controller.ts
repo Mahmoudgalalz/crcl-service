@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
 import { Role } from 'src/shared/interface/roles';
@@ -8,6 +17,7 @@ import { UserUpdateDto } from './dto/user-update.dto';
 import { CurrentUser } from 'src/shared/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { MetaRequestDto } from './dto/events.dto';
+import { TicketsTransactionDTO } from './dto/wallet.dto';
 
 @Controller('client/user')
 export class UserController {
@@ -23,13 +33,12 @@ export class UserController {
       return new ErrorResponse();
     }
   }
-
-  @Get('wallet')
-  @Roles(Role.Reader, Role.User)
-  async walletInfo(@CurrentUser() user: User) {
+  @Get()
+  @Roles(Role.Booth, Role.Reader, Role.User)
+  async getUserInfo(@CurrentUser() user: User) {
     try {
-      const updatedUser = await this.userService.UserWallet(user.id);
-      return new SuccessResponse('Updated User', updatedUser);
+      const userData = await this.userService.get(user.id);
+      return new SuccessResponse('All User information', userData);
     } catch (error) {
       return new ErrorResponse();
     }
@@ -50,17 +59,60 @@ export class UserController {
       );
       return new SuccessResponse('User Booked Event', bookEvent);
     } catch (error) {
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Get('wallet')
+  @Roles(Role.User, Role.Booth)
+  async walletInfo(@CurrentUser() user: User) {
+    try {
+      const userWallet = await this.userService.UserWallet(user.id);
+      return new SuccessResponse('User Wallet info', userWallet);
+    } catch (error) {
       return new ErrorResponse();
     }
   }
-  @Get('requests')
+
+  @Post('wallet/pay/:id')
   @Roles(Role.User)
-  async getBookTickets(@CurrentUser() user: User) {
+  async payWithWallet(@CurrentUser() user: User, @Param('id') id: string) {
     try {
-      const tickets = await this.userService.userTicketsToBuy(user.id);
-      return new SuccessResponse('User Tickets', tickets);
+      const transaction = await this.userService.userCompeleteTransaction(
+        user.id,
+        id,
+      );
+      return new SuccessResponse('Transaction attempet', transaction);
     } catch (error) {
-      return new ErrorResponse();
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Get('tickets')
+  @Roles(Role.User)
+  async userTicketsToPay(@CurrentUser() user: User) {
+    try {
+      const transaction = await this.userService.userTickets(user.id);
+      return new SuccessResponse('Tickets to pay', transaction);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @Post('tickets/pay')
+  @Roles(Role.User)
+  async userPayTickets(
+    @CurrentUser() user: User,
+    @Body() payload: TicketsTransactionDTO,
+  ) {
+    try {
+      const transaction = await this.userService.userPayTickets(
+        user.id,
+        payload.ticketsIds,
+      );
+      return new SuccessResponse('Tickets Paid', transaction);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
     }
   }
 }

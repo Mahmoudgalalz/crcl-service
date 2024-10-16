@@ -4,17 +4,24 @@ import { customUUID } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
+import { BcryptService } from 'src/shared/auth/shared/bcrypt.service';
 
 @Injectable()
 export class UsersManagmentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bycrptService: BcryptService,
+  ) {}
 
   async createUser(data: CreateUserViaAdminDto) {
     const id = customUUID(20);
+    const { password, ...rest } = data;
+    const hashedPassword = await this.bycrptService.hashPassword(password);
     return await this.prisma.user.create({
       data: {
         id,
-        ...data,
+        password: hashedPassword,
+        ...rest,
       },
     });
   }

@@ -40,3 +40,27 @@ export async function createRootUser(
     Logger.error('Error in connecting to the database', err);
   }
 }
+
+export async function creatRootTokenPrice(value: number) {
+  const prisma = new PrismaClient();
+  try {
+    const token = await prisma.walletToken.findFirst({
+      where: {
+        id: 1,
+      },
+    });
+    if (token) {
+      Logger.log('Root Token Exists');
+      return;
+    }
+    const create = await prisma.walletToken.create({
+      data: {
+        tokenPrice: value,
+      },
+    });
+    Logger.log('Created Root Token Price', create);
+    return;
+  } catch (err) {
+    Logger.error('Error in connecting to the database', err);
+  }
+}

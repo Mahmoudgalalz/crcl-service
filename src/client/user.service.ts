@@ -19,6 +19,30 @@ export class UserService {
     return user;
   }
 
+  async get(id: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id },
+      select: {
+        name: true,
+        email: true,
+        number: true,
+        facebook: true,
+        instagram: true,
+        gender: true,
+        picture: true,
+        type: true,
+        createdAt: true,
+        updatedAt: true,
+        wallet: true,
+        tickets: true,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException('User not Found');
+    }
+    return user;
+  }
+
   // payment through wallet
   // Booth create a transaction
   // transaction details, Booth name, amount, dates and so on
@@ -44,7 +68,7 @@ export class UserService {
       this.prisma.walletToken.findFirst({ where: { id: 1 } }),
     ]);
     if (!user) throw 'User not found';
-    if (user.wallet?.id) {
+    if (!user.wallet?.id) {
       const wallet = await this.prisma.wallet.create({
         data: {
           id: newId('wallet', 14),
@@ -54,8 +78,9 @@ export class UserService {
           },
         },
       });
-      return { wallet, token };
+      return wallet;
     }
+    return { ...user, token };
   }
 
   async userInitTicketRequest(
@@ -81,7 +106,32 @@ export class UserService {
     return request;
   }
 
+  //? not used
   async userTicketsToBuy(id: string) {
+    const tickets = await this.prisma.ticketPurchase.findMany({
+      where: { userId: id, status: 'UPCOMMING', payment: 'PENDING' },
+      include: {
+        ticket: {
+          select: {
+            title: true,
+            price: true,
+            description: true,
+            event: {
+              select: {
+                title: true,
+                time: true,
+                date: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return tickets;
+  }
+
+  async userTickets(id: string) {
     const tickets = await this.prisma.ticketPurchase.findMany({
       where: { userId: id },
       include: {
@@ -111,7 +161,7 @@ export class UserService {
       const ticketsToBuy = await this.prisma.ticketPurchase.findMany({
         where: {
           userId: id,
-          ticketId: {
+          id: {
             in: ticketIds,
           },
         },
@@ -193,11 +243,7 @@ export class UserService {
     }
   }
 
-  async userCompeleteTransaction(
-    id: string,
-    transactionId: string,
-    amount: number,
-  ) {
+  async userCompeleteTransaction(id: string, transactionId: string) {
     try {
       const userWallet = await this.prisma.user.findFirst({
         where: {
@@ -212,20 +258,16 @@ export class UserService {
           wallet: true,
         },
       });
-      if (userWallet.wallet.balance >= amount) {
-        const updateBoothTransaction =
-          await this.prisma.walletTransactions.update({
-            where: {
-              id: transactionId,
-            },
-            include: {
-              Wallet: true,
-            },
-            data: {
-              from: `${userWallet.name}@${userWallet.id}`,
-              status: 'PAID',
-            },
-          });
+      const updateBoothTransaction =
+        await this.prisma.walletTransactions.findUnique({
+          where: {
+            id: transactionId,
+          },
+          include: {
+            Wallet: true,
+          },
+        });
+      if (userWallet.wallet.balance >= updateBoothTransaction.amount) {
         const [userTransaction, userWalletUpdate] =
           await this.prisma.$transaction([
             this.prisma.walletTransactions.create({
@@ -235,7 +277,7 @@ export class UserService {
                 to: updateBoothTransaction.from,
                 status: 'PAID',
                 tokenPrice: updateBoothTransaction.tokenPrice,
-                amount,
+                amount: updateBoothTransaction.amount,
                 walletId: userWallet.wallet.id,
               },
             }),
@@ -244,7 +286,8 @@ export class UserService {
                 id: userWallet.wallet.id,
               },
               data: {
-                balance: userWallet.wallet.balance - amount,
+                balance:
+                  userWallet.wallet.balance - updateBoothTransaction.amount,
               },
             }),
             this.prisma.wallet.update({
@@ -252,15 +295,109 @@ export class UserService {
                 id: updateBoothTransaction.walletId,
               },
               data: {
-                balance: updateBoothTransaction.Wallet.balance + amount,
+                balance:
+                  updateBoothTransaction.Wallet.balance +
+                  updateBoothTransaction.amount,
+              },
+            }),
+            this.prisma.walletTransactions.update({
+              where: {
+                id: transactionId,
+              },
+              data: {
+                from: `${userWallet.name}@${userWallet.id}`,
+                status: 'PAID',
               },
             }),
           ]);
         return { userTransaction, userWalletUpdate };
+      } else {
+        throw new Error('Wallet has no sufficient balance');
       }
     } catch (error) {
       Logger.error('Payment Error in wallet', error);
       throw error;
     }
+  }
+
+  async readerTicketScan(id: string) {
+    const tickets = await this.prisma.ticketPurchase.findUnique({
+      where: { id: id },
+      include: {
+        user: {
+          select: {
+            name: true,
+            number: true,
+            picture: true,
+            email: true,
+          },
+        },
+        ticket: {
+          select: {
+            title: true,
+            price: true,
+            description: true,
+            event: {
+              select: {
+                title: true,
+                time: true,
+                date: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!tickets) {
+      throw new Error('Ticket not found');
+    }
+    return tickets;
+  }
+
+  async readerTicketOps(id: string) {
+    const ticket = await this.prisma.ticketPurchase.findUnique({
+      where: { id: id },
+    });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+
+    if (['ATTENDED', 'PAST_DUE'].includes(ticket.status)) {
+      throw new Error('Ticket is already used or past due');
+    }
+
+    return await this.prisma.ticketPurchase.update({
+      where: { id: id },
+      data: {
+        status: 'ATTENDED',
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            number: true,
+            picture: true,
+            email: true,
+          },
+        },
+        ticket: {
+          select: {
+            title: true,
+            price: true,
+            description: true,
+            event: {
+              select: {
+                title: true,
+                time: true,
+                date: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 }
