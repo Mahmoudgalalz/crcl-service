@@ -110,7 +110,19 @@ export class UserService {
   async userTicketsToBuy(id: string) {
     const tickets = await this.prisma.ticketPurchase.findMany({
       where: { userId: id, status: 'UPCOMMING', payment: 'PENDING' },
-      include: {
+      select: {
+        meta: true,
+        status: true,
+        payment: true,
+        createdAt: true,
+        updateAt: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+            number: true,
+          },
+        },
         ticket: {
           select: {
             title: true,
@@ -134,7 +146,19 @@ export class UserService {
   async userTickets(id: string) {
     const tickets = await this.prisma.ticketPurchase.findMany({
       where: { userId: id },
-      include: {
+      select: {
+        meta: true,
+        payment: true,
+        status: true,
+        createdAt: true,
+        updateAt: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+            number: true,
+          },
+        },
         ticket: {
           select: {
             title: true,
@@ -323,7 +347,13 @@ export class UserService {
   async readerTicketScan(id: string) {
     const tickets = await this.prisma.ticketPurchase.findUnique({
       where: { id: id },
-      include: {
+      select: {
+        meta: true,
+        ticketId: true,
+        payment: true,
+        status: true,
+        createdAt: true,
+        updateAt: true,
         user: {
           select: {
             name: true,
@@ -342,7 +372,6 @@ export class UserService {
                 title: true,
                 time: true,
                 date: true,
-                image: true,
               },
             },
           },
@@ -373,7 +402,13 @@ export class UserService {
       data: {
         status: 'ATTENDED',
       },
-      include: {
+      select: {
+        meta: true,
+        ticketId: true,
+        payment: true,
+        status: true,
+        createdAt: true,
+        updateAt: true,
         user: {
           select: {
             name: true,
@@ -392,7 +427,6 @@ export class UserService {
                 title: true,
                 time: true,
                 date: true,
-                image: true,
               },
             },
           },
