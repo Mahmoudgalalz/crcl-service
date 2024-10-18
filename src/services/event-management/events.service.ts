@@ -132,6 +132,7 @@ export class EventsManagementService {
           userId,
           payment: 'PENDING',
           status: 'UPCOMMING',
+          meta: elem.meta,
           ticketId: elem.ticketId,
         };
       });

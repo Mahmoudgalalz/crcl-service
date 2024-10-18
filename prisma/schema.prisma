@@ -97,6 +97,7 @@ model TicketPurchase {
   updateAt    DateTime @updatedAt
   payment     PaymentStatus?
   status      TicketStatus
+  meta        Json?
   ticket          Ticket          @relation(fields: [ticketId], references: [id])
   user          User          @relation(fields: [userId], references: [id])
   @@index([userId, ticketId])
