@@ -157,7 +157,6 @@ export class AuthController {
     return user;
   }
 
-  //! need to validate if the user exist or not
   @Public()
   @Post('user/send-otp')
   async sendOtp(@Body() { number }: NumberDto) {

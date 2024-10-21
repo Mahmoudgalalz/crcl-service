@@ -72,27 +72,33 @@ export class AuthService {
     throw new Error("Error, couldn't find the user");
   }
 
-  async validateUserByNumber(number: string, otp: string): Promise<any> {
+  async validateUserByNumber(number: string, otp: string) {
     const user = await this.prisma.user.findFirst({
       where: { number },
     });
-
-    if (user && (await this.otpService.verifyOtp(number, otp))) {
-      return await this.jwtService.createTokens({
-        email: user.email,
-        userId: user.id,
-        role: 'user',
-      });
+    if (user) {
+      const isValidOtp =
+        process.env.NODE_ENV === 'development'
+          ? true
+          : await this.otpService.verifyOtp(number, otp);
+      if (isValidOtp) {
+        return await this.jwtService.createTokens({
+          email: user.email,
+          userId: user.id,
+          role: 'user',
+        });
+      }
+      throw new Error("Error, couldn't verify the user with OTP");
     }
-    throw new Error("Error, couldn't verify the user with OTP");
+    throw new Error("Error, user isn't available");
   }
 
-  async userExist(number: string): Promise<any> {
+  async userExist(number: string) {
     const user = await this.prisma.user.findFirst({
       where: { number },
     });
 
-    if (user) {
+    if (user.id) {
       return true;
     }
     return false;
