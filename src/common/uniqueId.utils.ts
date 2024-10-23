@@ -35,3 +35,5 @@ export function customUUID(length: number = 16): string {
 export function generateUniqueOtp(): string {
   return generateOtp();
 }
+
+export const TOKEN_PRICE = parseFloat(process.env.TOKEN_PRICE);

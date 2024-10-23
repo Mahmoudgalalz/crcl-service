@@ -3,7 +3,7 @@ import { PrismaService } from 'src/prisma.service';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { BoothController } from './booth.controller';
-import { ReaderController } from './reader.controllet';
+import { ReaderController } from './reader.controller';
 
 @Module({
   controllers: [UserController, BoothController, ReaderController],
