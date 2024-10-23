@@ -14,6 +14,7 @@ import Redis from 'ioredis';
 import { ClientModule } from './client/consumer/client.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './client/user.module';
+import { AnalyticsModule } from './services/analytics/analytics.module';
 @Global()
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { UserModule } from './client/user.module';
     EventsManagementModule,
     UploadModule,
     ClientModule,
+    AnalyticsModule,
     UserModule,
   ],
   controllers: [AppController],

@@ -92,8 +92,9 @@ export class UserController {
   @Roles(Role.User)
   async userTicketsToPay(@CurrentUser() user: User) {
     try {
-      const transaction = await this.userService.userTickets(user.id);
-      return new SuccessResponse('Tickets to pay', transaction);
+      const tickets = await this.userService.userTickets(user.id);
+      const requests = await this.userService.userRequests(user.id);
+      return new SuccessResponse('Tickets and requests', { tickets, requests });
     } catch (error) {
       throw new HttpException(error, HttpStatus.NOT_FOUND);
     }

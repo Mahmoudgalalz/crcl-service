@@ -5,7 +5,7 @@ import { JWTService } from './shared/jwt.service';
 import { BcryptService } from './shared/bcrypt.service';
 import Redis from 'ioredis';
 import { RegisterDto } from './dto/register.dto';
-import { customUUID } from 'src/common/uniqueId.utils';
+import { customUUID, newId } from 'src/common/uniqueId.utils';
 
 @Injectable()
 export class AuthService {
@@ -130,7 +130,7 @@ export class AuthService {
     await this.otpService.sendOtpToUser(registerDto.number, otp);
   }
 
-  async verify(number: string, otp: string) {
+  async verify(number: string, otp: string, refered: boolean = false) {
     const isValidOtp =
       process.env.NODE_ENV === 'development'
         ? true
@@ -161,6 +161,12 @@ export class AuthService {
         gender: cachedData.gender,
         type: 'USER',
         status: 'ACTIVE',
+        wallet: {
+          create: {
+            id: newId('wallet', 16),
+            balance: refered ? 100 : 0,
+          },
+        },
       },
     });
 

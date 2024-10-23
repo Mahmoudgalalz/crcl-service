@@ -143,6 +143,71 @@ export class UserService {
     return tickets;
   }
 
+  async userRequests(id: string) {
+    // Step 1: Fetch all event requests for the given userId
+    const requests = await this.prisma.eventRequest.findMany({
+      where: { userId: id },
+    });
+
+    // Step 2: Extract ticketIds from all requests
+    const ticketIds = requests.flatMap((request) => {
+      const metaJSONvalue = request.meta as Array<object & any>; // Assuming meta is an array of objects
+      return Array.isArray(metaJSONvalue)
+        ? metaJSONvalue.map((item) => item.ticketId)
+        : [];
+    });
+
+    // Step 3: Fetch all ticket details in one query using the extracted ticketIds
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        id: { in: ticketIds },
+      },
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        event: {
+          select: {
+            title: true,
+            time: true,
+          },
+        },
+      },
+    });
+
+    // Step 4: Map ticket details and append the count and total price to each request
+    const result = requests.map((request) => {
+      const metaJSONvalue = request.meta as Array<object & any>; // Assuming meta is an array of objects
+      const metaCount = metaJSONvalue.length;
+
+      // Map ticket details back to the current request's metaJSONvalue
+      const ticketDetails = metaJSONvalue.map((item) => {
+        return tickets.find((ticket) => ticket.id === item.ticketId);
+      });
+
+      // Filter out valid tickets (non-null) and count them
+      const validTickets = ticketDetails.filter(
+        (ticket) => ticket !== undefined,
+      );
+
+      // Calculate the total price for the request
+      const totalPrice = validTickets.reduce(
+        (sum, ticket) => sum + (ticket?.price || 0),
+        0,
+      );
+
+      return {
+        ...request,
+        metaCount, // Count of items in metaJSONvalue
+        ticketDetails: validTickets, // Details of related tickets
+        totalPrice, // Total price of the tickets for this request
+        ticketCount: validTickets.length, // Count of valid tickets
+      };
+    });
+
+    return result;
+  }
+
   async userTickets(id: string) {
     const tickets = await this.prisma.ticketPurchase.findMany({
       where: { userId: id },
