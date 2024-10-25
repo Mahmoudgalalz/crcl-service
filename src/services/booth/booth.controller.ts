@@ -5,7 +5,9 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { BoothManagementService } from './booth.services';
 import { walletBoothTransactionDTO } from 'src/client/dto/wallet.dto';
@@ -42,10 +44,17 @@ export class BoothController {
   }
 
   @Get(':id')
-  async GetBoothTransactions(@Param('id') boothId: string) {
+  async GetBoothTransactions(
+    @Param('id') boothId: string,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+  ) {
     try {
-      const boothTransactions =
-        await this.boothServices.readTransactions(boothId);
+      const boothTransactions = await this.boothServices.readTransactions(
+        boothId,
+        page,
+        limit,
+      );
       const tokenPrice = await this.boothServices.tokenPrice;
       return new SuccessResponse('Transactions for booth', {
         boothTransactions,

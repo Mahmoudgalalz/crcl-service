@@ -5,15 +5,51 @@ import { PrismaService } from 'src/prisma.service';
 export class BoothManagementService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async readTransactions(boothId: string) {
-    return this.prisma.wallet.findMany({
+  async readTransactions(
+    boothId: string,
+    page: number = 1,
+    pageSize: number = 10,
+  ) {
+    const wallet = await this.prisma.wallet.findFirst({
       where: {
         userId: boothId,
       },
-      include: {
-        transactions: true,
-      },
     });
+
+    if (!wallet) {
+      return {
+        transactions: [],
+        totalPages: 0,
+        currentPage: page,
+        totalTransactions: 0,
+        transactionsCount: 0,
+      };
+    }
+
+    const skip = (page - 1) * pageSize;
+
+    const [transactions, totalCount] = await Promise.all([
+      this.prisma.walletTransactions.findMany({
+        where: {
+          walletId: wallet.id,
+        },
+        skip,
+        take: pageSize,
+      }),
+      this.prisma.walletTransactions.count({
+        where: {
+          walletId: wallet.id,
+        },
+      }),
+    ]);
+
+    return {
+      transactions,
+      totalPages: Math.ceil(totalCount / pageSize),
+      currentPage: page,
+      totalTransactions: totalCount,
+      transactionsCount: transactions.length,
+    };
   }
 
   async boothAccounts() {
