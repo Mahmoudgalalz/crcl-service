@@ -21,7 +21,8 @@ export class BoothController {
   async getAllBooth() {
     try {
       const booths = await this.boothServices.boothAccounts();
-      return new SuccessResponse('All Booths', booths);
+      const tokenPrice = await this.boothServices.tokenPrice();
+      return new SuccessResponse('All Booths', { booths, tokenPrice });
     } catch (error) {
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -55,7 +56,7 @@ export class BoothController {
         page,
         limit,
       );
-      const tokenPrice = await this.boothServices.tokenPrice;
+      const tokenPrice = await this.boothServices.tokenPrice();
       return new SuccessResponse('Transactions for booth', {
         boothTransactions,
         tokenPrice,
