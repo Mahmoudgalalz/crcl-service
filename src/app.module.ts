@@ -15,6 +15,7 @@ import { ClientModule } from './client/consumer/client.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './client/user.module';
 import { AnalyticsModule } from './services/analytics/analytics.module';
+import { BoothModule } from './services/booth/booth.module';
 @Global()
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AnalyticsModule } from './services/analytics/analytics.module';
     UploadModule,
     ClientModule,
     AnalyticsModule,
+    BoothModule,
     UserModule,
   ],
   controllers: [AppController],

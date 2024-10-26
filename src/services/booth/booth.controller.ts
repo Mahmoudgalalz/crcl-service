@@ -12,8 +12,11 @@ import {
 import { BoothManagementService } from './booth.services';
 import { walletBoothTransactionDTO } from 'src/client/dto/wallet.dto';
 import { SuccessResponse } from 'src/common/success.response';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/interface/roles';
 
 @Controller('booth')
+@Roles(Role.Admin)
 export class BoothController {
   constructor(private readonly boothServices: BoothManagementService) {}
 

@@ -7,4 +7,4 @@ import { BoothController } from './booth.controller';
   providers: [BoothManagementService, PrismaService],
   controllers: [BoothController],
 })
-export class AnalyticsModule {}
+export class BoothModule {}

@@ -1,7 +1,10 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/interface/roles';
 
 @Controller('analytics')
+@Roles(Role.Admin)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
