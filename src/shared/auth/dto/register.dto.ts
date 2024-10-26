@@ -38,4 +38,8 @@ export class RegisterDto {
   @IsString()
   @IsOptional()
   gender?: string;
+
+  @IsString()
+  @IsOptional()
+  referral?: string;
 }
