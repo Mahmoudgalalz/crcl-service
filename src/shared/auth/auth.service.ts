@@ -114,11 +114,11 @@ export class AuthService {
     if (existingUser) {
       throw new UnauthorizedException('Email or Number already in use');
     }
-
+    const refered = existingUser.id === registerDto.referal;
     const hashedPassword = await this.bycrptService.hashPassword(
       registerDto.password,
     );
-    const cachedData = { ...registerDto, password: hashedPassword };
+    const cachedData = { ...registerDto, password: hashedPassword, refered };
     await this.redisClient.set(
       `${registerDto.number}`,
       JSON.stringify(cachedData),
@@ -130,7 +130,7 @@ export class AuthService {
     await this.otpService.sendOtpToUser(registerDto.number, otp);
   }
 
-  async verify(number: string, otp: string, refered: boolean = false) {
+  async verify(number: string, otp: string) {
     const isValidOtp =
       process.env.NODE_ENV === 'development'
         ? true
@@ -164,7 +164,9 @@ export class AuthService {
         wallet: {
           create: {
             id: newId('wallet', 16),
-            balance: refered ? 100 : 0,
+            balance: cachedData.refered
+              ? parseInt(process.env.REFERAL_TOKENS) | 100
+              : 0,
           },
         },
       },
