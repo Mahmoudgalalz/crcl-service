@@ -41,5 +41,5 @@ export class RegisterDto {
 
   @IsString()
   @IsOptional()
-  referal?: string;
+  referral?: string;
 }
