@@ -104,6 +104,17 @@ export class AuthService {
     return false;
   }
 
+  async userExistById(id: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id },
+    });
+
+    if (user.id) {
+      return true;
+    }
+    return false;
+  }
+
   async register(registerDto: RegisterDto) {
     const existingUser = await this.prisma.user.findFirst({
       where: {
@@ -114,7 +125,9 @@ export class AuthService {
     if (existingUser) {
       throw new UnauthorizedException('Email or Number already in use');
     }
-    const refered = existingUser.id === registerDto.referral;
+    const refered = registerDto.referral
+      ? await this.userExistById(registerDto.referral)
+      : false;
     const hashedPassword = await this.bycrptService.hashPassword(
       registerDto.password,
     );
@@ -125,7 +138,6 @@ export class AuthService {
       'EX',
       300,
     );
-
     const otp = await this.otpService.generateOtp(registerDto.number);
     await this.otpService.sendOtpToUser(registerDto.number, otp);
   }
