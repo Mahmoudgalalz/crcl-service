@@ -9,6 +9,7 @@ import {
   HttpCode,
   Req,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from 'src/common/success.response';
@@ -211,6 +212,7 @@ export class AuthController {
       await this.authService.register(registerDto);
       return new SuccessResponse('OTP sent successfully');
     } catch (err) {
+      Logger.error(err);
       return new ErrorResponse();
     }
   }
