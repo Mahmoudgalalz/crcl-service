@@ -75,11 +75,83 @@ export class EventsManagementService {
     });
   }
 
-  async getEventRequests(eventId: string) {
+  async getEventRequests(
+    eventId: string,
+    page: number = 1,
+    pageSize: number = 10,
+  ) {
+    const skip = (page - 1) * pageSize;
+
     const requests = await this.prisma.eventRequest.findMany({
       where: { eventId },
+      include: {
+        user: true,
+      },
+      skip,
+      take: pageSize,
     });
-    return requests;
+
+    const totalRequests = await this.prisma.eventRequest.count({
+      where: { eventId },
+    });
+
+    return {
+      data: requests,
+      meta: {
+        total: totalRequests,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalRequests / pageSize),
+      },
+    };
+  }
+
+  async searchEventRequests(
+    eventId: string,
+    page: number = 1,
+    pageSize: number = 10,
+    searchQuery: string = '',
+  ) {
+    const skip = (page - 1) * pageSize;
+
+    const requests = await this.prisma.eventRequest.findMany({
+      where: {
+        eventId,
+        user: {
+          OR: [
+            { name: { contains: searchQuery, mode: 'insensitive' } },
+            { number: { contains: searchQuery, mode: 'insensitive' } },
+          ],
+        },
+      },
+      include: {
+        user: true,
+      },
+      skip,
+      take: pageSize,
+    });
+
+    const totalRequests = await this.prisma.eventRequest.count({
+      where: {
+        eventId,
+        user: {
+          OR: [
+            { name: { contains: searchQuery, mode: 'insensitive' } },
+            { number: { contains: searchQuery, mode: 'insensitive' } },
+          ],
+        },
+      },
+    });
+
+    return {
+      data: requests,
+      meta: {
+        total: totalRequests,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalRequests / pageSize),
+      },
+    };
   }
 
   async changeRequest(

@@ -7,6 +7,7 @@ import {
   Body,
   Query,
   Patch,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { EventsManagementService } from './events.service';
 import {
@@ -94,9 +95,26 @@ export class EventsManagementController {
   }
 
   @Get(':eventId/requests')
-  async getRequest(@Param('eventId') id: string) {
+  async getRequest(
+    @Param('eventId') id: string,
+    @Query('search') search?: string,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+  ) {
     try {
-      const requests = await this.eventsService.getEventRequests(id);
+      if (search) {
+        const requests = await this.eventsService.searchEventRequests(
+          id,
+          page,
+          limit,
+        );
+        return new SuccessResponse(`result of ${search} in Requests`, requests);
+      }
+      const requests = await this.eventsService.getEventRequests(
+        id,
+        page,
+        limit,
+      );
       return new SuccessResponse('All Event Requests', requests);
     } catch (error) {
       return new ErrorResponse();
