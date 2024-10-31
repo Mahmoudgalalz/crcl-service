@@ -75,6 +75,12 @@ export class EventsManagementService {
     });
   }
 
+  async deleteTicket(id: string): Promise<Ticket> {
+    return await this.prisma.ticket.delete({
+      where: { id },
+    });
+  }
+
   async getEventRequests(
     eventId: string,
     page: number = 1,

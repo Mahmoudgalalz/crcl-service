@@ -8,6 +8,7 @@ import {
   Query,
   Patch,
   ParseIntPipe,
+  Delete,
 } from '@nestjs/common';
 import { EventsManagementService } from './events.service';
 import {
@@ -147,6 +148,16 @@ export class EventsManagementController {
   ) {
     try {
       const ticket = await this.eventsService.updateTicket(ticketId, data);
+      return new SuccessResponse('Ticket Updated', ticket);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
+  @Delete('tickets/:id')
+  async deleteTicket(@Param('id') ticketId: string) {
+    try {
+      const ticket = await this.eventsService.deleteTicket(ticketId);
       return new SuccessResponse('Ticket Updated', ticket);
     } catch (error) {
       return new ErrorResponse();
