@@ -189,6 +189,16 @@ export class EventsManagementService {
       return false;
     }
   }
+
+  async checkIfTicketBooked(ticketId: string) {
+    const ticket = await this.prisma.ticketPurchase.findFirst({
+      where: {
+        ticketId,
+      },
+    });
+    return ticket ? true : false;
+  }
+
   private async changeRequestStatus(requestId: string, status: RequestStatus) {
     const requestState = await this.prisma.eventRequest.update({
       where: {

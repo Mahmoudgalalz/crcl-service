@@ -9,6 +9,8 @@ import {
   Patch,
   ParseIntPipe,
   Delete,
+  Res,
+  HttpStatus,
 } from '@nestjs/common';
 import { EventsManagementService } from './events.service';
 import {
@@ -22,6 +24,7 @@ import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
+import { Response } from 'express';
 
 @ApiTags('events')
 @Controller('events')
@@ -155,12 +158,19 @@ export class EventsManagementController {
   }
 
   @Delete('tickets/:id')
-  async deleteTicket(@Param('id') ticketId: string) {
+  async deleteTicket(@Param('id') ticketId: string, @Res() res: Response) {
     try {
+      const isBooked = await this.eventsService.checkIfTicketBooked(ticketId);
+      if (isBooked) {
+        return res.status(HttpStatus.NOT_ACCEPTABLE).send({
+          status: 'error',
+          message: 'Ticket already booked',
+        });
+      }
       const ticket = await this.eventsService.deleteTicket(ticketId);
-      return new SuccessResponse('Ticket Updated', ticket);
+      return new SuccessResponse('Ticket Deleted', ticket);
     } catch (error) {
-      return new ErrorResponse();
+      throw new ErrorResponse();
     }
   }
 }
