@@ -162,7 +162,9 @@ export class EventsManagementController {
     try {
       await this.eventsService.checkIfTicketBooked(ticketId);
       const ticket = await this.eventsService.deleteTicket(ticketId);
-      return new SuccessResponse('Ticket Deleted', ticket);
+      return res
+        .status(HttpStatus.OK)
+        .send(new SuccessResponse('Ticket Deleted', ticket));
     } catch (error) {
       return res.status(HttpStatus.NOT_ACCEPTABLE).json({
         message: error.message,

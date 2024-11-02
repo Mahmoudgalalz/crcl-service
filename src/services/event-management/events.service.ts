@@ -80,10 +80,15 @@ export class EventsManagementService {
     });
   }
 
-  async deleteTicket(id: string): Promise<Ticket> {
-    return await this.prisma.ticket.delete({
-      where: { id },
-    });
+  async deleteTicket(id: string) {
+    try {
+      return await this.prisma.ticket.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException('Ticket not found');
+    }
   }
 
   async getEventRequests(
@@ -196,12 +201,12 @@ export class EventsManagementService {
   }
 
   async checkIfTicketBooked(ticketId: string) {
-    const ticket = await this.prisma.ticketPurchase.findFirst({
+    const tickets = await this.prisma.ticketPurchase.count({
       where: {
         ticketId,
       },
     });
-    const isInEventReq = await this.prisma.eventRequest.findFirst({
+    const isInEventReq = await this.prisma.eventRequest.count({
       where: {
         meta: {
           equals: {
@@ -210,7 +215,7 @@ export class EventsManagementService {
         },
       },
     });
-    if (ticket || isInEventReq) {
+    if (tickets > 0 || isInEventReq > 0) {
       throw new NotAcceptableException('Ticket already booked');
     }
     return true;
