@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { Event, RequestStatus, Ticket } from '@prisma/client';
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
@@ -196,7 +201,19 @@ export class EventsManagementService {
         ticketId,
       },
     });
-    return ticket ? true : false;
+    const isInEventReq = await this.prisma.eventRequest.findFirst({
+      where: {
+        meta: {
+          equals: {
+            ticketId,
+          },
+        },
+      },
+    });
+    if (ticket || isInEventReq) {
+      throw new NotAcceptableException('Ticket already booked');
+    }
+    return true;
   }
 
   private async changeRequestStatus(requestId: string, status: RequestStatus) {

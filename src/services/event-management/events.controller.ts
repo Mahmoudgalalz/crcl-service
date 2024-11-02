@@ -160,17 +160,13 @@ export class EventsManagementController {
   @Delete('tickets/:id')
   async deleteTicket(@Param('id') ticketId: string, @Res() res: Response) {
     try {
-      const isBooked = await this.eventsService.checkIfTicketBooked(ticketId);
-      if (isBooked) {
-        return res.status(HttpStatus.NOT_ACCEPTABLE).send({
-          status: 'error',
-          message: 'Ticket already booked',
-        });
-      }
+      await this.eventsService.checkIfTicketBooked(ticketId);
       const ticket = await this.eventsService.deleteTicket(ticketId);
       return new SuccessResponse('Ticket Deleted', ticket);
     } catch (error) {
-      throw new ErrorResponse();
+      return res.status(HttpStatus.NOT_ACCEPTABLE).json({
+        message: error.message,
+      });
     }
   }
 }
