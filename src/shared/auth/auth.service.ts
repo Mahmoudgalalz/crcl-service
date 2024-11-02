@@ -25,14 +25,17 @@ export class AuthService {
         user.password,
       );
       if (user && isCorrect) {
-        return await this.jwtService.createTokens({
-          email: user.email,
-          userId: user.id,
-          role: 'admin',
-        });
+        return {
+          ...(await this.jwtService.createTokens({
+            email: user.email,
+            userId: user.id,
+            role: 'admin',
+          })),
+          type: user.type,
+        };
       }
-      throw "Error, couldn't find the user";
     }
+    throw "Error, couldn't find the user";
   }
 
   async validateSuperUserByRefresh(token: string) {

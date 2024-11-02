@@ -53,6 +53,7 @@ export class AuthController {
           message: 'Tokens',
           data: {
             access_token: payload.access_token,
+            type: payload.type,
           },
         });
         return;
