@@ -170,6 +170,7 @@ export class UserService {
           select: {
             title: true,
             time: true,
+            location: true,
           },
         },
       },
