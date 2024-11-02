@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { Event, RequestStatus, Ticket } from '@prisma/client';
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
@@ -73,6 +78,17 @@ export class EventsManagementService {
       where: { id },
       data,
     });
+  }
+
+  async deleteTicket(id: string) {
+    try {
+      return await this.prisma.ticket.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException('Ticket not found');
+    }
   }
 
   async getEventRequests(
@@ -183,6 +199,28 @@ export class EventsManagementService {
       return false;
     }
   }
+
+  async checkIfTicketBooked(ticketId: string) {
+    const tickets = await this.prisma.ticketPurchase.count({
+      where: {
+        ticketId,
+      },
+    });
+    const isInEventReq = await this.prisma.eventRequest.count({
+      where: {
+        meta: {
+          equals: {
+            ticketId,
+          },
+        },
+      },
+    });
+    if (tickets > 0 || isInEventReq > 0) {
+      throw new NotAcceptableException('Ticket already booked');
+    }
+    return true;
+  }
+
   private async changeRequestStatus(requestId: string, status: RequestStatus) {
     const requestState = await this.prisma.eventRequest.update({
       where: {

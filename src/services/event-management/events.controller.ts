@@ -8,6 +8,9 @@ import {
   Query,
   Patch,
   ParseIntPipe,
+  Delete,
+  Res,
+  HttpStatus,
 } from '@nestjs/common';
 import { EventsManagementService } from './events.service';
 import {
@@ -21,6 +24,7 @@ import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
+import { Response } from 'express';
 
 @ApiTags('events')
 @Controller('events')
@@ -150,6 +154,21 @@ export class EventsManagementController {
       return new SuccessResponse('Ticket Updated', ticket);
     } catch (error) {
       return new ErrorResponse();
+    }
+  }
+
+  @Delete('tickets/:id')
+  async deleteTicket(@Param('id') ticketId: string, @Res() res: Response) {
+    try {
+      await this.eventsService.checkIfTicketBooked(ticketId);
+      const ticket = await this.eventsService.deleteTicket(ticketId);
+      return res
+        .status(HttpStatus.OK)
+        .send(new SuccessResponse('Ticket Deleted', ticket));
+    } catch (error) {
+      return res.status(HttpStatus.NOT_ACCEPTABLE).json({
+        message: error.message,
+      });
     }
   }
 }
