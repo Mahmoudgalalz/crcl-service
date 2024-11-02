@@ -1,6 +1,8 @@
+import { SuperUserType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsString,
   MaxLength,
@@ -24,4 +26,8 @@ export class CreateSuperUserViaAdminDto {
     message: 'password must not be more than 32 characters',
   })
   password: string;
+
+  @IsEnum(SuperUserType)
+  @IsNotEmpty()
+  type: SuperUserType;
 }
