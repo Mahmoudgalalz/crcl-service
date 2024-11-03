@@ -166,6 +166,19 @@ export class UsersManagmentService {
     data: UpdateSuperUserViaAdminDto,
   ) {
     if (user.type === Role.Admin) {
+      if (data.password) {
+        const { password, ...restData } = data;
+        const hashedPassword = await this.bycrptService.hashPassword(password);
+        return await this.prisma.superUser.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            password: hashedPassword,
+            ...restData,
+          },
+        });
+      }
       return await this.prisma.superUser.update({
         where: {
           id: userId,

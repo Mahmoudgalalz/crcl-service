@@ -10,7 +10,7 @@ import {
 export class UpdateSuperUserViaAdminDto {
   @IsString()
   @IsOptional()
-  name: string;
+  name?: string;
 
   @IsString()
   @IsOptional()
