@@ -5,6 +5,8 @@ import { PrismaService } from 'src/prisma.service';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { BcryptService } from 'src/shared/auth/shared/bcrypt.service';
+import { UpdateSuperUserViaAdminDto } from './dto/update-admin.dto';
+import { Role } from 'src/shared/interface/roles';
 
 @Injectable()
 export class UsersManagmentService {
@@ -156,6 +158,22 @@ export class UsersManagmentService {
         ...data,
       },
     });
+  }
+
+  async updateSuperUser(
+    user: any,
+    userId: string,
+    data: UpdateSuperUserViaAdminDto,
+  ) {
+    if (user.type === Role.Admin) {
+      return await this.prisma.superUser.update({
+        where: {
+          id: userId,
+        },
+        data,
+      });
+    }
+    throw Error('Have no access to this');
   }
 
   async findAllSuperUsers() {
