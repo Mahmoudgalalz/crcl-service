@@ -34,6 +34,19 @@ export class UserService {
     return user;
   }
 
+  async addFavoriteEvent(userId: string, eventId: string) {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        favoriteEvents: {
+          push: eventId,
+        },
+      },
+    });
+  }
+
   async get(id: string) {
     const user = await this.prisma.user.findFirst({
       where: { id },

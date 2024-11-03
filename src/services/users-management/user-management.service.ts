@@ -36,7 +36,7 @@ export class UsersManagmentService {
       gender?: 'Male' | 'Female';
       types?: UserType[] | UserType;
     },
-  ): Promise<Omit<User, 'password'>[]> {
+  ) {
     try {
       const { types, ...filter } = filters || {};
       const skip = (page - 1) * limit || 0;

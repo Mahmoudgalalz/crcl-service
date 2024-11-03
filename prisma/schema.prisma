@@ -38,6 +38,7 @@ model User {
   wallet      Wallet?
   tickets     TicketPurchase[]
   requests    EventRequest[]
+  favoriteEvents String[]
   status      UserStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

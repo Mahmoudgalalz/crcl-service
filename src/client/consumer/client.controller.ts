@@ -4,6 +4,8 @@ import { ErrorResponse } from 'src/common/error.response';
 import { Role } from 'src/shared/interface/roles';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { ClientService } from './client.service';
+import { CurrentUser } from 'src/shared/decorators/user.decorator';
+import { User } from '@prisma/client/wasm';
 
 @Controller('client')
 @Roles(Role.User)
@@ -42,6 +44,7 @@ export class ClientController {
 
   @Get('events')
   async getAllEventsWithTickets(
+    @CurrentUser() user: User,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
   ) {
@@ -51,6 +54,7 @@ export class ClientController {
         limitNumber: parseInt(limit),
       };
       const events = await this.clientService.listAllEvents(
+        user.id,
         pageNumber,
         limitNumber,
       );

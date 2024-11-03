@@ -28,26 +28,50 @@ export class ClientService {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.newspaper.count(),
+      this.prisma.newspaper.count({
+        where: {
+          status: 'PUBLISHED',
+        },
+      }),
     ]);
     return { newspapers, total };
   }
 
-  async listAllEvents(
-    page: number,
-    limit: number,
-  ): Promise<{ events: Event[]; total: number }> {
-    const [events, total] = await this.prisma.$transaction([
+  async listAllEvents(userId: string, page: number, limit: number) {
+    const { favoriteEvents } = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+
+    const [UserFavoriteEvents, events, total] = await this.prisma.$transaction([
       this.prisma.event.findMany({
         where: {
           status: 'PUBLISHED',
+          id: {
+            in: favoriteEvents,
+          },
         },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.event.count(),
+      this.prisma.event.findMany({
+        where: {
+          status: 'PUBLISHED',
+          id: {
+            notIn: favoriteEvents,
+          },
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.event.count({
+        where: {
+          status: 'PUBLISHED',
+        },
+      }),
     ]);
-    return { events, total };
+    return { UserFavoriteEvents, events, total };
   }
 
   async getEventWithTickets(id: string): Promise<{ event: Event }> {
