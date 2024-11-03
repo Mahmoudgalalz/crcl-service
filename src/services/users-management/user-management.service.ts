@@ -5,6 +5,8 @@ import { PrismaService } from 'src/prisma.service';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { BcryptService } from 'src/shared/auth/shared/bcrypt.service';
+import { UpdateSuperUserViaAdminDto } from './dto/update-admin.dto';
+import { Role } from 'src/shared/interface/roles';
 
 @Injectable()
 export class UsersManagmentService {
@@ -34,7 +36,7 @@ export class UsersManagmentService {
       gender?: 'Male' | 'Female';
       types?: UserType[] | UserType;
     },
-  ): Promise<Omit<User, 'password'>[]> {
+  ) {
     try {
       const { types, ...filter } = filters || {};
       const skip = (page - 1) * limit || 0;
@@ -158,6 +160,35 @@ export class UsersManagmentService {
     });
   }
 
+  async updateSuperUser(
+    user: any,
+    userId: string,
+    data: UpdateSuperUserViaAdminDto,
+  ) {
+    if (user.type === Role.Admin) {
+      if (data.password) {
+        const { password, ...restData } = data;
+        const hashedPassword = await this.bycrptService.hashPassword(password);
+        return await this.prisma.superUser.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            password: hashedPassword,
+            ...restData,
+          },
+        });
+      }
+      return await this.prisma.superUser.update({
+        where: {
+          id: userId,
+        },
+        data,
+      });
+    }
+    throw Error('Have no access to this');
+  }
+
   async findAllSuperUsers() {
     return this.prisma.superUser.findMany({
       select: {
@@ -166,6 +197,7 @@ export class UsersManagmentService {
         id: true,
         createdAt: true,
         updatedAt: true,
+        type: true,
       },
     });
   }

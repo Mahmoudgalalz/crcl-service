@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsEnum, IsEmail } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsEmail,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { Gender } from '@prisma/client';
 
 export class UserUpdateDto {
@@ -17,6 +24,16 @@ export class UserUpdateDto {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @IsString()
+  @IsOptional()
+  @MinLength(8, {
+    message: 'password must not be less than 8 characters',
+  })
+  @MaxLength(32, {
+    message: 'password must not be more than 32 characters',
+  })
+  password?: string;
 
   @IsString()
   @IsOptional()

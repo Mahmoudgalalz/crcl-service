@@ -8,6 +8,7 @@ import {
   Query,
   Delete,
   Patch,
+  Req,
 } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
 import { UserStatus, UserType } from '@prisma/client';
@@ -24,6 +25,7 @@ import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
 import { TopUpDto, UpadteUserViaAdminDto } from './dto/update-user.dto';
+import { Request } from 'express';
 
 @ApiTags('users')
 @Controller('users')
@@ -115,6 +117,25 @@ export class UsersManagmentController {
     try {
       const user = await this.usersService.createSuperUser(data);
       return new SuccessResponse('Created SuperUser', user);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
+  @Put('super/:id')
+  async updateSuperUser(
+    @Req() req: Request,
+    @Param('id') userId: string,
+    @Body() data: CreateSuperUserViaAdminDto,
+  ) {
+    try {
+      const user = req.user;
+      const update = await this.usersService.updateSuperUser(
+        user,
+        userId,
+        data,
+      );
+      return new SuccessResponse('Update SuperUser', update);
     } catch (error) {
       return new ErrorResponse();
     }

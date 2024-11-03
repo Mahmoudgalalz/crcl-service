@@ -9,7 +9,6 @@ import {
   HttpCode,
   Req,
   NotFoundException,
-  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from 'src/common/success.response';
@@ -53,6 +52,7 @@ export class AuthController {
           message: 'Tokens',
           data: {
             access_token: payload.access_token,
+            type: payload.type,
           },
         });
         return;
@@ -72,6 +72,7 @@ export class AuthController {
   }
 
   @Post('admin/verify')
+  @Public()
   @HttpCode(HttpStatus.OK)
   async superUserVerify(@Req() req: Request, @Res() res: Response) {
     try {
@@ -212,8 +213,7 @@ export class AuthController {
       await this.authService.register(registerDto);
       return new SuccessResponse('OTP sent successfully');
     } catch (err) {
-      Logger.error(err);
-      return new ErrorResponse();
+      throw new UnauthorizedException(err?.message || 'Verification failed');
     }
   }
 

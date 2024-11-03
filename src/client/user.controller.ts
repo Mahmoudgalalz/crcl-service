@@ -74,6 +74,20 @@ export class UserController {
     }
   }
 
+  @Post('events/:id')
+  @Roles(Role.User)
+  async addfavoriteEvents(
+    @CurrentUser() user: User,
+    @Param('id') eventId: string,
+  ) {
+    try {
+      const add = await this.userService.addFavoriteEvent(user.id, eventId);
+      return new SuccessResponse('Add Event to Favorite list', add);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
+    }
+  }
+
   @Post('wallet/pay/:id')
   @Roles(Role.User)
   async payWithWallet(@CurrentUser() user: User, @Param('id') id: string) {

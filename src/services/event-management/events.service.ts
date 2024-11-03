@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { Event, RequestStatus, Ticket } from '@prisma/client';
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
@@ -75,11 +80,94 @@ export class EventsManagementService {
     });
   }
 
-  async getEventRequests(eventId: string) {
+  async deleteTicket(id: string) {
+    try {
+      return await this.prisma.ticket.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException('Ticket not found');
+    }
+  }
+
+  async getEventRequests(
+    eventId: string,
+    page: number = 1,
+    pageSize: number = 10,
+  ) {
+    const skip = (page - 1) * pageSize;
+
     const requests = await this.prisma.eventRequest.findMany({
       where: { eventId },
+      include: {
+        user: true,
+      },
+      skip,
+      take: pageSize,
     });
-    return requests;
+
+    const totalRequests = await this.prisma.eventRequest.count({
+      where: { eventId },
+    });
+
+    return {
+      data: requests,
+      meta: {
+        total: totalRequests,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalRequests / pageSize),
+      },
+    };
+  }
+
+  async searchEventRequests(
+    eventId: string,
+    page: number = 1,
+    pageSize: number = 10,
+    searchQuery: string = '',
+  ) {
+    const skip = (page - 1) * pageSize;
+
+    const requests = await this.prisma.eventRequest.findMany({
+      where: {
+        eventId,
+        user: {
+          OR: [
+            { name: { contains: searchQuery, mode: 'insensitive' } },
+            { number: { contains: searchQuery, mode: 'insensitive' } },
+          ],
+        },
+      },
+      include: {
+        user: true,
+      },
+      skip,
+      take: pageSize,
+    });
+
+    const totalRequests = await this.prisma.eventRequest.count({
+      where: {
+        eventId,
+        user: {
+          OR: [
+            { name: { contains: searchQuery, mode: 'insensitive' } },
+            { number: { contains: searchQuery, mode: 'insensitive' } },
+          ],
+        },
+      },
+    });
+
+    return {
+      data: requests,
+      meta: {
+        total: totalRequests,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalRequests / pageSize),
+      },
+    };
   }
 
   async changeRequest(
@@ -111,6 +199,28 @@ export class EventsManagementService {
       return false;
     }
   }
+
+  async checkIfTicketBooked(ticketId: string) {
+    const tickets = await this.prisma.ticketPurchase.count({
+      where: {
+        ticketId,
+      },
+    });
+    const isInEventReq = await this.prisma.eventRequest.count({
+      where: {
+        meta: {
+          equals: {
+            ticketId,
+          },
+        },
+      },
+    });
+    if (tickets > 0 || isInEventReq > 0) {
+      throw new NotAcceptableException('Ticket already booked');
+    }
+    return true;
+  }
+
   private async changeRequestStatus(requestId: string, status: RequestStatus) {
     const requestState = await this.prisma.eventRequest.update({
       where: {

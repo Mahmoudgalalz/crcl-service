@@ -14,8 +14,15 @@ model SuperUser {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  type      String   @default("ADMIN")
+  type      SuperUserType   @default(ADMIN)
   @@unique([email, id])
+}
+
+enum SuperUserType {
+  ADMIN
+  FINANCE
+  MODERATOR
+  APPROVAL
 }
 model User {
   id          String      @id
@@ -31,6 +38,7 @@ model User {
   wallet      Wallet?
   tickets     TicketPurchase[]
   requests    EventRequest[]
+  favoriteEvents String[]
   status      UserStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

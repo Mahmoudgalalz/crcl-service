@@ -3,12 +3,27 @@ import { PrismaService } from 'src/prisma.service';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { newId } from 'src/common/uniqueId.utils';
 import { MetaRequestDto } from './dto/events.dto';
+import { BcryptService } from 'src/shared/auth/shared/bcrypt.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bcryptService: BcryptService,
+  ) {}
 
   async update(id: string, data: UserUpdateDto) {
+    if (data.password) {
+      const { password, ...restData } = data;
+      const hashedPassword = await this.bcryptService.hashPassword(password);
+      await this.prisma.user.update({
+        where: { id },
+        data: {
+          password: hashedPassword,
+          ...restData,
+        },
+      });
+    }
     const user = await this.prisma.user.update({
       where: { id },
       data,
@@ -17,6 +32,19 @@ export class UserService {
       throw new NotFoundException('User not Found');
     }
     return user;
+  }
+
+  async addFavoriteEvent(userId: string, eventId: string) {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        favoriteEvents: {
+          push: eventId,
+        },
+      },
+    });
   }
 
   async get(id: string) {
@@ -170,6 +198,7 @@ export class UserService {
           select: {
             title: true,
             time: true,
+            location: true,
           },
         },
       },
