@@ -26,6 +26,7 @@ import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
 import { TopUpDto, UpadteUserViaAdminDto } from './dto/update-user.dto';
 import { Request } from 'express';
+import { UpdateSuperUserViaAdminDto } from './dto/update-admin.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -126,7 +127,7 @@ export class UsersManagmentController {
   async updateSuperUser(
     @Req() req: Request,
     @Param('id') userId: string,
-    @Body() data: CreateSuperUserViaAdminDto,
+    @Body() data: UpdateSuperUserViaAdminDto,
   ) {
     try {
       const user = req.user;
