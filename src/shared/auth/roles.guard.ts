@@ -18,7 +18,6 @@ export class RolesGuard implements CanActivate {
     const { user }: { user: any } = context.switchToHttp().getRequest();
     const userRole = user.type;
 
-    // Define admin-like roles
     const adminRoles: Role[] = [
       Role.Admin,
       Role.Finance,
@@ -26,7 +25,6 @@ export class RolesGuard implements CanActivate {
       Role.Approval,
     ];
 
-    // Check if the user has an admin-like role or any required role
     return (
       adminRoles.includes(userRole) ||
       requiredRoles.some((role) => role === userRole)
