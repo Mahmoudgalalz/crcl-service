@@ -166,6 +166,7 @@ export class UsersManagmentService {
         id: true,
         createdAt: true,
         updatedAt: true,
+        type: true,
       },
     });
   }
