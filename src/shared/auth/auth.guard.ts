@@ -10,6 +10,7 @@ import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/roles.decorator';
 import { PrismaService } from 'src/prisma.service';
+import { Role } from '../interface/roles';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -50,11 +51,15 @@ export class AuthGuard implements CanActivate {
 
       if (payload.role === 'admin') {
         const user = await this.prisma.superUser.findFirst({
-          where: {
-            id: payload.userId,
-          },
+          where: { id: payload.userId },
         });
-        request['user'] = user;
+        if (!user) {
+          throw new UnauthorizedException('User not found');
+        }
+        request['user'] = {
+          ...user,
+          type: Role.Admin,
+        };
       } else {
         const user = await this.prisma.user.findFirst({
           where: {
