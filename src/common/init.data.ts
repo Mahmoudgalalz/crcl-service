@@ -1,12 +1,12 @@
 import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { customUUID } from './uniqueId.utils';
-import * as bcrypt from 'bcrypt';
+// import * as bcrypt from 'bcrypt';
 
-async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 10;
-  return await bcrypt.hash(password, saltRounds);
-}
+// async function hashPassword(password: string): Promise<string> {
+//   const saltRounds = 10;
+//   return await bcrypt.hash(password, saltRounds);
+// }
 
 export async function createRootUser(
   name: string,
@@ -25,12 +25,11 @@ export async function createRootUser(
       return;
     }
 
-    const hashedPassword = await hashPassword(password);
     await prisma.superUser.create({
       data: {
         id: customUUID(20),
         email,
-        password: hashedPassword,
+        password: password,
         name,
       },
     });
