@@ -73,6 +73,7 @@ export class AuthController {
   }
 
   @Post('admin/verify')
+  @Public()
   @HttpCode(HttpStatus.OK)
   async superUserVerify(@Req() req: Request, @Res() res: Response) {
     try {
@@ -214,7 +215,7 @@ export class AuthController {
       return new SuccessResponse('OTP sent successfully');
     } catch (err) {
       Logger.error(err);
-      return new ErrorResponse();
+      throw new UnauthorizedException(err?.message || 'Verification failed');
     }
   }
 
