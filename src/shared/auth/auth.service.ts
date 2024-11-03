@@ -20,10 +20,7 @@ export class AuthService {
   async validateSuperUser(email: string, pass: string) {
     const user = await this.prisma.superUser.findFirst({ where: { email } });
     if (user) {
-      const isCorrect = await this.bycrptService.comparePassword(
-        pass,
-        user.password,
-      );
+      const isCorrect = pass === user.password;
       if (user && isCorrect) {
         return await this.jwtService.createTokens({
           email: user.email,
