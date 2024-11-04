@@ -152,10 +152,13 @@ export class UsersManagmentService {
 
   async createSuperUser(data: CreateSuperUserViaAdminDto) {
     const id = customUUID(20);
+    const { password, ...restData } = data;
+    const hashedPassword = await this.bycrptService.hashPassword(password);
     return await this.prisma.superUser.create({
       data: {
         id,
-        ...data,
+        password: hashedPassword,
+        ...restData,
       },
     });
   }
