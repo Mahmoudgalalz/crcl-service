@@ -134,12 +134,8 @@ export class EventsManagementService {
       where: {
         eventId,
         user: {
-          AND: [
-            { name: { contains: searchQuery, mode: 'insensitive' } },
-            { number: { contains: searchQuery, mode: 'insensitive' } },
-            { email: { contains: searchQuery, mode: 'insensitive' } },
-            { id: { contains: searchQuery, mode: 'insensitive' } },
-          ],
+          AND: [{ number: { contains: searchQuery } }],
+          OR: [{ id: { contains: searchQuery } }],
         },
       },
       include: {
@@ -149,17 +145,7 @@ export class EventsManagementService {
       take: pageSize,
     });
 
-    const totalRequests = await this.prisma.eventRequest.count({
-      where: {
-        eventId,
-        user: {
-          OR: [
-            { name: { contains: searchQuery, mode: 'insensitive' } },
-            { number: { contains: searchQuery, mode: 'insensitive' } },
-          ],
-        },
-      },
-    });
+    const totalRequests = requests.length;
 
     return {
       data: requests,
