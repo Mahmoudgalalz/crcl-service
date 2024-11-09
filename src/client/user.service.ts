@@ -119,19 +119,28 @@ export class UserService {
     const shallowData = Array.isArray(data)
       ? JSON.parse(JSON.stringify(data))
       : [JSON.parse(JSON.stringify(data))];
-    const request = await this.prisma.eventRequest.create({
-      data: {
-        id: newId('ref', 14),
-        user: {
-          connect: { id },
-        },
-        event: {
-          connect: { id: eventId },
-        },
-        meta: shallowData,
+    const check = await this.prisma.eventRequest.count({
+      where: {
+        eventId,
+        userId: id,
       },
     });
-    return request;
+    if (!check) {
+      const request = await this.prisma.eventRequest.create({
+        data: {
+          id: newId('ref', 14),
+          user: {
+            connect: { id },
+          },
+          event: {
+            connect: { id: eventId },
+          },
+          meta: shallowData,
+        },
+      });
+      return request;
+    }
+    throw Error('Already requested for this event');
   }
 
   //? not used
