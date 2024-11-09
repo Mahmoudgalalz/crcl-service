@@ -133,9 +133,11 @@ export class EventsManagementService {
     const requests = await this.prisma.eventRequest.findMany({
       where: {
         eventId,
-        user: {
-          AND: [{ number: { contains: searchQuery } }],
-          OR: [{ id: { contains: searchQuery } }],
+        AND: {
+          user: {
+            AND: [{ number: { contains: searchQuery } }],
+            OR: [{ id: { contains: searchQuery } }],
+          },
         },
       },
       include: {
