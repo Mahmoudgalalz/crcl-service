@@ -134,9 +134,11 @@ export class EventsManagementService {
       where: {
         eventId,
         user: {
-          OR: [
+          AND: [
             { name: { contains: searchQuery, mode: 'insensitive' } },
             { number: { contains: searchQuery, mode: 'insensitive' } },
+            { email: { contains: searchQuery, mode: 'insensitive' } },
+            { id: { contains: searchQuery, mode: 'insensitive' } },
           ],
         },
       },
