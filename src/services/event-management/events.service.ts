@@ -136,7 +136,7 @@ export class EventsManagementService {
         user: {
           OR: [
             { number: { contains: searchQuery } },
-            { id: { contains: searchQuery } },
+            { id: { contains: searchQuery, mode: 'insensitive' } },
           ],
         },
       },

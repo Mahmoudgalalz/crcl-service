@@ -111,6 +111,7 @@ export class EventsManagementController {
           id,
           page,
           limit,
+          search,
         );
         return new SuccessResponse(`result of ${search} in Requests`, requests);
       }
