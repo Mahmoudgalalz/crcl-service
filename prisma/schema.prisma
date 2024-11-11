@@ -36,6 +36,7 @@ model User {
   picture     String?  // Optional URL to user's profile picture
   type        UserType
   wallet      Wallet?
+  notificationToken String?
   tickets     TicketPurchase[]
   requests    EventRequest[]
   favoriteEvents String[]
