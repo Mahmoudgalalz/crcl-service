@@ -56,8 +56,8 @@ export class UsersManagmentController {
   ) {
     const filters = { types, status, gender };
     try {
-      const users = await this.usersService.listAllUsers(page, limit, filters);
-      return new SuccessResponse('List of all users', users);
+      const result = await this.usersService.listAllUsers(page, limit, filters);
+      return new SuccessResponse('List of all users', result);
     } catch (error) {
       return new ErrorResponse();
     }
