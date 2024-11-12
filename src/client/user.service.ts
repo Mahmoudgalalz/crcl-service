@@ -284,6 +284,18 @@ export class UserService {
     return tickets;
   }
 
+
+  async deleteUser(userId: string) {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        deletedAt: Date.now().toString(),
+      },
+    });
+  }
+
   async userPayTickets(id: string, ticketIds: string[], callback: string) {
     try {
       const paymentUrl = await this.paymentService.initIntention(

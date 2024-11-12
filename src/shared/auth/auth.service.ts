@@ -65,6 +65,14 @@ export class AuthService {
       user.password,
     );
     if (user && validPassword) {
+      if (user.deletedAt)
+        throw new Error(
+          'This account has been desactivated,  please contact with support team to activate it',
+        );
+      if (user.status === 'BLOCKED')
+        throw new Error(
+          'This account has been blocked, please contact with support team',
+        );
       return await this.jwtService.createTokens({
         email: user.email,
         userId: user.id,

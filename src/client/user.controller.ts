@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
@@ -127,6 +128,16 @@ export class UserController {
         payload.callback,
       );
       return new SuccessResponse('Tickets Payment URL', transaction);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
+    }
+  }
+  @Delete('')
+  @Roles(Role.User)
+  async userDelete(@CurrentUser() user: User) {
+    try {
+      const deleted = await this.userService.deleteUser(user.id);
+      return new SuccessResponse('Desactivate Account', deleted);
     } catch (error) {
       throw new HttpException(error, HttpStatus.NOT_FOUND);
     }
