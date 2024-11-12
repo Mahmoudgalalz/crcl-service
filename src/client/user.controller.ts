@@ -125,8 +125,9 @@ export class UserController {
       const transaction = await this.userService.userPayTickets(
         user.id,
         payload.ticketsIds,
+        payload.callback,
       );
-      return new SuccessResponse('Tickets Paid', transaction);
+      return new SuccessResponse('Tickets Payment URL', transaction);
     } catch (error) {
       throw new HttpException(error, HttpStatus.NOT_FOUND);
     }
