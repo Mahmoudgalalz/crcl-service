@@ -142,6 +142,16 @@ export class UsersManagmentController {
     }
   }
 
+  @Delete('super/:id')
+  async deleteSuperUser(@Req() req: Request, @Param('id') userId: string) {
+    try {
+      const update = await this.usersService.deleteSuperUser(userId);
+      return new SuccessResponse('Delete SuperUser', update);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
   @Get('super/users')
   @SwaggerRoute(SuperUsersSwaggerConfig.findAllSuperUsers)
   async findAllSuperUsers() {
