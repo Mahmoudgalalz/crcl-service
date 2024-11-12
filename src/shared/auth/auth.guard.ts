@@ -61,6 +61,9 @@ export class AuthGuard implements CanActivate {
             id: payload.userId,
           },
         });
+        if (user.deletedAt != null || user.status === 'BLOCKED') {
+          return false;
+        }
         request['user'] = user;
       }
       return true;

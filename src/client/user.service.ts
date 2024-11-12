@@ -4,12 +4,14 @@ import { UserUpdateDto } from './dto/user-update.dto';
 import { newId } from 'src/common/uniqueId.utils';
 import { MetaRequestDto } from './dto/events.dto';
 import { BcryptService } from 'src/shared/auth/shared/bcrypt.service';
+import { PaymentService } from 'src/services/payment/payment.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bcryptService: BcryptService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   async update(id: string, data: UserUpdateDto) {
@@ -282,46 +284,26 @@ export class UserService {
     return tickets;
   }
 
-  //? This need to synced with payment
-  async userPayTickets(id: string, ticketIds: string[]) {
+
+  async deleteUser(userId: string) {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        deletedAt: Date.now().toString(),
+      },
+    });
+  }
+
+  async userPayTickets(id: string, ticketIds: string[], callback: string) {
     try {
-      const ticketsToBuy = await this.prisma.ticketPurchase.findMany({
-        where: {
-          userId: id,
-          id: {
-            in: ticketIds,
-          },
-        },
-        include: {
-          ticket: {
-            select: {
-              price: true,
-            },
-          },
-        },
-      });
-      //! caclulate payment and procced here, then switch
-      const totalResults = ticketsToBuy.reduce(
-        (acc, ticket) => {
-          acc.totalPrice += ticket.ticket.price;
-          acc.ticketIds.push(ticket.ticketId);
-          return acc;
-        },
-        { totalPrice: 0, ticketIds: [] as string[] },
+      const paymentUrl = await this.paymentService.initIntention(
+        ticketIds,
+        id,
+        callback,
       );
-      //! assume its paid
-      const flipStatus = await this.prisma.ticketPurchase.updateMany({
-        where: {
-          userId: id,
-          ticketId: {
-            in: totalResults.ticketIds,
-          },
-        },
-        data: {
-          payment: 'PAID',
-        },
-      });
-      return flipStatus;
+      return paymentUrl;
     } catch (err) {
       Logger.error('Payment Error in tickets', err);
       throw err;

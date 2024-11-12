@@ -41,6 +41,7 @@ model User {
   requests    EventRequest[]
   favoriteEvents String[]
   status      UserStatus @default(ACTIVE)
+  deletedAt   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
