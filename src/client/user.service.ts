@@ -282,6 +282,16 @@ export class UserService {
     return tickets;
   }
 
+  async deleteUser(userId: string) {
+    return await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        deletedAt: Date.now().toString(),
+      },
+    });
+  }
   //? This need to synced with payment
   async userPayTickets(id: string, ticketIds: string[]) {
     try {
