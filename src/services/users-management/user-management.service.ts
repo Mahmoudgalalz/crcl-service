@@ -46,38 +46,52 @@ export class UsersManagmentService {
       if (types) {
         typeFilter = Array.isArray(types) ? types : [types];
       }
-      const users = await this.prisma.user.findMany({
-        where: {
-          ...(filter?.status ? { status: filter.status } : {}),
-          ...(filter?.gender ? { gender: filter.gender } : {}),
-          ...(typeFilter && typeFilter.length > 0
-            ? { type: { in: typeFilter } }
-            : {}),
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          number: true,
-          facebook: true,
-          instagram: true,
-          gender: true,
-          picture: true,
-          type: true,
-          wallet: {
-            select: {
-              balance: true,
-            },
-          },
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-        skip,
-        take,
-      });
 
-      return users;
+      const whereClause = {
+        ...(filter?.status ? { status: filter.status } : {}),
+        ...(filter?.gender ? { gender: filter.gender } : {}),
+        ...(typeFilter && typeFilter.length > 0
+          ? { type: { in: typeFilter } }
+          : {}),
+      };
+
+      const [users, total] = await this.prisma.$transaction([
+        this.prisma.user.findMany({
+          where: whereClause,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            number: true,
+            facebook: true,
+            instagram: true,
+            gender: true,
+            picture: true,
+            type: true,
+            wallet: {
+              select: {
+                balance: true,
+              },
+            },
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          skip,
+          take,
+        }),
+        this.prisma.user.count({ where: whereClause }),
+      ]);
+
+      return {
+        users,
+        meta: {
+          total,
+          page,
+          pageSize: limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
     } catch (error) {
       Logger.error('Error fetching users:', error);
       throw new Error('Unable to fetch users at the moment.');

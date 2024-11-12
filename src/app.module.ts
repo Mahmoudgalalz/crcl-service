@@ -16,6 +16,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './client/user.module';
 import { AnalyticsModule } from './services/analytics/analytics.module';
 import { BoothModule } from './services/booth/booth.module';
+import { PaymentModule } from './services/payment/payment.module';
 @Global()
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { BoothModule } from './services/booth/booth.module';
     AnalyticsModule,
     BoothModule,
     UserModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

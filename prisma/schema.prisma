@@ -36,6 +36,7 @@ model User {
   picture     String?  // Optional URL to user's profile picture
   type        UserType
   wallet      Wallet?
+  notificationToken String?
   tickets     TicketPurchase[]
   requests    EventRequest[]
   favoriteEvents String[]
@@ -106,6 +107,7 @@ model TicketPurchase {
   payment     PaymentStatus?
   status      TicketStatus
   meta        Json?
+  paymentReference String?
   ticket          Ticket          @relation(fields: [ticketId], references: [id])
   user          User          @relation(fields: [userId], references: [id])
   @@index([userId, ticketId])
