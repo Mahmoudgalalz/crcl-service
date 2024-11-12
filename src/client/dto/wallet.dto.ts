@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsArray } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsArray, IsString } from 'class-validator';
 
 export class walletBoothTransactionDTO {
   @IsNumber()
@@ -10,4 +10,8 @@ export class TicketsTransactionDTO {
   @IsArray()
   @IsNotEmpty()
   ticketsIds: string[];
+
+  @IsNotEmpty()
+  @IsString()
+  callback: string;
 }
