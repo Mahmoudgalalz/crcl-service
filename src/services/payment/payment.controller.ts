@@ -12,7 +12,7 @@ import { PaymentService } from './payment.service';
 import { CurrentUser } from 'src/shared/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { PaymentDto } from './dto/payment.dto';
-import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Public, Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 
 @Controller('payment')
@@ -20,6 +20,7 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post('listen')
+  @Public()
   async listen(@Req() req: Request, @Res() res: Response) {
     try {
       const body = req.body;
