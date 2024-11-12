@@ -68,6 +68,8 @@ export class UsersManagmentService {
             gender: true,
             picture: true,
             type: true,
+            deletedAt: true,
+            notificationToken: true,
             wallet: {
               select: {
                 balance: true,

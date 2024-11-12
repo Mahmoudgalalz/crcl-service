@@ -135,8 +135,8 @@ export class UserController {
   @Roles(Role.User)
   async userDelete(@CurrentUser() user: User) {
     try {
-      const transaction = await this.userService.deleteUser(user.id);
-      return new SuccessResponse('Tickets Paid', transaction);
+      const deleted = await this.userService.deleteUser(user.id);
+      return new SuccessResponse('Desactivate Account', deleted);
     } catch (error) {
       throw new HttpException(error, HttpStatus.NOT_FOUND);
     }
