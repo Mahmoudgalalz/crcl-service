@@ -89,6 +89,24 @@ export class UserController {
     }
   }
 
+  @Post('tickets/pay')
+  @Roles(Role.User)
+  async userPayTickets(
+    @CurrentUser() user: User,
+    @Body() payload: TicketsTransactionDTO,
+  ) {
+    try {
+      const transaction = await this.userService.userPayTickets(
+        user.id,
+        payload.ticketsIds,
+        payload.callback,
+      );
+      return new SuccessResponse('Tickets Payment URL', transaction);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
+    }
+  }
+
   @Post('wallet/pay/:id')
   @Roles(Role.User)
   async payWithWallet(@CurrentUser() user: User, @Param('id') id: string) {
@@ -115,23 +133,6 @@ export class UserController {
     }
   }
 
-  @Post('tickets/pay')
-  @Roles(Role.User)
-  async userPayTickets(
-    @CurrentUser() user: User,
-    @Body() payload: TicketsTransactionDTO,
-  ) {
-    try {
-      const transaction = await this.userService.userPayTickets(
-        user.id,
-        payload.ticketsIds,
-        payload.callback,
-      );
-      return new SuccessResponse('Tickets Payment URL', transaction);
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.NOT_FOUND);
-    }
-  }
   @Delete('')
   @Roles(Role.User)
   async userDelete(@CurrentUser() user: User) {

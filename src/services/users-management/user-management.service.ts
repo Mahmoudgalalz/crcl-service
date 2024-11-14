@@ -208,6 +208,14 @@ export class UsersManagmentService {
     throw Error('Have no access to this');
   }
 
+  async deleteSuperUser(userId: string) {
+    return await this.prisma.superUser.delete({
+      where: {
+        id: userId,
+      },
+    });
+  }
+
   async findAllSuperUsers() {
     return this.prisma.superUser.findMany({
       select: {

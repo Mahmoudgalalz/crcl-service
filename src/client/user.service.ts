@@ -266,6 +266,7 @@ export class UserService {
         },
         ticket: {
           select: {
+            id: true,
             title: true,
             price: true,
             description: true,
@@ -283,7 +284,6 @@ export class UserService {
     });
     return tickets;
   }
-
 
   async deleteUser(userId: string) {
     return await this.prisma.user.update({
