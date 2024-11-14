@@ -87,7 +87,9 @@ export class PaymentService {
   async paymentCallback(body: any) {
     const { id, success, payment_key_claims } = body.obj;
     const { userId, ticketsIds } = payment_key_claims.extra;
-
+    Logger.log(id);
+    Logger.log(success);
+    Logger.log(body.obj);
     try {
       const res = await this.updateTicketStatus(
         userId,
