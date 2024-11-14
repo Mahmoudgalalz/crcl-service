@@ -100,7 +100,7 @@ export class PaymentService {
   private async updateTicketStatus(
     userId: string,
     ticketsIds: string[],
-    paymentReference: string,
+    paymentReference: number,
     status: PaymentStatus,
   ) {
     try {
@@ -113,7 +113,7 @@ export class PaymentService {
         },
         data: {
           payment: status,
-          paymentReference,
+          paymentReference: paymentReference.toString(),
         },
       });
       return result.count === ticketsIds.length;
