@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import axios from 'axios';
 import { PAYMENT_WEBHOOK_URL, PUBLIC_PAYMENT_URL } from 'src/shared/constants';
@@ -15,6 +15,11 @@ export class PaymentService {
       const request = await axios.post(
         'https://accept.paymob.com/v1/intention/',
         payload,
+        {
+          headers: {
+            Authorization: `Token ${process.env.PAYMENT_SECRET_KEY}`,
+          },
+        },
       );
       if (request.status === 201) {
         const { client_secret } = request.data;
@@ -56,8 +61,8 @@ export class PaymentService {
       0,
     );
 
+    Logger.log(`dsdsd ${ticketsUsersInfo}`);
     const user = ticketsUsersInfo[0].user;
-
     const data = {
       amount: amount * 100, // paymob takes amount in piastre
       currency: 'EGP',
