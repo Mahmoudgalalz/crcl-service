@@ -89,7 +89,8 @@ export class PaymentService {
     const { userId, ticketsIds } = payment_key_claims.extra;
     Logger.log(id);
     Logger.log(success);
-    Logger.log(body.obj);
+    Logger.log(ticketsIds);
+    Logger.log(userId);
     try {
       const res = await this.updateTicketStatus(
         userId,
