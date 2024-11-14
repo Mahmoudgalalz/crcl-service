@@ -103,19 +103,21 @@ export class PaymentService {
     status: PaymentStatus,
   ) {
     try {
-      const result = await this.prisma.ticketPurchase.updateMany({
-        where: {
-          userId,
-          id: {
-            in: ticketsIds,
+      const paid: object = {};
+      for (const ticketId in ticketsIds) {
+        const ticket = await this.prisma.ticketPurchase.update({
+          where: {
+            userId,
+            id: ticketId,
           },
-        },
-        data: {
-          payment: status,
-          paymentReference: paymentReference.toString(),
-        },
-      });
-      return result.count === ticketsIds.length;
+          data: {
+            payment: status,
+            paymentReference: paymentReference.toString(),
+          },
+        });
+        paid[ticketId] = ticket;
+      }
+      return paid;
     } catch (error) {
       Logger.error(error);
     }

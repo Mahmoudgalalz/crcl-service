@@ -228,7 +228,7 @@ export class EventsManagementService {
     if (Array.isArray(data)) {
       data.forEach((elem) => {
         output = {
-          id: newId('ticket', 16),
+          id: newId('ticketPurchase', 16),
           userId,
           payment: 'PENDING',
           status: 'UPCOMMING',
