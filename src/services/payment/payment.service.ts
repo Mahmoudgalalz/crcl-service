@@ -103,18 +103,22 @@ export class PaymentService {
     paymentReference: string,
     status: PaymentStatus,
   ) {
-    const result = await this.prisma.ticketPurchase.updateMany({
-      where: {
-        userId,
-        ticketId: {
-          in: ticketsIds,
+    try {
+      const result = await this.prisma.ticketPurchase.updateMany({
+        where: {
+          userId,
+          ticketId: {
+            in: ticketsIds,
+          },
         },
-      },
-      data: {
-        payment: status,
-        paymentReference,
-      },
-    });
-    return result.count === ticketsIds.length;
+        data: {
+          payment: status,
+          paymentReference,
+        },
+      });
+      return result.count === ticketsIds.length;
+    } catch (error) {
+      Logger.error(error);
+    }
   }
 }
