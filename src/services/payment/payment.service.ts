@@ -61,7 +61,6 @@ export class PaymentService {
       0,
     );
 
-    Logger.log(`dsdsd ${ticketsUsersInfo}`);
     const user = ticketsUsersInfo[0].user;
     const data = {
       amount: amount * 100, // paymob takes amount in piastre
@@ -107,7 +106,7 @@ export class PaymentService {
       const result = await this.prisma.ticketPurchase.updateMany({
         where: {
           userId,
-          ticketId: {
+          id: {
             in: ticketsIds,
           },
         },
