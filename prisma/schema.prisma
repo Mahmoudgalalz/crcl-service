@@ -100,7 +100,7 @@ model EventRequest {
 }
 
 model TicketPurchase {
-  id          String          @id
+  id          String          @id @unique
   userId      String
   ticketId    String
   createdAt   DateTime @default(now())
@@ -111,7 +111,7 @@ model TicketPurchase {
   paymentReference String?
   ticket          Ticket          @relation(fields: [ticketId], references: [id])
   user          User          @relation(fields: [userId], references: [id])
-  @@index([userId, ticketId])
+  @@index([userId, ticketId, id])
 }
 
 model Wallet {
