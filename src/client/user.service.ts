@@ -252,6 +252,8 @@ export class UserService {
     const tickets = await this.prisma.ticketPurchase.findMany({
       where: { userId: id },
       select: {
+        id: true,
+        ticketId: true,
         meta: true,
         payment: true,
         status: true,
