@@ -111,7 +111,7 @@ model TicketPurchase {
   paymentReference String?
   ticket          Ticket          @relation(fields: [ticketId], references: [id])
   user          User          @relation(fields: [userId], references: [id])
-  @@index([userId, ticketId, id])
+  @@index([userId, id])
 }
 
 model Wallet {
