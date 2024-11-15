@@ -199,12 +199,16 @@ export class UserService {
     });
 
     // Step 2: Extract ticketIds from all requests
-    const ticketIds = requests.flatMap((request) => {
-      const metaJSONvalue = request.meta as Array<object & any>; // Assuming meta is an array of objects
-      return Array.isArray(metaJSONvalue)
-        ? metaJSONvalue.map((item) => item.ticketId)
-        : [];
-    });
+    const ticketIds = requests
+      .flatMap((request) => {
+        const metaJSONvalue = request.meta as Array<object & any>;
+        return Array.isArray(metaJSONvalue)
+          ? metaJSONvalue
+              .map((item) => item.ticketId)
+              .filter((id) => id !== undefined)
+          : [];
+      })
+      .filter((id) => id !== undefined);
 
     // Step 3: Fetch all ticket details in one query using the extracted ticketIds
     const tickets = await this.prisma.ticket.findMany({
@@ -229,31 +233,28 @@ export class UserService {
 
     // Step 4: Map ticket details and append the count and total price to each request
     const result = requests.map((request) => {
-      const metaJSONvalue = request.meta as Array<object & any>; // Assuming meta is an array of objects
+      const metaJSONvalue = request.meta as Array<object & any>;
       const metaCount = metaJSONvalue.length;
 
       // Map ticket details back to the current request's metaJSONvalue
-      const ticketDetails = metaJSONvalue.map((item) => {
-        return tickets.find((ticket) => ticket.id === item.ticketId);
-      });
-
-      // Filter out valid tickets (non-null) and count them
-      const validTickets = ticketDetails.filter(
-        (ticket) => ticket !== undefined,
-      );
+      const ticketDetails = metaJSONvalue
+        .map((item) => {
+          return tickets.find((ticket) => ticket.id === item.ticketId);
+        })
+        .filter((ticket) => ticket !== undefined);
 
       // Calculate the total price for the request
-      const totalPrice = validTickets.reduce(
+      const totalPrice = ticketDetails.reduce(
         (sum, ticket) => sum + (ticket?.price || 0),
         0,
       );
 
       return {
         ...request,
-        metaCount, // Count of items in metaJSONvalue
-        ticketDetails: validTickets, // Details of related tickets
-        totalPrice, // Total price of the tickets for this request
-        ticketCount: validTickets.length, // Count of valid tickets
+        metaCount,
+        ticketDetails,
+        totalPrice,
+        ticketCount: ticketDetails.length,
       };
     });
 
