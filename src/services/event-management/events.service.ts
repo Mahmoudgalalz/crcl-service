@@ -5,10 +5,24 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { Event, RequestStatus, Ticket } from '@prisma/client';
+import {
+  Event,
+  PaymentStatus,
+  RequestStatus,
+  Ticket,
+  TicketStatus,
+} from '@prisma/client';
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import { newId } from 'src/common/uniqueId.utils';
 import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
+
+interface RequestMetaItem {
+  name: string;
+  email: string;
+  number: string;
+  social: string;
+  ticketId: string;
+}
 
 @Injectable()
 export class EventsManagementService {
@@ -91,35 +105,203 @@ export class EventsManagementService {
     }
   }
 
-  async getEventRequests(
+  async getEventRequestDetails(
     eventId: string,
     page: number = 1,
     pageSize: number = 10,
   ) {
-    const skip = (page - 1) * pageSize;
+    try {
+      // Validate inputs
+      if (!eventId) {
+        throw new Error('Event ID is required');
+      }
 
-    const requests = await this.prisma.eventRequest.findMany({
-      where: { eventId },
-      include: {
-        user: true,
-      },
-      skip,
-      take: pageSize,
-    });
+      // Ensure positive numbers for pagination
+      page = Math.max(1, page);
+      pageSize = Math.max(1, pageSize);
+      const skip = (page - 1) * pageSize;
 
-    const totalRequests = await this.prisma.eventRequest.count({
-      where: { eventId },
-    });
+      const requests = await this.prisma.eventRequest.findMany({
+        where: {
+          eventId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              number: true,
+              picture: true,
+              tickets: {
+                where: {
+                  ticket: {
+                    eventId: eventId,
+                  },
+                },
+                select: {
+                  id: true,
+                  status: true,
+                  payment: true,
+                  paymentReference: true,
+                  ticket: {
+                    select: {
+                      id: true,
+                      title: true,
+                      price: true,
+                    },
+                  },
+                  createdAt: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: pageSize,
+      });
 
-    return {
-      data: requests,
-      meta: {
-        total: totalRequests,
-        page,
-        pageSize,
-        totalPages: Math.ceil(totalRequests / pageSize),
-      },
-    };
+      // Transform the data with proper meta handling
+      const transformedRequests = requests
+        .map((request) => {
+          let ticketsWithStatus: Array<{
+            ticketId: string;
+            requestInfo: {
+              name: string;
+              email: string;
+              number: string;
+              social: string;
+            };
+            ticketInfo: {
+              title: string | undefined;
+              price: number | undefined;
+            };
+            purchaseStatus: {
+              status: TicketStatus;
+              payment: PaymentStatus;
+              purchaseId: string;
+              paymentReference?: string;
+              purchasedAt: Date;
+            } | null;
+          }> = [];
+
+          try {
+            const metaItems = request.meta as unknown as RequestMetaItem[];
+
+            if (Array.isArray(metaItems)) {
+              ticketsWithStatus = metaItems.map((metaItem) => {
+                const purchaseRecord = request.user?.tickets?.find(
+                  (t) => t.ticket?.id === metaItem.ticketId,
+                );
+
+                // Find the corresponding ticket info
+                const ticketInfo = request.user?.tickets?.find(
+                  (t) => t.ticket?.id === metaItem.ticketId,
+                )?.ticket;
+
+                return {
+                  ticketId: metaItem.ticketId,
+                  requestInfo: {
+                    name: metaItem.name,
+                    email: metaItem.email,
+                    number: metaItem.number,
+                    social: metaItem.social,
+                  },
+                  ticketInfo: {
+                    title: ticketInfo?.title,
+                    price: ticketInfo?.price,
+                  },
+                  purchaseStatus:
+                    request.status === RequestStatus.APPROVED
+                      ? {
+                          status:
+                            purchaseRecord?.status || TicketStatus.UPCOMMING,
+                          payment:
+                            purchaseRecord?.payment || PaymentStatus.PENDING,
+                          purchaseId: purchaseRecord?.id || '',
+                          paymentReference: purchaseRecord?.paymentReference,
+                          purchasedAt: purchaseRecord?.createdAt || new Date(),
+                        }
+                      : null,
+                };
+              });
+            } else {
+              console.warn(
+                `Invalid meta structure for request ${request.id}:`,
+                request.meta,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `Error processing request ${request.id} meta data:`,
+              error,
+            );
+            console.log('Meta content:', request.meta);
+          }
+
+          return {
+            id: request.id,
+            status: request.status,
+            createdAt: request.createdAt,
+            user: request.user
+              ? {
+                  id: request.user.id,
+                  name: request.user.name || 'Unknown User',
+                  email: request.user.email,
+                  number: request.user.number,
+                  picture: request.user.picture,
+                }
+              : null,
+            tickets: ticketsWithStatus,
+          };
+        })
+        .filter((request) => request.user !== null);
+
+      const totalRequests = await this.prisma.eventRequest.count({
+        where: {
+          eventId,
+        },
+      });
+
+      // Handle case where there are no results
+      if (totalRequests === 0) {
+        return {
+          data: [],
+          meta: {
+            total: 0,
+            page,
+            pageSize,
+            totalPages: 0,
+          },
+        };
+      }
+
+      return {
+        data: transformedRequests,
+        meta: {
+          total: totalRequests,
+          page,
+          pageSize,
+          totalPages: Math.ceil(totalRequests / pageSize),
+        },
+      };
+    } catch (error) {
+      console.error('Error in getEventRequestDetails:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'An error occurred while fetching event request details',
+      );
+    }
   }
 
   async searchEventRequests(
@@ -128,36 +310,225 @@ export class EventsManagementService {
     pageSize: number = 10,
     searchQuery: string = '',
   ) {
-    const skip = (page - 1) * pageSize;
+    try {
+      // Validate inputs
+      if (!eventId) {
+        throw new Error('Event ID is required');
+      }
 
-    const requests = await this.prisma.eventRequest.findMany({
-      where: {
-        eventId,
-        user: {
-          OR: [
-            { number: { contains: searchQuery } },
-            { id: { contains: searchQuery, mode: 'insensitive' } },
-          ],
+      // Ensure positive numbers for pagination
+      page = Math.max(1, page);
+      pageSize = Math.max(1, pageSize);
+      const skip = (page - 1) * pageSize;
+
+      // Normalize phone number search query
+      let phoneSearch = searchQuery;
+      if (searchQuery.startsWith('+')) {
+        // Also search without the plus
+        phoneSearch = searchQuery.substring(1);
+      } else if (/^\d+$/.test(searchQuery)) {
+        // If it's all numbers, also search with a plus
+        phoneSearch = `+${searchQuery}`;
+      }
+
+      const requests = await this.prisma.eventRequest.findMany({
+        where: {
+          eventId,
+          user: {
+            OR: [
+              { number: { contains: searchQuery } },
+              { number: { contains: phoneSearch } },
+              { id: { contains: searchQuery, mode: 'insensitive' } },
+              { name: { contains: searchQuery, mode: 'insensitive' } },
+            ],
+          },
         },
-      },
-      include: {
-        user: true,
-      },
-      skip,
-      take: pageSize,
-    });
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              number: true,
+              picture: true,
+              tickets: {
+                where: {
+                  ticket: {
+                    eventId: eventId,
+                  },
+                },
+                select: {
+                  id: true,
+                  status: true,
+                  payment: true,
+                  paymentReference: true,
+                  ticket: {
+                    select: {
+                      id: true,
+                      title: true,
+                      price: true,
+                    },
+                  },
+                  createdAt: true,
+                },
+              },
+            },
+          },
+        },
+        skip,
+        take: pageSize,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
 
-    const totalRequests = requests.length;
+      // Transform the data with proper meta handling
+      const transformedRequests = requests
+        .map((request) => {
+          let ticketsWithStatus: Array<{
+            ticketId: string;
+            requestInfo: {
+              name: string;
+              email: string;
+              number: string;
+              social: string;
+            };
+            ticketInfo: {
+              title: string | undefined;
+              price: number | undefined;
+            };
+            purchaseStatus: {
+              status: TicketStatus;
+              payment: PaymentStatus;
+              purchaseId: string;
+              paymentReference?: string;
+              purchasedAt: Date;
+            } | null;
+          }> = [];
 
-    return {
-      data: requests,
-      meta: {
-        total: totalRequests,
-        page,
-        pageSize,
-        totalPages: Math.ceil(totalRequests / pageSize),
-      },
-    };
+          try {
+            const metaItems = request.meta as unknown as RequestMetaItem[];
+
+            if (Array.isArray(metaItems)) {
+              ticketsWithStatus = metaItems.map((metaItem) => {
+                const purchaseRecord = request.user?.tickets?.find(
+                  (t) => t.ticket?.id === metaItem.ticketId,
+                );
+
+                // Find the corresponding ticket info
+                const ticketInfo = request.user?.tickets?.find(
+                  (t) => t.ticket?.id === metaItem.ticketId,
+                )?.ticket;
+
+                return {
+                  ticketId: metaItem.ticketId,
+                  requestInfo: {
+                    name: metaItem.name,
+                    email: metaItem.email,
+                    number: metaItem.number,
+                    social: metaItem.social,
+                  },
+                  ticketInfo: {
+                    title: ticketInfo?.title,
+                    price: ticketInfo?.price,
+                  },
+                  purchaseStatus:
+                    request.status === RequestStatus.APPROVED
+                      ? {
+                          status:
+                            purchaseRecord?.status || TicketStatus.UPCOMMING,
+                          payment:
+                            purchaseRecord?.payment || PaymentStatus.PENDING,
+                          purchaseId: purchaseRecord?.id || '',
+                          paymentReference: purchaseRecord?.paymentReference,
+                          purchasedAt: purchaseRecord?.createdAt || new Date(),
+                        }
+                      : null,
+                };
+              });
+            } else {
+              console.warn(
+                `Invalid meta structure for request ${request.id}:`,
+                request.meta,
+              );
+            }
+          } catch (error) {
+            console.error(
+              `Error processing request ${request.id} meta data:`,
+              error,
+            );
+            console.log('Meta content:', request.meta);
+          }
+
+          return {
+            id: request.id,
+            status: request.status,
+            createdAt: request.createdAt,
+            user: request.user
+              ? {
+                  id: request.user.id,
+                  name: request.user.name || 'Unknown User',
+                  email: request.user.email,
+                  number: request.user.number,
+                  picture: request.user.picture,
+                }
+              : null,
+            tickets: ticketsWithStatus,
+          };
+        })
+        .filter((request) => request.user !== null);
+
+      // Get total count with the same search criteria
+      const totalRequests = await this.prisma.eventRequest.count({
+        where: {
+          eventId,
+          user: {
+            OR: [
+              { number: { contains: searchQuery } },
+              { number: { contains: phoneSearch } },
+              { id: { contains: searchQuery, mode: 'insensitive' } },
+              { name: { contains: searchQuery, mode: 'insensitive' } },
+            ],
+          },
+        },
+      });
+
+      // Handle case where there are no results
+      if (totalRequests === 0) {
+        return {
+          data: [],
+          meta: {
+            total: 0,
+            page,
+            pageSize,
+            totalPages: 0,
+          },
+        };
+      }
+
+      return {
+        data: transformedRequests,
+        meta: {
+          total: totalRequests,
+          page,
+          pageSize,
+          totalPages: Math.ceil(totalRequests / pageSize),
+        },
+      };
+    } catch (error) {
+      console.error('Error in searchEventRequests:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'An error occurred while searching event requests',
+      );
+    }
   }
 
   async changeRequest(
