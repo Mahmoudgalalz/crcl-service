@@ -103,20 +103,35 @@ export class PaymentService {
     status: PaymentStatus,
   ) {
     try {
-      const paid: object = {};
-      for (const ticketId in ticketsIds) {
-        const ticket = await this.prisma.ticketPurchase.update({
-          where: {
-            userId,
-            id: ticketId,
-          },
-          data: {
-            payment: status,
-            paymentReference: paymentReference.toString(),
-          },
-        });
-        paid[ticketId] = ticket;
-      }
+      const paid: Record<string, any> = {};
+      await this.prisma.$transaction(async (prisma) => {
+        for (const ticketId of ticketsIds) {
+          const existingTicket = await prisma.ticketPurchase.findFirst({
+            where: {
+              userId,
+              id: ticketId,
+            },
+          });
+
+          if (!existingTicket) {
+            throw new Error(
+              `Ticket with id ${ticketId} for user ${userId} not found`,
+            );
+          }
+
+          const ticket = await prisma.ticketPurchase.update({
+            where: {
+              id: ticketId,
+            },
+            data: {
+              payment: status,
+              paymentReference: paymentReference.toString(),
+            },
+          });
+
+          paid[ticketId] = ticket;
+        }
+      });
       return paid;
     } catch (error) {
       Logger.error(error);
