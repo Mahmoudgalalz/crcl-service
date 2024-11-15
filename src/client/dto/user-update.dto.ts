@@ -42,4 +42,8 @@ export class UserUpdateDto {
   @IsString()
   @IsOptional()
   instagram?: string;
+
+  @IsString()
+  @IsOptional()
+  notificationToken?: string;
 }

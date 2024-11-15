@@ -64,7 +64,17 @@ export class UserService {
         createdAt: true,
         updatedAt: true,
         wallet: true,
-        tickets: true,
+        tickets: {
+          include: {
+            ticket: {
+              select: {
+                title: true,
+                price: true,
+                description: true,
+              },
+            },
+          },
+        },
       },
     });
     if (!user) {
@@ -204,11 +214,13 @@ export class UserService {
       select: {
         id: true,
         title: true,
+        description: true,
         price: true,
         event: {
           select: {
             title: true,
             time: true,
+            date: true,
             location: true,
           },
         },
@@ -259,6 +271,7 @@ export class UserService {
         status: true,
         createdAt: true,
         updateAt: true,
+        paymentReference: true,
         user: {
           select: {
             name: true,
@@ -277,6 +290,7 @@ export class UserService {
                 title: true,
                 time: true,
                 date: true,
+                location: true,
                 image: true,
               },
             },

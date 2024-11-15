@@ -11,6 +11,7 @@ import {
   Delete,
   Res,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { EventsManagementService } from './events.service';
 import {
@@ -115,13 +116,14 @@ export class EventsManagementController {
         );
         return new SuccessResponse(`result of ${search} in Requests`, requests);
       }
-      const requests = await this.eventsService.getEventRequests(
+      const requests = await this.eventsService.getEventRequestDetails(
         id,
         page,
         limit,
       );
       return new SuccessResponse('All Event Requests', requests);
     } catch (error) {
+      Logger.error(error);
       return new ErrorResponse();
     }
   }

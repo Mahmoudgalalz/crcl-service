@@ -1,12 +1,153 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TOKEN_PRICE } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'; // Make sure you import these functions
 
 @Injectable()
 export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // 1. Get total money from all transactions and payments
+  // 1. Group booth transactions and calculate total money for each booth user
+  async getBoothTransactionsWithTotal() {
+    const groupedTransactions = await this.prisma.walletTransactions.groupBy({
+      by: ['walletId'],
+      _sum: { amount: true },
+      where: {
+        Wallet: {
+          user: { type: 'BOOTH' },
+        },
+      },
+    });
+
+    return Promise.all(
+      groupedTransactions.map(async (transaction) => {
+        const wallet = await this.prisma.wallet.findUnique({
+          where: { id: transaction.walletId },
+          select: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        });
+        return {
+          ...transaction,
+          user: wallet?.user,
+          totalMoney: transaction._sum.amount * TOKEN_PRICE || 0,
+        };
+      }),
+    );
+  }
+
+  async getEventDetailsWithRevenue(startDate: Date, endDate: Date) {
+    const timeZone = 'Africa/Cairo';
+
+    const localStartDate = toZonedTime(startDate, timeZone);
+    const localEndDate = toZonedTime(endDate, timeZone);
+
+    localStartDate.setHours(0, 0, 0, 0);
+    localEndDate.setHours(23, 59, 59, 999);
+
+    const normalizedStartDate = fromZonedTime(localStartDate, timeZone);
+    const normalizedEndDate = fromZonedTime(localEndDate, timeZone);
+
+    const events = await this.prisma.event.findMany({
+      where: {
+        date: {
+          gte: normalizedStartDate,
+          lte: normalizedEndDate,
+        },
+        status: { notIn: ['DELETED', 'DRAFTED', 'CANCLED'] },
+      },
+      select: {
+        id: true,
+        title: true,
+        location: true,
+        date: true,
+        status: true,
+        tickets: {
+          include: {
+            TicketPurchase: {
+              select: {
+                payment: true,
+                ticket: { select: { price: true } },
+              },
+            },
+          },
+        },
+        requests: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    const eventDetails = events.map((event) => {
+      let totalRevenue = 0;
+      let totalPaidTickets = 0;
+      let totalUnpaidTickets = 0;
+      let totalPendingTickets = 0;
+      const totalRequests = event.requests.length;
+
+      event.tickets.forEach((ticket) => {
+        ticket.TicketPurchase?.forEach((purchase) => {
+          if (purchase.payment === 'PAID') {
+            totalRevenue += purchase.ticket.price || 0;
+            totalPaidTickets += 1;
+          } else if (purchase.payment === 'UN_PAID') {
+            totalUnpaidTickets += 1;
+          } else if (purchase.payment === 'PENDING') {
+            totalPendingTickets += 1;
+          }
+        });
+      });
+
+      return {
+        id: event.id,
+        title: event.title,
+        location: event.location,
+        date: event.date,
+        totalRevenue,
+        totalPaidTickets,
+        totalUnpaidTickets,
+        totalPendingTickets,
+        totalRequests,
+      };
+    });
+
+    const totalEvents = eventDetails.length;
+    const combinedRevenue = eventDetails.reduce(
+      (sum, event) => sum + event.totalRevenue,
+      0,
+    );
+    const totalPaidTickets = eventDetails.reduce(
+      (sum, event) => sum + event.totalPaidTickets,
+      0,
+    );
+    const totalUnpaidTickets = eventDetails.reduce(
+      (sum, event) => sum + event.totalUnpaidTickets,
+      0,
+    );
+    const totalPendingTickets = eventDetails.reduce(
+      (sum, event) => sum + event.totalPendingTickets,
+      0,
+    );
+    const totalRequests = eventDetails.reduce(
+      (sum, event) => sum + event.totalRequests,
+      0,
+    );
+
+    return {
+      totalEvents,
+      combinedRevenue,
+      totalPaidTickets,
+      totalUnpaidTickets,
+      totalPendingTickets,
+      totalRequests,
+      eventDetails,
+    };
+  }
+
   async getTotalMoney() {
     try {
       const walletResult = await this.prisma.walletTransactions.aggregate({
@@ -24,7 +165,7 @@ export class AnalyticsService {
       );
 
       return {
-        walletTotal: walletResult._sum.amount || 0,
+        walletTotal: walletResult._sum.amount * TOKEN_PRICE || 0,
         paymentTotal: totalPaymentSum,
         combinedTotal:
           (walletResult._sum.amount * TOKEN_PRICE || 0) + totalPaymentSum,
@@ -35,117 +176,103 @@ export class AnalyticsService {
     }
   }
 
-  // 2. Get booth transactions
-  async getBoothTransactions() {
-    return await this.prisma.walletTransactions.groupBy({
-      by: ['to'],
-      _sum: { amount: true },
-      _count: { id: true },
-      where: {
-        Wallet: { user: { type: 'BOOTH' } },
-      },
-    });
-  }
-
-  // 3. Get event statistics (launched, upcoming, past events)
   async getEventStats() {
-    const totalEvents = await this.prisma.event.count({
-      where: { status: { notIn: ['DELETED', 'DRAFTED', 'CANCLED'] } },
-    });
-    const upcomingEvents = await this.prisma.event.count({
-      where: {
-        date: { gte: new Date() },
-        status: 'PUBLISHED',
-      },
-    });
-    const pastEvents = await this.prisma.event.count({
-      where: {
-        date: { lt: new Date() },
-        status: { in: ['ENDED', 'PUBLISHED'] },
-      },
-    });
+    const [totalEvents, upcomingEvents, pastEvents] =
+      await this.prisma.$transaction([
+        this.prisma.event.count({
+          where: { status: { notIn: ['DELETED', 'DRAFTED', 'CANCLED'] } },
+        }),
+        this.prisma.event.count({
+          where: {
+            date: { gte: new Date() },
+            status: 'PUBLISHED',
+          },
+        }),
+        this.prisma.event.count({
+          where: {
+            date: { lt: new Date() },
+            status: { in: ['ENDED', 'PUBLISHED'] },
+          },
+        }),
+      ]);
+
     return { totalEvents, upcomingEvents, pastEvents };
   }
 
-  // 4. Get event request counts grouped by event
+  // 5. Get event request counts grouped by event
   async getEventRequestCounts() {
-    return await this.prisma.eventRequest.groupBy({
+    const requestCounts = await this.prisma.eventRequest.groupBy({
       by: ['eventId'],
       _count: { id: true },
     });
-  }
 
-  // 5. Get total paid ticket purchases
-  async getTotalPaidTickets() {
-    const totalPaid = await this.prisma.ticketPurchase.count({
-      where: { payment: 'PAID' },
-    });
-    return totalPaid;
-  }
-
-  // 6. Get user request counts for static periods (1 day, 3 days, etc.)
-  async getUserRequestCountsForStaticPeriods() {
-    const periods = [
-      { name: '1_day', days: 1 },
-      { name: '3_days', days: 3 },
-      { name: '1_week', days: 7 },
-      { name: '2_weeks', days: 14 },
-      { name: '1_month', days: 30 },
-      { name: '2_months', days: 60 },
-      { name: '3_months', days: 90 },
-    ];
-
-    const results = [];
-    for (const period of periods) {
-      const startDate = new Date();
-      const endDate = new Date();
-      startDate.setDate(endDate.getDate() - period.days);
-      const periodResults = await this.getUserRequestCounts(startDate, endDate);
-      results.push({ period: period.name, data: periodResults });
-    }
-    return results;
-  }
-
-  private async getUserRequestCounts(startDate: Date, endDate: Date) {
-    const result = await this.prisma.eventRequest.groupBy({
-      by: ['userId', 'eventId'],
-      _count: { id: true },
-      where: { createdAt: { gte: startDate, lte: endDate } },
-      orderBy: { _count: { id: 'desc' } },
-    });
-
+    const eventIds = requestCounts.map((count) => count.eventId);
     const events = await this.prisma.event.findMany({
-      where: { id: { in: result.map((request) => request.eventId) } },
-      select: { id: true, title: true },
+      where: {
+        id: { in: eventIds },
+      },
+      select: {
+        id: true,
+        title: true,
+      },
     });
 
-    return result.map((request) => {
-      const event = events.find((event) => event.id === request.eventId);
+    const eventRequestCounts = requestCounts.map((requestCount) => {
+      const event = events.find((event) => event.id === requestCount.eventId);
       return {
-        userId: request.userId,
-        eventId: request.eventId,
-        eventName: event ? event.title : 'Unknown Event',
-        requestCount: request._count.id,
+        eventId: requestCount.eventId,
+        eventTitle: event?.title || 'Unknown', // Default to 'Unknown' if event title is not found
+        requestCount: requestCount._count.id,
       };
     });
+
+    return eventRequestCounts;
   }
 
-  // Aggregate all data or selectively based on params
-  async getAllAnalytics(params: { [key: string]: boolean }) {
+  // 6. Get total paid ticket purchases
+  async getTotalTicketsWithStatus() {
+    const [paid, unpaid, pending] = await this.prisma.$transaction([
+      this.prisma.ticketPurchase.count({ where: { payment: 'PAID' } }),
+      this.prisma.ticketPurchase.count({ where: { payment: 'UN_PAID' } }),
+      this.prisma.ticketPurchase.count({ where: { payment: 'PENDING' } }),
+    ]);
+
+    return { paid, unpaid, pending };
+  }
+
+  // 7. Aggregate all analytics data or selectively based on params
+  async getAllAnalytics(
+    params: { [key: string]: boolean },
+    startDate: Date,
+    endDate: Date,
+  ) {
     const result: any = {};
-    if (params.totalMoney || params.all)
+
+    if (!startDate || !endDate) {
+      throw new Error(
+        'startDate and endDate are required for non-booth analytics',
+      );
+    }
+
+    // Handle analytics requiring dates
+    if (params.totalMoney || params.all) {
       result.totalMoney = await this.getTotalMoney();
-    if (params.boothTransactions || params.all)
-      result.boothTransactions = await this.getBoothTransactions();
-    if (params.eventStats || params.all)
+    }
+    if (params.eventStats || params.all) {
       result.eventStats = await this.getEventStats();
-    if (params.eventRequestCounts || params.all)
+    }
+    if (params.eventRequestCounts || params.all) {
       result.eventRequestCounts = await this.getEventRequestCounts();
-    if (params.totalPaidTickets || params.all)
-      result.totalPaidTickets = await this.getTotalPaidTickets();
-    if (params.userRequestCounts || params.all)
-      result.userRequestCounts =
-        await this.getUserRequestCountsForStaticPeriods();
+    }
+    if (params.totalPaidTickets || params.all) {
+      result.totalPaidTickets = await this.getTotalTicketsWithStatus();
+    }
+    if (params.userRequestCounts || params.all) {
+      result.userRequestCounts = await this.getEventDetailsWithRevenue(
+        startDate,
+        endDate,
+      );
+    }
 
     return result;
   }
