@@ -89,6 +89,20 @@ export class UserController {
     }
   }
 
+  @Delete('events/:id')
+  @Roles(Role.User)
+  async removefavoriteEvents(
+    @CurrentUser() user: User,
+    @Param('id') eventId: string,
+  ) {
+    try {
+      const add = await this.userService.removeFavoriteEvent(user.id, eventId);
+      return new SuccessResponse('Add Event to Favorite list', add);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
+    }
+  }
+
   @Post('tickets/pay')
   @Roles(Role.User)
   async userPayTickets(

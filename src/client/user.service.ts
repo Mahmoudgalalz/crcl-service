@@ -15,7 +15,6 @@ export class UserService {
   ) {}
 
   async update(id: string, data: UserUpdateDto) {
-    Logger.log(data);
     if (data.password) {
       const { password, ...restData } = data;
       const hashedPassword = await this.bcryptService.hashPassword(password);
@@ -48,6 +47,29 @@ export class UserService {
         },
       },
     });
+  }
+
+  async removeFavoriteEvent(userId: string, eventId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId },
+      select: { favoriteEvents: true },
+    });
+
+    if (!user || !user.favoriteEvents) {
+      throw new Error('User not found or favorite events not initialized');
+    }
+
+    const newFavEvents = user.favoriteEvents.filter(
+      (favEvent) => favEvent !== eventId,
+    );
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { favoriteEvents: newFavEvents },
+      select: { favoriteEvents: true },
+    });
+
+    return updatedUser.favoriteEvents;
   }
 
   async get(id: string) {
