@@ -1,5 +1,5 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class AnalyticsQueryDto {
   @IsOptional()
@@ -24,15 +24,14 @@ export class AnalyticsQueryDto {
 
   @IsOptional()
   @IsBoolean()
+  @Transform(({ value }) => value === 'true')
   all?: boolean;
 
   @IsOptional()
   @IsString()
-  @Transform(({ value }) => (value ? new Date(value) : null))
-  startDate?: Date;
+  startDate?: string;
 
   @IsOptional()
   @IsString()
-  @Transform(({ value }) => (value ? new Date(value) : null))
-  endDate?: Date;
+  endDate?: string;
 }

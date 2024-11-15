@@ -35,8 +35,8 @@ export class AnalyticsController {
 
     return await this.analyticsService.getAllAnalytics(
       params,
-      query.startDate,
-      query.endDate,
+      new Date(query.startDate),
+      new Date(query.startDate),
     );
   }
 }
