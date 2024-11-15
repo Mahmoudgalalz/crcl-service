@@ -1,33 +1,42 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
+import { AnalyticsQueryDto } from './dto/anylytics.dto';
 
 @Controller('analytics')
 @Roles(Role.Admin)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
+  // Static Booth Analytics, doesn't need dates
+  @Get('booth')
+  async getBoothAnalytics() {
+    return await this.analyticsService.getBoothTransactionsWithTotal();
+  }
+
   @Get()
-  async getAllAnalytics(
-    @Query('totalMoney') totalMoney?: boolean,
-    @Query('boothTransactions') boothTransactions?: boolean,
-    @Query('eventStats') eventStats?: boolean,
-    @Query('eventRequestCounts') eventRequestCounts?: boolean,
-    @Query('totalPaidTickets') totalPaidTickets?: boolean,
-    @Query('userRequestCounts') userRequestCounts?: boolean,
-    @Query('all') all?: boolean,
-  ) {
+  async getAllAnalytics(@Query() query: AnalyticsQueryDto) {
+    // Ensure startDate and endDate are provided if "all" is requested
+    if (query.all && (!query.startDate || !query.endDate)) {
+      throw new BadRequestException(
+        'startDate and endDate are required for "all" analytics',
+      );
+    }
+
     const params = {
-      totalMoney: totalMoney === true,
-      boothTransactions: boothTransactions === true,
-      eventStats: eventStats === true,
-      eventRequestCounts: eventRequestCounts === true,
-      totalPaidTickets: totalPaidTickets === true,
-      userRequestCounts: userRequestCounts === true,
-      all: all === true,
+      totalMoney: query.totalMoney === true,
+      eventStats: query.eventStats === true,
+      eventRequestCounts: query.eventRequestCounts === true,
+      totalPaidTickets: query.totalPaidTickets === true,
+      userRequestCounts: query.userRequestCounts === true,
+      all: query.all === true,
     };
 
-    return await this.analyticsService.getAllAnalytics(params);
+    return await this.analyticsService.getAllAnalytics(
+      params,
+      query.startDate,
+      query.endDate,
+    );
   }
 }
