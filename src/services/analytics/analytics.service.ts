@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TOKEN_PRICE } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'; // Make sure you import these functions
 
 @Injectable()
 export class AnalyticsService {
@@ -38,11 +39,22 @@ export class AnalyticsService {
   }
 
   async getEventDetailsWithRevenue(startDate: Date, endDate: Date) {
+    const timeZone = 'Africa/Cairo';
+
+    const localStartDate = toZonedTime(startDate, timeZone);
+    const localEndDate = toZonedTime(endDate, timeZone);
+
+    localStartDate.setHours(0, 0, 0, 0);
+    localEndDate.setHours(23, 59, 59, 999);
+
+    const normalizedStartDate = fromZonedTime(localStartDate, timeZone);
+    const normalizedEndDate = fromZonedTime(localEndDate, timeZone);
+
     const events = await this.prisma.event.findMany({
       where: {
         date: {
-          gte: startDate,
-          lte: endDate,
+          gte: normalizedStartDate,
+          lte: normalizedEndDate,
         },
         status: { notIn: ['DELETED', 'DRAFTED', 'CANCLED'] },
       },
@@ -51,14 +63,13 @@ export class AnalyticsService {
         title: true,
         location: true,
         date: true,
+        status: true,
         tickets: {
           include: {
             TicketPurchase: {
               select: {
-                payment: true, // To differentiate between PAID, UNPAID, and PENDING
-                ticket: {
-                  select: { price: true },
-                },
+                payment: true,
+                ticket: { select: { price: true } },
               },
             },
           },
@@ -72,7 +83,6 @@ export class AnalyticsService {
     });
 
     const eventDetails = events.map((event) => {
-      // Initialize counters for ticket statuses and total revenue
       let totalRevenue = 0;
       let totalPaidTickets = 0;
       let totalUnpaidTickets = 0;
@@ -81,17 +91,12 @@ export class AnalyticsService {
 
       event.tickets.forEach((ticket) => {
         ticket.TicketPurchase?.forEach((purchase) => {
-          // Add to revenue if the ticket is paid
           if (purchase.payment === 'PAID') {
             totalRevenue += purchase.ticket.price || 0;
             totalPaidTickets += 1;
-          }
-          // Add to unpaid tickets if the payment is unpaid
-          else if (purchase.payment === 'UN_PAID') {
+          } else if (purchase.payment === 'UN_PAID') {
             totalUnpaidTickets += 1;
-          }
-          // Add to pending tickets if the payment is pending
-          else if (purchase.payment === 'PENDING') {
+          } else if (purchase.payment === 'PENDING') {
             totalPendingTickets += 1;
           }
         });
@@ -115,7 +120,6 @@ export class AnalyticsService {
       (sum, event) => sum + event.totalRevenue,
       0,
     );
-
     const totalPaidTickets = eventDetails.reduce(
       (sum, event) => sum + event.totalPaidTickets,
       0,
