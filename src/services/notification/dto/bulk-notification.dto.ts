@@ -19,6 +19,10 @@ export class BulkPushNotifiaction {
   @IsOptional()
   usersIds?: string[];
 
+  @IsString()
+  @IsOptional()
+  notificationId?: string;
+
   @IsBoolean()
   @IsOptional()
   all?: boolean;
