@@ -73,6 +73,27 @@ export class EventsManagementService {
     return { event };
   }
 
+  async searchEvents(
+    page: number,
+    limit: number,
+    search: string,
+  ): Promise<{ events: Event[]; total: number }> {
+    const [events, total] = await this.prisma.$transaction([
+      this.prisma.event.findMany({
+        where: {
+          title: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.event.count(),
+    ]);
+    return { events, total };
+  }
+
   async createTicket(eventId: string, data: CreateTicketDto): Promise<Ticket> {
     const id = newId('ticket', 16);
     return await this.prisma.ticket.create({
@@ -429,6 +450,7 @@ export class EventsManagementService {
       }
 
       const transformedRequests = filteredRequests.map(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         ({ searchFields, data }) => {
           const ticketsWithStatus = data.metaItems.map((metaItem) => {
             const item = metaItem as Record<string, any>;

@@ -35,17 +35,27 @@ export class NewspaperController {
   async getAllNewspapers(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
   ) {
     try {
       const { pageNumber, limitNumber } = {
         pageNumber: parseInt(page),
         limitNumber: parseInt(limit),
       };
-      const newspapers = await this.newspaperService.listNewspapers(
-        pageNumber,
-        limitNumber,
-      );
-      return new SuccessResponse('All Newspapers', newspapers);
+      if (search) {
+        const newspapers = await this.newspaperService.searchNewspapers(
+          pageNumber,
+          limitNumber,
+          search,
+        );
+        return new SuccessResponse('search Newspapers', newspapers);
+      } else {
+        const newspapers = await this.newspaperService.listNewspapers(
+          pageNumber,
+          limitNumber,
+        );
+        return new SuccessResponse('All Newspapers', newspapers);
+      }
     } catch (error) {
       return new ErrorResponse();
     }
