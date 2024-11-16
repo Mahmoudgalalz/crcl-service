@@ -7,6 +7,7 @@ import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { BcryptService } from 'src/shared/auth/shared/bcrypt.service';
 import { UpdateSuperUserViaAdminDto } from './dto/update-admin.dto';
 import { Role } from 'src/shared/interface/roles';
+import { getFuse } from 'src/shared/auth/shared/fues';
 
 @Injectable()
 export class UsersManagmentService {
@@ -67,6 +68,7 @@ export class UsersManagmentService {
             instagram: true,
             gender: true,
             picture: true,
+            Notifications: true,
             type: true,
             deletedAt: true,
             notificationToken: true,
@@ -97,6 +99,45 @@ export class UsersManagmentService {
     } catch (error) {
       Logger.error('Error fetching users:', error);
       throw new Error('Unable to fetch users at the moment.');
+    }
+  }
+
+  async searchUsers(
+    page: number = 1,
+    limit: number = 10,
+    searchQuery: string,
+    filters?: {
+      status?: UserStatus;
+      gender?: 'Male' | 'Female';
+      types?: UserType[] | UserType;
+    },
+  ) {
+    try {
+      // Step 1: Fetch users based on filters
+      const { users, meta } = await this.listAllUsers(page, limit, filters);
+      const Fuse = await getFuse();
+      // Step 2: Configure Fuse.js options
+      const fuse = new Fuse(users, {
+        keys: ['name', 'email', 'number'], // Search by name, email, or phone
+        threshold: 0.2, // Adjust for desired match sensitivity
+      });
+
+      // Step 3: Perform search
+      const filteredUsers = searchQuery
+        ? fuse.search(searchQuery).map((result) => result.item)
+        : users;
+
+      return {
+        users: filteredUsers,
+        meta: {
+          ...meta,
+          total: filteredUsers.length,
+          totalPages: Math.ceil(filteredUsers.length / limit),
+        },
+      };
+    } catch (error) {
+      Logger.error('Error searching users:', error);
+      throw new Error('Unable to search users at the moment.');
     }
   }
 

@@ -15,6 +15,7 @@ import {
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import { newId } from 'src/common/uniqueId.utils';
 import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
+import { getFuse } from 'src/shared/auth/shared/fues';
 
 interface RequestMetaItem {
   name: string;
@@ -314,7 +315,7 @@ export class EventsManagementService {
       if (!eventId) {
         throw new Error('Event ID is required');
       }
-      const Fuse = await this.getFuse();
+      const Fuse = await getFuse();
 
       page = Math.max(1, page);
       pageSize = Math.max(1, pageSize);
@@ -592,10 +593,5 @@ export class EventsManagementService {
       });
     }
     return output;
-  }
-
-  private async getFuse() {
-    const { default: Fuse } = await import('fuse.js');
-    return Fuse;
   }
 }
