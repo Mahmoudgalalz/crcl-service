@@ -52,16 +52,16 @@ export class UsersManagmentController {
     @Query('limit') limit: number = 10,
     @Query('status') status?: UserStatus,
     @Query('gender') gender?: 'Male' | 'Female',
-    @Body() payload?: { search: string },
+    @Query('search') search?: string,
     @Query('types') types?: UserType[] | UserType,
   ) {
     const filters = { types, status, gender };
     try {
-      if (payload && payload.search) {
+      if (search) {
         const result = await this.usersService.searchUsers(
           page,
           limit,
-          payload.search,
+          search,
           filters,
         );
         return new SuccessResponse('List search users', result);
