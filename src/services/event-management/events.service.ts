@@ -89,7 +89,14 @@ export class EventsManagementService {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.event.count(),
+      this.prisma.event.count({
+        where: {
+          title: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      }),
     ]);
     return { events, total };
   }

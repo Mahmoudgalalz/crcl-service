@@ -72,7 +72,14 @@ export class NewspaperService {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.newspaper.count(),
+      this.prisma.newspaper.count({
+        where: {
+          title: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      }),
     ]);
     return { newspapers, total };
   }
