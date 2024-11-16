@@ -47,17 +47,27 @@ export class EventsManagementController {
   async getAllEventsWithTickets(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('search') search?: string,
   ) {
     try {
       const { pageNumber, limitNumber } = {
         pageNumber: parseInt(page),
         limitNumber: parseInt(limit),
       };
-      const events = await this.eventsService.listAllEvents(
-        pageNumber,
-        limitNumber,
-      );
-      return new SuccessResponse('all events', events);
+      if (search) {
+        const events = await this.eventsService.searchEvents(
+          pageNumber,
+          limitNumber,
+          search,
+        );
+        return new SuccessResponse('search events', events);
+      } else {
+        const events = await this.eventsService.listAllEvents(
+          pageNumber,
+          limitNumber,
+        );
+        return new SuccessResponse('all events', events);
+      }
     } catch (error) {
       return new ErrorResponse();
     }

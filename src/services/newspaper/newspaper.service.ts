@@ -55,4 +55,32 @@ export class NewspaperService {
     ]);
     return { newspapers, total };
   }
+
+  async searchNewspapers(
+    page: number,
+    limit: number,
+    search: string,
+  ): Promise<{ newspapers: Newspaper[]; total: number }> {
+    const [newspapers, total] = await this.prisma.$transaction([
+      this.prisma.newspaper.findMany({
+        where: {
+          title: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.newspaper.count({
+        where: {
+          title: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      }),
+    ]);
+    return { newspapers, total };
+  }
 }
