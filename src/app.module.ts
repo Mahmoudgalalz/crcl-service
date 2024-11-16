@@ -17,6 +17,7 @@ import { UserModule } from './client/user.module';
 import { AnalyticsModule } from './services/analytics/analytics.module';
 import { BoothModule } from './services/booth/booth.module';
 import { PaymentModule } from './services/payment/payment.module';
+import { NotificationsModule } from './services/notification/notification.module';
 @Global()
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { PaymentModule } from './services/payment/payment.module';
     BoothModule,
     UserModule,
     PaymentModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
