@@ -311,37 +311,18 @@ export class EventsManagementService {
     searchQuery: string = '',
   ) {
     try {
-      // Validate inputs
       if (!eventId) {
         throw new Error('Event ID is required');
       }
+      const Fuse = await this.getFuse();
 
-      // Ensure positive numbers for pagination
       page = Math.max(1, page);
       pageSize = Math.max(1, pageSize);
       const skip = (page - 1) * pageSize;
 
-      // Normalize phone number search query
-      let phoneSearch = searchQuery;
-      if (searchQuery.startsWith('+')) {
-        // Also search without the plus
-        phoneSearch = searchQuery.substring(1);
-      } else if (/^\d+$/.test(searchQuery)) {
-        // If it's all numbers, also search with a plus
-        phoneSearch = `+${searchQuery}`;
-      }
-
       const requests = await this.prisma.eventRequest.findMany({
         where: {
           eventId,
-          user: {
-            OR: [
-              { number: { contains: searchQuery } },
-              { number: { contains: phoneSearch } },
-              { id: { contains: searchQuery, mode: 'insensitive' } },
-              { name: { contains: searchQuery, mode: 'insensitive' } },
-            ],
-          },
         },
         include: {
           user: {
@@ -354,7 +335,7 @@ export class EventsManagementService {
               tickets: {
                 where: {
                   ticket: {
-                    eventId: eventId,
+                    eventId,
                   },
                 },
                 select: {
@@ -375,154 +356,144 @@ export class EventsManagementService {
             },
           },
         },
-        skip,
-        take: pageSize,
         orderBy: {
           createdAt: 'desc',
         },
       });
 
-      // Transform the data with proper meta handling
-      const transformedRequests = requests
-        .map((request) => {
-          let ticketsWithStatus: Array<{
-            ticketId: string;
-            requestInfo: {
-              name: string;
-              email: string;
-              number: string;
-              social: string;
-            };
-            ticketInfo: {
-              title: string | undefined;
-              price: number | undefined;
-            };
-            purchaseStatus: {
-              status: TicketStatus;
-              payment: PaymentStatus;
-              purchaseId: string;
-              paymentReference?: string;
-              purchasedAt: Date;
-            } | null;
-          }> = [];
+      const combinedData = requests.map((request) => {
+        const metaItems = Array.isArray(request.meta) ? request.meta : [];
 
-          try {
-            const metaItems = request.meta as unknown as RequestMetaItem[];
-
-            if (Array.isArray(metaItems)) {
-              ticketsWithStatus = metaItems.map((metaItem) => {
-                const purchaseRecord = request.user?.tickets?.find(
-                  (t) => t.ticket?.id === metaItem.ticketId,
-                );
-
-                // Find the corresponding ticket info
-                const ticketInfo = request.user?.tickets?.find(
-                  (t) => t.ticket?.id === metaItem.ticketId,
-                )?.ticket;
-
-                return {
-                  ticketId: metaItem.ticketId,
-                  requestInfo: {
-                    name: metaItem.name,
-                    email: metaItem.email,
-                    number: metaItem.number,
-                    social: metaItem.social,
-                  },
-                  ticketInfo: {
-                    title: ticketInfo?.title,
-                    price: ticketInfo?.price,
-                  },
-                  purchaseStatus:
-                    request.status === RequestStatus.APPROVED
-                      ? {
-                          status:
-                            purchaseRecord?.status || TicketStatus.UPCOMMING,
-                          payment:
-                            purchaseRecord?.payment || PaymentStatus.PENDING,
-                          purchaseId: purchaseRecord?.id || '',
-                          paymentReference: purchaseRecord?.paymentReference,
-                          purchasedAt: purchaseRecord?.createdAt || new Date(),
-                        }
-                      : null,
-                };
-              });
-            } else {
-              console.warn(
-                `Invalid meta structure for request ${request.id}:`,
-                request.meta,
-              );
-            }
-          } catch (error) {
-            console.error(
-              `Error processing request ${request.id} meta data:`,
-              error,
-            );
-            console.log('Meta content:', request.meta);
-          }
-
+        // Only extract email and number from meta items
+        const searchFields = metaItems.map((metaItem) => {
+          const item = metaItem as Record<string, any>;
           return {
+            // Normalize phone number by removing spaces, dashes, and other characters
+            number: (item.number?.toString() || '')
+              .replace(/[\s\-\(\)\.]/g, '')
+              .trim(),
+            // Normalize email by converting to lowercase and trimming
+            email: (item.email?.toString() || '').toLowerCase().trim(),
+          };
+        });
+
+        return {
+          searchFields,
+          data: {
             id: request.id,
             status: request.status,
             createdAt: request.createdAt,
-            user: request.user
+            user: request.user,
+            metaItems,
+          },
+        };
+      });
+
+      let filteredRequests = combinedData;
+
+      if (searchQuery) {
+        // Normalize the search query
+        const normalizedQuery = searchQuery
+          .toLowerCase()
+          .replace(/[\s\-\(\)\.]/g, '')
+          .trim();
+
+        // First try exact matches in meta items
+        const exactMatches = combinedData.filter((item) =>
+          item.searchFields.some(
+            (field) =>
+              field.number === normalizedQuery || // Match normalized phone number
+              field.email === normalizedQuery, // Match normalized email
+          ),
+        );
+
+        // If we find exact matches, return only those
+        if (exactMatches.length > 0) {
+          filteredRequests = exactMatches;
+        } else {
+          // Otherwise, use Fuse.js for fuzzy searching with strict settings
+          const fuse = new Fuse(combinedData, {
+            keys: ['searchFields.number', 'searchFields.email'],
+            threshold: 0.1, // Very strict matching
+            distance: 0, // Require consecutive matching
+            minMatchCharLength: 3,
+            shouldSort: true,
+            ignoreLocation: true,
+            useExtendedSearch: true,
+          });
+
+          const searchResults = fuse.search(normalizedQuery);
+          filteredRequests = searchResults.map((result) => result.item);
+        }
+      }
+
+      const transformedRequests = filteredRequests.map(
+        ({ searchFields, data }) => {
+          const ticketsWithStatus = data.metaItems.map((metaItem) => {
+            const item = metaItem as Record<string, any>;
+
+            const purchaseRecord = data.user?.tickets?.find(
+              (t) => t.ticket?.id === item.ticketId,
+            );
+
+            return {
+              ticketId: item.ticketId || 'Unknown Ticket ID',
+              requestInfo: {
+                name: item.name || 'Unknown Name',
+                email: item.email || 'Unknown Email',
+                number: item.number || 'Unknown Number',
+                social: item.social || 'Unknown Social',
+              },
+              ticketInfo: {
+                title: purchaseRecord?.ticket?.title || 'Unknown Title',
+                price: purchaseRecord?.ticket?.price || 0,
+              },
+              purchaseStatus: purchaseRecord
+                ? {
+                    status: purchaseRecord.status || 'UPCOMING',
+                    payment: purchaseRecord.payment || 'PENDING',
+                    purchaseId: purchaseRecord.id,
+                    paymentReference: purchaseRecord.paymentReference || 'N/A',
+                    purchasedAt: purchaseRecord.createdAt || null,
+                  }
+                : null,
+            };
+          });
+
+          return {
+            id: data.id,
+            status: data.status,
+            createdAt: data.createdAt,
+            user: data.user
               ? {
-                  id: request.user.id,
-                  name: request.user.name || 'Unknown User',
-                  email: request.user.email,
-                  number: request.user.number,
-                  picture: request.user.picture,
+                  id: data.user.id,
+                  name: data.user.name || 'Unknown User',
+                  email: data.user.email,
+                  number: data.user.number,
+                  picture: data.user.picture || null,
                 }
               : null,
             tickets: ticketsWithStatus,
           };
-        })
-        .filter((request) => request.user !== null);
-
-      // Get total count with the same search criteria
-      const totalRequests = await this.prisma.eventRequest.count({
-        where: {
-          eventId,
-          user: {
-            OR: [
-              { number: { contains: searchQuery } },
-              { number: { contains: phoneSearch } },
-              { id: { contains: searchQuery, mode: 'insensitive' } },
-              { name: { contains: searchQuery, mode: 'insensitive' } },
-            ],
-          },
         },
-      });
+      );
 
-      // Handle case where there are no results
-      if (totalRequests === 0) {
-        return {
-          data: [],
-          meta: {
-            total: 0,
-            page,
-            pageSize,
-            totalPages: 0,
-          },
-        };
-      }
+      const paginatedRequests = transformedRequests.slice(
+        skip,
+        skip + pageSize,
+      );
 
       return {
-        data: transformedRequests,
+        data: paginatedRequests,
         meta: {
-          total: totalRequests,
+          total: filteredRequests.length,
           page,
           pageSize,
-          totalPages: Math.ceil(totalRequests / pageSize),
+          totalPages: Math.ceil(filteredRequests.length / pageSize),
         },
       };
     } catch (error) {
       console.error('Error in searchEventRequests:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', {
-          message: error.message,
-          stack: error.stack,
-        });
-      }
       throw new Error(
         error instanceof Error
           ? error.message
@@ -621,5 +592,10 @@ export class EventsManagementService {
       });
     }
     return output;
+  }
+
+  private async getFuse() {
+    const { default: Fuse } = await import('fuse.js');
+    return Fuse;
   }
 }
