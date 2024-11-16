@@ -44,4 +44,47 @@ export class NotificationService {
       where: { id },
     });
   }
+
+  async addUserToNoticationGroup(usersIds: string[], notificationId: string) {
+    return await this.prisma.notifications.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        users: {
+          connect: usersIds.map((id) => ({ id })),
+        },
+      },
+    });
+  }
+
+  async removeUserFromNotificationGroup(
+    usersIds: string[],
+    notificationId: string,
+  ) {
+    return await this.prisma.notifications.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        users: {
+          disconnect: usersIds.map((id) => ({ id })),
+        },
+      },
+    });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async pushNotification(userId: string) {
+    return 'Not Impelemented yet';
+  }
+
+  async bulkPushNotifiaction(payload: {
+    title: string;
+    message: string;
+    notificationId?: string;
+    usersIds?: string[];
+  }) {
+    return payload;
+  }
 }
