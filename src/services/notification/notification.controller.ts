@@ -16,6 +16,7 @@ import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Response } from 'express';
 import { SuccessResponse } from 'src/shared/success-response';
 import { BulkPushNotifiaction } from './dto/bulk-notification.dto';
+import { addUsersNotifiaction } from './dto/add-users.dto';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -106,13 +107,13 @@ export class NotificationsController {
   @Patch(':notificationId/users')
   async addUserToNotificationGroup(
     @Param('notificationId') notificationId: string,
-    @Body() { usersIds }: { usersIds: string[] },
+    @Body() payload: addUsersNotifiaction,
     @Res() res: Response,
   ) {
     try {
       const updatedNotification =
         await this.notificationsService.addUserToNoticationGroup(
-          usersIds,
+          payload.usersIds,
           notificationId,
         );
       return res
@@ -133,13 +134,13 @@ export class NotificationsController {
   @Delete(':notificationId/users')
   async removeUserFromNotificationGroup(
     @Param('notificationId') notificationId: string,
-    @Body() { usersIds }: { usersIds: string[] },
+    @Body() payload: addUsersNotifiaction,
     @Res() res: Response,
   ) {
     try {
       const updatedNotification =
         await this.notificationsService.removeUserFromNotificationGroup(
-          usersIds,
+          payload.usersIds,
           notificationId,
         );
       return res
