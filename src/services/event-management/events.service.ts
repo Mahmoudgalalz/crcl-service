@@ -74,8 +74,6 @@ export class EventsManagementService {
   }
 
   async searchEvents(
-    page: number,
-    limit: number,
     search: string,
   ): Promise<{ events: Event[]; total: number }> {
     const [events, total] = await this.prisma.$transaction([
@@ -86,8 +84,6 @@ export class EventsManagementService {
             mode: 'insensitive',
           },
         },
-        skip: (page - 1) * limit,
-        take: limit,
       }),
       this.prisma.event.count({
         where: {

@@ -57,8 +57,6 @@ export class NewspaperService {
   }
 
   async searchNewspapers(
-    page: number,
-    limit: number,
     search: string,
   ): Promise<{ newspapers: Newspaper[]; total: number }> {
     const [newspapers, total] = await this.prisma.$transaction([
@@ -69,8 +67,6 @@ export class NewspaperService {
             mode: 'insensitive',
           },
         },
-        skip: (page - 1) * limit,
-        take: limit,
       }),
       this.prisma.newspaper.count({
         where: {

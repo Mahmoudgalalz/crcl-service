@@ -55,11 +55,7 @@ export class EventsManagementController {
         limitNumber: parseInt(limit),
       };
       if (search) {
-        const events = await this.eventsService.searchEvents(
-          pageNumber,
-          limitNumber,
-          search,
-        );
+        const events = await this.eventsService.searchEvents(search);
         return new SuccessResponse('search events', events);
       } else {
         const events = await this.eventsService.listAllEvents(

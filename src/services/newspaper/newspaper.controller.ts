@@ -43,11 +43,7 @@ export class NewspaperController {
         limitNumber: parseInt(limit),
       };
       if (search) {
-        const newspapers = await this.newspaperService.searchNewspapers(
-          pageNumber,
-          limitNumber,
-          search,
-        );
+        const newspapers = await this.newspaperService.searchNewspapers(search);
         return new SuccessResponse('search Newspapers', newspapers);
       } else {
         const newspapers = await this.newspaperService.listNewspapers(
