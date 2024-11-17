@@ -147,6 +147,7 @@ model walletTransactions {
 model WalletToken {
   id         Int      @id @default(autoincrement())
   tokenPrice Float    @default(0.05)
+  usd_price  Float?   @default(49.30)
   createdAt  DateTime @default(now())
   updateAt   DateTime @updatedAt
 }
