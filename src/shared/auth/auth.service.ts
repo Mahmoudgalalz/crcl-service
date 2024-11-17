@@ -126,6 +126,17 @@ export class AuthService {
     return false;
   }
 
+  async referralReward(userId: string) {
+    await this.prisma.wallet.update({
+      where: {
+        userId,
+      },
+      data: {
+        balance: parseInt(process.env.REFERAL_TOKENS) | 100,
+      },
+    });
+  }
+
   async register(registerDto: RegisterDto) {
     const existingUser = await this.prisma.user.findFirst({
       where: {
@@ -136,13 +147,11 @@ export class AuthService {
     if (existingUser) {
       throw new UnauthorizedException('Email or Number already in use');
     }
-    const refered = registerDto.referral
-      ? await this.userExistById(registerDto.referral)
-      : false;
+    await this.referralReward(registerDto.referral);
     const hashedPassword = await this.bycrptService.hashPassword(
       registerDto.password,
     );
-    const cachedData = { ...registerDto, password: hashedPassword, refered };
+    const cachedData = { ...registerDto, password: hashedPassword };
     await this.redisClient.set(
       `${registerDto.number}`,
       JSON.stringify(cachedData),
@@ -187,9 +196,6 @@ export class AuthService {
         wallet: {
           create: {
             id: newId('wallet', 16),
-            balance: cachedData.refered
-              ? parseInt(process.env.REFERAL_TOKENS) | 100
-              : 0,
           },
         },
       },
