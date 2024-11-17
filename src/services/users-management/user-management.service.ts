@@ -103,8 +103,6 @@ export class UsersManagmentService {
   }
 
   async searchUsers(
-    page: number = 1,
-    limit: number = 10,
     searchQuery: string,
     filters?: {
       status?: UserStatus;
@@ -113,10 +111,13 @@ export class UsersManagmentService {
     },
   ) {
     try {
-      // Step 1: Fetch users based on filters
-      const { users, meta } = await this.listAllUsers(page, limit, filters);
+      const { users } = await this.listAllUsers(
+        1,
+        Number.MAX_SAFE_INTEGER,
+        filters,
+      ); // Fetch all users
       const Fuse = await getFuse();
-      // Step 2: Configure Fuse.js options
+
       const fuse = new Fuse(users, {
         keys: ['name', 'email', 'number'], // Search by name, email, or phone
         threshold: 0.2, // Adjust for desired match sensitivity
@@ -130,9 +131,7 @@ export class UsersManagmentService {
       return {
         users: filteredUsers,
         meta: {
-          ...meta,
           total: filteredUsers.length,
-          totalPages: Math.ceil(filteredUsers.length / limit),
         },
       };
     } catch (error) {

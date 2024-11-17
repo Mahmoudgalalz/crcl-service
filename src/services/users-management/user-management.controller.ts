@@ -58,12 +58,7 @@ export class UsersManagmentController {
     const filters = { types, status, gender };
     try {
       if (search) {
-        const result = await this.usersService.searchUsers(
-          page,
-          limit,
-          search,
-          filters,
-        );
+        const result = await this.usersService.searchUsers(search, filters);
         return new SuccessResponse('List search users', result);
       }
       const result = await this.usersService.listAllUsers(page, limit, filters);
