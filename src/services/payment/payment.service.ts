@@ -55,9 +55,11 @@ export class PaymentService {
     if (ticketsIds.length === 0) {
       return null;
     }
+    const prices = await this.prisma.walletToken.findFirst();
+    const taxPerTicket = 2.5 * prices.usd_price;
     // Calculate the total amount
     const amount = ticketsUsersInfo.reduce(
-      (sum, purchase) => sum + (purchase.ticket.price || 0),
+      (sum, purchase) => sum + (purchase.ticket.price + taxPerTicket || 0),
       0,
     );
 
