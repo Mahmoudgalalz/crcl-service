@@ -36,10 +36,11 @@ export class UsersManagmentService {
       status?: UserStatus;
       gender?: 'Male' | 'Female';
       types?: UserType[] | UserType;
+      notification?: boolean;
     },
   ) {
     try {
-      const { types, ...filter } = filters || {};
+      const { types, notification, ...filter } = filters || {};
       const skip = (page - 1) * limit || 0;
       const take = limit || 10;
 
@@ -54,6 +55,7 @@ export class UsersManagmentService {
         ...(typeFilter && typeFilter.length > 0
           ? { type: { in: typeFilter } }
           : {}),
+        ...(notification ? { notificationToken: { not: null } } : {}),
       };
 
       const [users, total] = await this.prisma.$transaction([
@@ -108,6 +110,7 @@ export class UsersManagmentService {
       status?: UserStatus;
       gender?: 'Male' | 'Female';
       types?: UserType[] | UserType;
+      notification?: boolean;
     },
   ) {
     try {

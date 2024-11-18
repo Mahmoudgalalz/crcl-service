@@ -9,6 +9,7 @@ import {
   Delete,
   Patch,
   Req,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
 import { UserStatus, UserType } from '@prisma/client';
@@ -54,8 +55,9 @@ export class UsersManagmentController {
     @Query('gender') gender?: 'Male' | 'Female',
     @Query('search') search?: string,
     @Query('types') types?: UserType[] | UserType,
+    @Query('notification', ParseBoolPipe) notification?: boolean,
   ) {
-    const filters = { types, status, gender };
+    const filters = { types, status, gender, notification };
     try {
       if (search) {
         const result = await this.usersService.searchUsers(search, filters);
