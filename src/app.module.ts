@@ -19,6 +19,7 @@ import { BoothModule } from './services/booth/booth.module';
 import { PaymentModule } from './services/payment/payment.module';
 import { NotificationsModule } from './services/notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CronModule } from './shared/cron/cron.module';
 @Global()
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
+    CronModule,
     AuthModule,
     NewspaperModule,
     UsersManagmentModule,

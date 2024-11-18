@@ -69,14 +69,16 @@ export async function creatRootTokenPrice(value: number) {
 
 export async function usdPrice() {
   if (!process.env.PRICE_API_KEY) {
-    this.logger.debug('Api Key does not exist');
+    Logger.debug('currency api: Api Key does not exist');
     return 49.35;
   }
   const result = await axios.get(
     `https://api.currencyapi.com/v3/latest?apikey=${process.env.PRICE_API_KEY}&currencies=EGP`,
   );
   if (result.status === 200) {
+    Logger.debug('currency api called and returned price correctly');
     return result.data.data.EGP.value;
   }
+  Logger.debug('currency api: failed request');
   return 49.35;
 }
