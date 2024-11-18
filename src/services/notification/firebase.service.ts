@@ -3,7 +3,7 @@ import path from 'path';
 
 admin.initializeApp({
   credential: admin.credential.cert(
-    path.join(__dirname, '../.../../../../crcl-firebase.json'),
+    path.join(__dirname, '../../../../crcl-firebase.json'),
   ),
 });
 
