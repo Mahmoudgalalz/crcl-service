@@ -26,6 +26,7 @@ export class PaymentService {
         const paymentUrl = `${PUBLIC_PAYMENT_URL}?publicKey=${process.env.PAYMENT_PUBLIC_KEY}&clientSecret=${client_secret}`;
         return paymentUrl;
       } else {
+        throw Error('Error in payment gateway');
       }
     }
   }
@@ -56,7 +57,9 @@ export class PaymentService {
       return null;
     }
     const prices = await this.prisma.walletToken.findFirst();
-    const taxPerTicket = 2.5 * prices.usd_price;
+    const taxPerTicket = process.env.TAXES
+      ? parseFloat(process.env.TAXES)
+      : 2.5 * prices.usd_price;
     // Calculate the total amount
     const amount = ticketsUsersInfo.reduce(
       (sum, purchase) => sum + (purchase.ticket.price + taxPerTicket || 0),
@@ -96,6 +99,15 @@ export class PaymentService {
     } catch (error) {
       return false;
     }
+  }
+  async usdPrice() {
+    return await this.prisma.walletToken.findFirst({
+      where: {
+        usd_price: {
+          not: null,
+        },
+      },
+    });
   }
 
   private async updateTicketStatus(

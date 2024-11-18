@@ -6,6 +6,7 @@ import {
   Logger,
   Post,
   Body,
+  Get,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { PaymentService } from './payment.service';
@@ -30,6 +31,36 @@ export class PaymentController {
     } catch (error) {
       Logger.log(error);
       res.sendStatus(HttpStatus.NOT_ACCEPTABLE);
+    }
+  }
+
+  @Get('usd')
+  @Public()
+  async usdPrice(@Req() req: Request, @Res() res: Response) {
+    try {
+      const price = await this.paymentService.usdPrice();
+      res.status(HttpStatus.ACCEPTED).send({
+        status: 'success',
+        message: 'Taxes and usd price',
+        data: {
+          usd: price.usd_price,
+          tax_per_ticket: process.env.TAXES
+            ? parseFloat(process.env.TAXES)
+            : 2.5,
+          egp_tax:
+            (process.env.TAXES ? parseFloat(process.env.TAXES) : 2.5) *
+            price.usd_price,
+        },
+      });
+      return;
+    } catch (error) {
+      Logger.log(error);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+        status: 'error',
+        message: 'error happend in getting usd price',
+        error,
+      });
+      return;
     }
   }
 
