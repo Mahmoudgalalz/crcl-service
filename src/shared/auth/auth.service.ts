@@ -156,7 +156,9 @@ export class AuthService {
     if (existingUser) {
       throw new UnauthorizedException('Email or Number already in use');
     }
-    await this.referralReward(registerDto.referral);
+    if (registerDto.referral) {
+      await this.referralReward(registerDto.referral);
+    }
     const hashedPassword = await this.bycrptService.hashPassword(
       registerDto.password,
     );

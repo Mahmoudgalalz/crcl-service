@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { customUUID } from './uniqueId.utils';
 import * as bcrypt from 'bcrypt';
+import axios from 'axios';
 
 async function hashPassword(password: string): Promise<string> {
   const saltRounds = 10;
@@ -56,6 +57,7 @@ export async function creatRootTokenPrice(value: number) {
     const create = await prisma.walletToken.create({
       data: {
         tokenPrice: value,
+        usd_price: await usdPrice(),
       },
     });
     Logger.log('Created Root Token Price', create);
@@ -63,4 +65,18 @@ export async function creatRootTokenPrice(value: number) {
   } catch (err) {
     Logger.error('Error in connecting to the database', err);
   }
+}
+
+export async function usdPrice() {
+  if (!process.env.PRICE_API_KEY) {
+    this.logger.debug('Api Key does not exist');
+    return 49.35;
+  }
+  const result = await axios.get(
+    `https://api.currencyapi.com/v3/latest?apikey=${process.env.PRICE_API_KEY}&currencies=EGP`,
+  );
+  if (result.status === 200) {
+    return result.data.data.EGP.value;
+  }
+  return 49.35;
 }
