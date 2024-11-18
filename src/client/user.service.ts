@@ -83,6 +83,7 @@ export class UserService {
         instagram: true,
         gender: true,
         picture: true,
+        notificationToken: true,
         type: true,
         createdAt: true,
         updatedAt: true,

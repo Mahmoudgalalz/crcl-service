@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
 import { Role } from 'src/shared/interface/roles';
@@ -13,19 +13,13 @@ export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   @Get('newspapers')
-  async getAllNewspapers(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
+  async getAllNewspapers() {
     try {
-      const { pageNumber, limitNumber } = {
-        pageNumber: parseInt(page),
-        limitNumber: parseInt(limit),
-      };
-      const newspapers = await this.clientService.listNewspapers(
-        pageNumber,
-        limitNumber,
-      );
+      // const { pageNumber, limitNumber } = {
+      //   pageNumber: parseInt(page),
+      //   limitNumber: parseInt(limit),
+      // };
+      const newspapers = await this.clientService.listNewspapers();
       return new SuccessResponse('All Newspapers', newspapers);
     } catch (error) {
       return new ErrorResponse();
@@ -43,21 +37,9 @@ export class ClientController {
   }
 
   @Get('events')
-  async getAllEventsWithTickets(
-    @CurrentUser() user: User,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
+  async getAllEventsWithTickets(@CurrentUser() user: User) {
     try {
-      const { pageNumber, limitNumber } = {
-        pageNumber: parseInt(page),
-        limitNumber: parseInt(limit),
-      };
-      const events = await this.clientService.listAllEvents(
-        user.id,
-        pageNumber,
-        limitNumber,
-      );
+      const events = await this.clientService.listAllEvents(user.id);
       return new SuccessResponse('all events', events);
     } catch (error) {
       return new ErrorResponse();

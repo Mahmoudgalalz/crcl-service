@@ -12,6 +12,7 @@ yarn-error.log*
 lerna-debug.log*
 
 .env
+crcl-firebase.json
 # OS
 .DS_Store
 

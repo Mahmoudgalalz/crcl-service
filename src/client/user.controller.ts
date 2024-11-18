@@ -44,7 +44,7 @@ export class UserController {
       return new ErrorResponse();
     }
   }
-
+  //! fix this issue related to events and add validation
   @Post('requests/:eventId')
   @Roles(Role.User)
   async bookTickets(

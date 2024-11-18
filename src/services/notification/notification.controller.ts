@@ -15,7 +15,10 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Response } from 'express';
 import { SuccessResponse } from 'src/shared/success-response';
-import { BulkPushNotifiaction } from './dto/bulk-notification.dto';
+import {
+  BulkPushNotifiaction,
+  PushNotifiaction,
+} from './dto/bulk-notification.dto';
 import { addUsersNotifiaction } from './dto/add-users.dto';
 
 @Controller('notifications')
@@ -161,10 +164,14 @@ export class NotificationsController {
   @Post(':userId/push-notification')
   async pushNotification(
     @Param('userId') userId: string,
+    @Body() payload: PushNotifiaction,
     @Res() res: Response,
   ) {
     try {
-      const result = await this.notificationsService.pushNotification(userId);
+      const result = await this.notificationsService.pushNotification(
+        userId,
+        payload,
+      );
       return res
         .status(HttpStatus.OK)
         .send(new SuccessResponse('Notification Sent', result));

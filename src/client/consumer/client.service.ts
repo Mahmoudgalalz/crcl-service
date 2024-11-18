@@ -16,17 +16,12 @@ export class ClientService {
     return newspaper;
   }
 
-  async listNewspapers(
-    page: number,
-    limit: number,
-  ): Promise<{ newspapers: Newspaper[]; total: number }> {
+  async listNewspapers(): Promise<{ newspapers: Newspaper[]; total: number }> {
     const [newspapers, total] = await this.prisma.$transaction([
       this.prisma.newspaper.findMany({
         where: {
           status: 'PUBLISHED',
         },
-        skip: (page - 1) * limit,
-        take: limit,
       }),
       this.prisma.newspaper.count({
         where: {
@@ -37,7 +32,7 @@ export class ClientService {
     return { newspapers, total };
   }
 
-  async listAllEvents(userId: string, page: number, limit: number) {
+  async listAllEvents(userId: string) {
     const { favoriteEvents } = await this.prisma.user.findFirst({
       where: {
         id: userId,
@@ -52,8 +47,6 @@ export class ClientService {
             in: favoriteEvents,
           },
         },
-        skip: (page - 1) * limit,
-        take: limit,
       }),
       this.prisma.event.findMany({
         where: {
@@ -62,8 +55,6 @@ export class ClientService {
             notIn: favoriteEvents,
           },
         },
-        skip: (page - 1) * limit,
-        take: limit,
       }),
       this.prisma.event.count({
         where: {

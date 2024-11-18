@@ -27,3 +27,13 @@ export class BulkPushNotifiaction {
   @IsOptional()
   all?: boolean;
 }
+
+export class PushNotifiaction {
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  body: string;
+}
