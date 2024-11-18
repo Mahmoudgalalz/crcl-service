@@ -55,7 +55,7 @@ export class UsersManagmentController {
     @Query('gender') gender?: 'Male' | 'Female',
     @Query('search') search?: string,
     @Query('types') types?: UserType[] | UserType,
-    @Query('notification', ParseBoolPipe) notification?: boolean,
+    @Query('notification', ParseBoolPipe) notification: boolean = false,
   ) {
     const filters = { types, status, gender, notification };
     try {
