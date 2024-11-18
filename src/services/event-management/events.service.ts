@@ -543,11 +543,13 @@ export class EventsManagementService {
         return true;
       } else {
         const request = await this.changeRequestStatus(requestId, status);
-        const formatedData = this.createTicketIdsArray(request.meta);
+        const formatedData = this.createTicketIdsArray(request.meta as any);
         await this.prisma.ticketPurchase.deleteMany({
           where: {
             userId,
-            ticketId: formatedData,
+            ticketId: {
+              in: formatedData,
+            },
           },
         });
         return true;
@@ -594,8 +596,8 @@ export class EventsManagementService {
   private createTicketsArray(userId: string, data: any) {
     let output;
     if (Array.isArray(data)) {
-      data.forEach((elem) => {
-        output = {
+      output = data.map((elem) => {
+        return {
           id: newId('ticketPurchase', 16),
           userId,
           payment: 'PENDING',
@@ -608,15 +610,11 @@ export class EventsManagementService {
     return output;
   }
 
-  private createTicketIdsArray(data: any) {
-    let output;
-    if (typeof data === 'object') {
-      data.forEach((elem) => {
-        output = {
-          ticketId: elem.ticketId,
-        };
-      });
+  private createTicketIdsArray(data: any[]) {
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid ticket data format');
     }
-    return output;
+
+    return data.map((elem) => elem.ticketId);
   }
 }
