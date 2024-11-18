@@ -18,12 +18,14 @@ import { AnalyticsModule } from './services/analytics/analytics.module';
 import { BoothModule } from './services/booth/booth.module';
 import { PaymentModule } from './services/payment/payment.module';
 import { NotificationsModule } from './services/notification/notification.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Global()
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     NewspaperModule,
     UsersManagmentModule,

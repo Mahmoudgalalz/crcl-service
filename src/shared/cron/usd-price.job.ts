@@ -8,7 +8,7 @@ export class UsdPriceService {
   constructor(private readonly prismaService: PrismaService) {}
   private readonly logger = new Logger(UsdPriceService.name);
 
-  @Cron(CronExpression.EVERY_3_HOURS)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCron() {
     this.logger.debug('Updating USD PRICE');
     if (!process.env.PRICE_API_KEY) {
