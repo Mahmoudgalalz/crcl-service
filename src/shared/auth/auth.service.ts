@@ -127,7 +127,7 @@ export class AuthService {
   }
 
   async referralReward(userId: string) {
-    const wallet = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
       },
@@ -135,15 +135,17 @@ export class AuthService {
         wallet: true,
       },
     });
-    await this.prisma.wallet.update({
-      where: {
-        id: wallet.wallet.id,
-      },
-      data: {
-        balance:
-          (wallet.wallet.balance + parseInt(process.env.REFERAL_TOKENS)) | 20,
-      },
-    });
+    if (user) {
+      await this.prisma.wallet.update({
+        where: {
+          id: user.wallet.id,
+        },
+        data: {
+          balance:
+            (user.wallet.balance + parseInt(process.env.REFERAL_TOKENS)) | 20,
+        },
+      });
+    }
   }
 
   async register(registerDto: RegisterDto) {
