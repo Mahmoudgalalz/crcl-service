@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { customUUID } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
+import {
+  sendNotificationToDevice,
+  sendNotificationToMultipleDevices,
+  sendNotificationToTopic,
+  subscribeMultipleUsersToTopic,
+} from './firebase.service';
 
 @Injectable()
 export class NotificationService {
@@ -46,7 +52,7 @@ export class NotificationService {
   }
 
   async addUserToNoticationGroup(usersIds: string[], notificationId: string) {
-    return await this.prisma.notifications.update({
+    const notification = await this.prisma.notifications.update({
       where: {
         id: notificationId,
       },
@@ -55,14 +61,29 @@ export class NotificationService {
           connect: usersIds.map((id) => ({ id })),
         },
       },
+      include: {
+        users: {
+          select: {
+            notificationToken: true,
+          },
+        },
+      },
     });
+    const notificationTokens = notification.users.map((user) => {
+      return user.notificationToken;
+    });
+    const firebaseIntegration = await subscribeMultipleUsersToTopic(
+      notificationTokens,
+      notification.id,
+    );
+    return { notification, firebaseIntegration };
   }
 
   async removeUserFromNotificationGroup(
     usersIds: string[],
     notificationId: string,
   ) {
-    return await this.prisma.notifications.update({
+    const notification = await this.prisma.notifications.update({
       where: {
         id: notificationId,
       },
@@ -71,12 +92,37 @@ export class NotificationService {
           disconnect: usersIds.map((id) => ({ id })),
         },
       },
+      include: {
+        users: {
+          select: {
+            notificationToken: true,
+          },
+        },
+      },
     });
+    const notificationTokens = notification.users.map((user) => {
+      return user.notificationToken;
+    });
+    const firebaseIntegration = await subscribeMultipleUsersToTopic(
+      notificationTokens,
+      notification.id,
+    );
+    return { notification, firebaseIntegration };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async pushNotification(userId: string) {
-    return 'Not Impelemented yet';
+  async pushNotification(
+    userId: string,
+    payload: { title: string; body: string },
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (user.notificationToken) {
+      return await sendNotificationToDevice(user.notificationToken, payload);
+    }
+    throw Error("User doesn't have a notification token installed");
   }
 
   async bulkPushNotifiaction(payload: {
@@ -85,6 +131,37 @@ export class NotificationService {
     notificationId?: string;
     usersIds?: string[];
   }) {
+    if (payload.notificationId) {
+      const result = await sendNotificationToTopic(payload.notificationId, {
+        title: payload.title,
+        body: payload.message,
+      });
+      return result;
+    }
+    if (payload.usersIds) {
+      const users = await this.prisma.user.findMany({
+        where: {
+          id: {
+            in: payload.usersIds,
+          },
+        },
+        select: {
+          notificationToken: true,
+        },
+      });
+      const notificationTokens = users.map((user) => {
+        return user.notificationToken;
+      });
+      const result = await sendNotificationToMultipleDevices(
+        notificationTokens,
+        {
+          title: payload.title,
+          body: payload.message,
+        },
+      );
+      return result;
+    }
+
     return payload;
   }
 }
