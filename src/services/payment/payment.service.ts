@@ -69,10 +69,10 @@ export class PaymentService {
     );
 
     const user = ticketsUsersInfo[0].user;
-    Logger.log(user);
-    Logger.log(amount * 100);
+    const amountInPiastres = Math.round(amount * 100); // Multiply and round to integer
+
     const data = {
-      amount: amount * 100, // paymob takes amount in piastre
+      amount: amountInPiastres, // paymob takes amount in piastre
       currency: 'EGP',
       payment_methods: ['card', 'wallet'],
       billing_data: {
