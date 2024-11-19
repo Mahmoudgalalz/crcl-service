@@ -62,6 +62,9 @@ export class AuthGuard implements CanActivate {
           },
         });
         if (user.deletedAt != null || user.status === 'BLOCKED') {
+          throw new UnauthorizedException(
+            'Account is suspended or desactivated, contact the support',
+          );
           return false;
         }
         request['user'] = user;
