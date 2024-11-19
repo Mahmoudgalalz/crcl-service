@@ -1,4 +1,9 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { OTPService } from './shared/otp.service';
 import { JWTService } from './shared/jwt.service';
@@ -65,14 +70,16 @@ export class AuthService {
       user.password,
     );
     if (user && validPassword) {
-      if (user.deletedAt)
-        throw new Error(
+      if (user.deletedAt) {
+        return new Error(
           'This account has been desactivated,  please contact with support team to activate it',
         );
-      if (user.status === 'BLOCKED')
-        throw new Error(
+      }
+      if (user.status === 'BLOCKED') {
+        return new Error(
           'This account has been blocked, please contact with support team',
         );
+      }
       return await this.jwtService.createTokens({
         email: user.email,
         userId: user.id,
@@ -149,30 +156,35 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email: registerDto.email }, { number: registerDto.number }],
-      },
-    });
+    try {
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ email: registerDto.email }, { number: registerDto.number }],
+        },
+      });
 
-    if (existingUser) {
-      throw new UnauthorizedException('Email or Number already in use');
+      if (existingUser) {
+        throw new UnauthorizedException('Email or Number already in use');
+      }
+      if (registerDto.referral) {
+        await this.referralReward(registerDto.referral);
+      }
+      const hashedPassword = await this.bycrptService.hashPassword(
+        registerDto.password,
+      );
+      const cachedData = { ...registerDto, password: hashedPassword };
+      await this.redisClient.set(
+        `${registerDto.number}`,
+        JSON.stringify(cachedData),
+        'EX',
+        300,
+      );
+      const otp = await this.otpService.generateOtp(registerDto.number);
+      await this.otpService.sendOtpToUser(registerDto.number, otp);
+    } catch (err) {
+      Logger.error(err);
+      return err;
     }
-    if (registerDto.referral) {
-      await this.referralReward(registerDto.referral);
-    }
-    const hashedPassword = await this.bycrptService.hashPassword(
-      registerDto.password,
-    );
-    const cachedData = { ...registerDto, password: hashedPassword };
-    await this.redisClient.set(
-      `${registerDto.number}`,
-      JSON.stringify(cachedData),
-      'EX',
-      300,
-    );
-    const otp = await this.otpService.generateOtp(registerDto.number);
-    await this.otpService.sendOtpToUser(registerDto.number, otp);
   }
 
   async verify(number: string, otp: string) {

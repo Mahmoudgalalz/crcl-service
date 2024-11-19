@@ -25,29 +25,41 @@ export class OTPService {
     console.log(`Sending OTP ${otp} to number ${number}`);
     await this.sendSms(
       number,
-      `Your Verfication code for Crcl Events is ${otp}`,
+      `Your Verfication code for \n Crcl Events is: ${otp}`,
     );
   }
 
   private async sendSms(to: string, message: string) {
     try {
-      const result = await axios.post(
-        'https://api.sms.to/sms/send',
-        {
-          message,
-          to,
-          sender_id: 'Crcl Events',
+      const body = {
+        message,
+        to,
+        sender_id: 'CRCL',
+        bypass_optout: true,
+      };
+      const result = await axios.post('https://api.sms.to/sms/send', body, {
+        headers: {
+          Authorization: `Bearer ${process.env.OTP_KEY}`,
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            Authorization: process.env.OTP_KEY,
-          },
-        },
+      });
+      Logger.log(result.data, 'OTP Service');
+      return {
+        status: 'success',
+        message: `Message sent successfully to ${to}`,
+        data: result.data,
+      };
+    } catch (error) {
+      Logger.error(
+        `Failed to send message to ${to}: ${error.message}`,
+        error.stack,
+        'OTP Service',
       );
-      const response = `Sending a message to ${to} response: ${result.status}, ${result.data}`;
-      Logger.log(response, 'OTP Service');
-    } catch (err) {
-      Logger.error(err);
+      return {
+        status: 'error',
+        message: `Failed to send message to ${to}`,
+        error: error.response?.data || error.message,
+      };
     }
   }
 }
