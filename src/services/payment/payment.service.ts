@@ -74,13 +74,13 @@ export class PaymentService {
       currency: 'EGP',
       payment_methods: ['card', 'wallet'],
       billing_data: {
-        first_name: user.name,
+        first_name: user[0].name,
         last_name: '-',
-        phone_number: user.number,
-        email: user.email,
+        phone_number: user[0].number,
+        email: user[0].email,
       },
       extras: {
-        userId: user.id,
+        userId: user[0].id,
         ticketsIds,
       },
       special_reference: newId('transaction', 14),
