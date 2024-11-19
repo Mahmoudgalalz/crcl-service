@@ -58,7 +58,7 @@ export class PaymentService {
     }
     const prices = await this.prisma.walletToken.findFirst();
     const taxPerTicket = process.env.TAXES
-      ? parseFloat(process.env.TAXES)
+      ? parseFloat(process.env.TAXES) * prices.usd_price
       : 2.5 * prices.usd_price;
     // Calculate the total amount
     const amount = ticketsUsersInfo.reduce(
