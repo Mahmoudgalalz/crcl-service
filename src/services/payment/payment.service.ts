@@ -24,7 +24,6 @@ export class PaymentService {
       if (request.status === 201) {
         const { client_secret } = request.data;
         const paymentUrl = `${PUBLIC_PAYMENT_URL}?publicKey=${process.env.PAYMENT_PUBLIC_KEY}&clientSecret=${client_secret}`;
-        Logger.log(request);
         return paymentUrl;
       } else {
         Logger.log(payload);
@@ -38,9 +37,14 @@ export class PaymentService {
     ticketsIds: string[],
     callback: string,
   ) {
+    if (!ticketsIds || ticketsIds.length === 0) {
+      throw new Error('No ticket IDs provided.');
+    }
+
+    // Fetch ticket purchase information
     const ticketsUsersInfo = await this.prisma.ticketPurchase.findMany({
       where: {
-        userId: userId,
+        userId,
         id: {
           in: ticketsIds,
         },
@@ -55,31 +59,46 @@ export class PaymentService {
       },
     });
 
-    if (ticketsIds.length === 0) {
-      return null;
+    if (!ticketsUsersInfo || ticketsUsersInfo.length === 0) {
+      throw new Error('No tickets found for the provided IDs.');
     }
+
+    // Fetch wallet token prices
     const prices = await this.prisma.walletToken.findFirst();
-    const taxPerTicket = process.env.TAXES
-      ? parseFloat(process.env.TAXES) * prices.usd_price
-      : 2.5 * prices.usd_price;
+    if (!prices || !prices.usd_price) {
+      throw new Error('Unable to fetch wallet token prices.');
+    }
+
+    // Calculate taxes
+    const usdPrice = prices.usd_price;
+    const taxRate = parseFloat(process.env.TAXES || '2.5'); // Default to 2.5 if TAXES is not set
+    const taxPerTicket = taxRate * usdPrice;
+
     // Calculate the total amount
     const amount = ticketsUsersInfo.reduce(
       (sum, purchase) => sum + (purchase.ticket.price + taxPerTicket || 0),
       0,
     );
 
+    // Ensure user information is available
     const user = ticketsUsersInfo[0].user;
-    const amountInPiastres = Math.round(amount * 100); // Multiply and round to integer
+    if (!user) {
+      throw new Error('User information is missing for the ticket purchase.');
+    }
 
+    // Convert amount to piastres (rounded integer)
+    const amountInPiastres = Math.round(amount * 100);
+
+    // Prepare payment data
     const data = {
-      amount: amountInPiastres, // paymob takes amount in piastre
+      amount: amountInPiastres, // Paymob expects amount in piastres
       currency: 'EGP',
       payment_methods: ['card', 'wallet'],
       billing_data: {
-        first_name: user.name,
+        first_name: user.name || 'Unknown',
         last_name: '-',
-        phone_number: user.number,
-        email: user.email,
+        phone_number: user.number || 'N/A',
+        email: user.email || 'N/A',
       },
       extras: {
         userId: user.id,
@@ -92,6 +111,7 @@ export class PaymentService {
 
     return data;
   }
+
   async paymentCallback(body: any) {
     const { id, success, payment_key_claims } = body.obj;
     const { userId, ticketsIds } = payment_key_claims.extra;
