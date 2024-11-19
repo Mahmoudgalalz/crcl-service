@@ -70,6 +70,7 @@ export class PaymentService {
 
     const user = ticketsUsersInfo[0].user;
     Logger.log(user);
+    Logger.log(amount * 100);
     const data = {
       amount: amount * 100, // paymob takes amount in piastre
       currency: 'EGP',
