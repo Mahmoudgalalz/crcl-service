@@ -24,8 +24,10 @@ export class PaymentService {
       if (request.status === 201) {
         const { client_secret } = request.data;
         const paymentUrl = `${PUBLIC_PAYMENT_URL}?publicKey=${process.env.PAYMENT_PUBLIC_KEY}&clientSecret=${client_secret}`;
+        Logger.log(request);
         return paymentUrl;
       } else {
+        Logger.log(payload);
         throw Error('Error in payment gateway');
       }
     }
