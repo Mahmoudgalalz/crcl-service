@@ -1,4 +1,5 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
+import axios from 'axios';
 import Redis from 'ioredis';
 import { generateUniqueOtp } from 'src/common/uniqueId.utils';
 @Injectable()
@@ -22,5 +23,31 @@ export class OTPService {
   async sendOtpToUser(number: string, otp: string): Promise<void> {
     // Implement your OTP sending logic (e.g., through an SMS service)
     console.log(`Sending OTP ${otp} to number ${number}`);
+    await this.sendSms(
+      number,
+      `Your Verfication code for Crcl Events is ${otp}`,
+    );
+  }
+
+  private async sendSms(to: string, message: string) {
+    try {
+      const result = await axios.post(
+        'https://api.sms.to/sms/send',
+        {
+          message,
+          to,
+          sender_id: 'Crcl Events',
+        },
+        {
+          headers: {
+            Authorization: process.env.OTP_KEY,
+          },
+        },
+      );
+      const response = `Sending a message to ${to} response: ${result.status}, ${result.data}`;
+      Logger.log(response, 'OTP Service');
+    } catch (err) {
+      Logger.error(err);
+    }
   }
 }
