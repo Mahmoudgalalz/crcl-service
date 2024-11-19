@@ -69,18 +69,19 @@ export class PaymentService {
     );
 
     const user = ticketsUsersInfo[0].user;
+    Logger.log(user);
     const data = {
       amount: amount * 100, // paymob takes amount in piastre
       currency: 'EGP',
       payment_methods: ['card', 'wallet'],
       billing_data: {
-        first_name: user[0].name,
+        first_name: user.name,
         last_name: '-',
-        phone_number: user[0].number,
-        email: user[0].email,
+        phone_number: user.number,
+        email: user.email,
       },
       extras: {
-        userId: user[0].id,
+        userId: user.id,
         ticketsIds,
       },
       special_reference: newId('transaction', 14),
