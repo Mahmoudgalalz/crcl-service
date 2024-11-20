@@ -1,14 +1,13 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
-import { Role } from 'src/shared/interface/roles';
-import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Public } from 'src/shared/decorators/roles.decorator';
 import { ClientService } from './client.service';
 import { CurrentUser } from 'src/shared/decorators/user.decorator';
 import { User } from '@prisma/client/wasm';
 
 @Controller('client')
-@Roles(Role.User)
+@Public()
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
