@@ -65,6 +65,27 @@ export class ClientService {
     return { UserFavoriteEvents, events, total };
   }
 
+  async listAllEventsPublic() {
+    const [UserFavoriteEvents, events, total] = await this.prisma.$transaction([
+      this.prisma.event.findMany({
+        where: {
+          status: 'PUBLISHED',
+        },
+      }),
+      this.prisma.event.findMany({
+        where: {
+          status: 'PUBLISHED',
+        },
+      }),
+      this.prisma.event.count({
+        where: {
+          status: 'PUBLISHED',
+        },
+      }),
+    ]);
+    return { UserFavoriteEvents, events, total };
+  }
+
   async getEventWithTickets(id: string): Promise<{ event: Event }> {
     const event = await this.prisma.event.findUnique({
       where: { id, status: 'PUBLISHED' },
