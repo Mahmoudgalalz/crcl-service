@@ -66,12 +66,7 @@ export class ClientService {
   }
 
   async listAllEventsPublic() {
-    const [UserFavoriteEvents, events, total] = await this.prisma.$transaction([
-      this.prisma.event.findMany({
-        where: {
-          status: 'PUBLISHED',
-        },
-      }),
+    const [events, total] = await this.prisma.$transaction([
       this.prisma.event.findMany({
         where: {
           status: 'PUBLISHED',
@@ -83,7 +78,7 @@ export class ClientService {
         },
       }),
     ]);
-    return { UserFavoriteEvents, events, total };
+    return { events, total };
   }
 
   async getEventWithTickets(id: string): Promise<{ event: Event }> {
