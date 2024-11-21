@@ -4,7 +4,6 @@ import { ErrorResponse } from 'src/common/error.response';
 import { Public } from 'src/shared/decorators/roles.decorator';
 import { ClientService } from './client.service';
 import { CurrentUser } from 'src/shared/decorators/user.decorator';
-import { User } from '@prisma/client/wasm';
 
 @Controller('client')
 @Public()
@@ -36,10 +35,10 @@ export class ClientController {
   }
 
   @Get('events')
-  async getAllEventsWithTickets(@CurrentUser() user: User) {
+  async getAllEventsWithTickets(@CurrentUser() user: any) {
     try {
-      if (user.id) {
-        const events = await this.clientService.listAllEvents(user.id);
+      if (user.userId) {
+        const events = await this.clientService.listAllEvents(user.userId);
         return new SuccessResponse('all events', events);
       }
       const events = await this.clientService.listAllEventsPublic();
