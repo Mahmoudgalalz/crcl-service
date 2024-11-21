@@ -11,6 +11,7 @@ export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   @Get('newspapers')
+  @Public()
   async getAllNewspapers() {
     try {
       // const { pageNumber, limitNumber } = {
@@ -25,6 +26,7 @@ export class ClientController {
   }
 
   @Get('newspapers/:id')
+  @Public()
   async getNewspaper(@Param('id') newspaperId: string) {
     try {
       const newspaper = await this.clientService.getNewspaper(newspaperId);
@@ -58,6 +60,7 @@ export class ClientController {
   }
 
   @Get('events/:id')
+  @Public()
   async getEventWithTickets(@Param('id') eventId: string) {
     try {
       const events = await this.clientService.getEventWithTickets(eventId);
