@@ -1,12 +1,12 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Logger, Param } from '@nestjs/common';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
-import { Public } from 'src/shared/decorators/roles.decorator';
 import { ClientService } from './client.service';
 import { CurrentUser } from 'src/shared/decorators/user.decorator';
-
+import { User } from '@prisma/client';
+import { Public, Roles } from 'src/shared/decorators/roles.decorator';
+import { Role } from 'src/shared/interface/roles';
 @Controller('client')
-@Public()
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
@@ -35,12 +35,21 @@ export class ClientController {
   }
 
   @Get('events')
-  async getAllEventsWithTickets(@CurrentUser() user: any) {
+  @Roles(Role.User)
+  async getAllEventsUser(@CurrentUser() user: User) {
     try {
-      if (user.userId) {
-        const events = await this.clientService.listAllEvents(user.userId);
-        return new SuccessResponse('all events', events);
-      }
+      Logger.log(user);
+      const events = await this.clientService.listAllEvents(user.id);
+      return new SuccessResponse('all events', events);
+    } catch (error) {
+      return new ErrorResponse();
+    }
+  }
+
+  @Get('public/events')
+  @Public()
+  async getAllEvents() {
+    try {
       const events = await this.clientService.listAllEventsPublic();
       return new SuccessResponse('all events', events);
     } catch (error) {

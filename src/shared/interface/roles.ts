@@ -6,4 +6,5 @@ export enum Role {
   User = 'USER',
   Reader = 'READER',
   Booth = 'BOOTH',
+  Public = 'Public',
 }
