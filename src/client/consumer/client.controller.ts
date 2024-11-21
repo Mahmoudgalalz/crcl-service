@@ -38,7 +38,7 @@ export class ClientController {
   @Get('events')
   async getAllEventsWithTickets(@CurrentUser() user: User) {
     try {
-      if (user) {
+      if (user.id) {
         const events = await this.clientService.listAllEvents(user.id);
         return new SuccessResponse('all events', events);
       }
