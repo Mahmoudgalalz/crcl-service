@@ -307,16 +307,10 @@ export class UserService {
 
   async userPayTickets(id: string, ticketIds: string[], callback: string) {
     try {
-      // Validate ticket availability
       const tickets = await this.prisma.ticket.findMany({
         where: { id: { in: ticketIds } },
       });
 
-      if (tickets.length !== ticketIds.length) {
-        throw new BadRequestException('One or more tickets are invalid.');
-      }
-
-      // Check remaining capacity for each ticket
       for (const ticket of tickets) {
         const ticketsSold = await this.prisma.ticketPurchase.count({
           where: { ticketId: ticket.id },
