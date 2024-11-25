@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { OTPService } from './shared/otp.service';
 import { JWTService } from './shared/jwt.service';
@@ -156,35 +151,30 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    try {
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          OR: [{ email: registerDto.email }, { number: registerDto.number }],
-        },
-      });
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: registerDto.email }, { number: registerDto.number }],
+      },
+    });
 
-      if (existingUser) {
-        throw new UnauthorizedException('Email or Number already in use');
-      }
-      if (registerDto.referral) {
-        await this.referralReward(registerDto.referral);
-      }
-      const hashedPassword = await this.bycrptService.hashPassword(
-        registerDto.password,
-      );
-      const cachedData = { ...registerDto, password: hashedPassword };
-      await this.redisClient.set(
-        `${registerDto.number}`,
-        JSON.stringify(cachedData),
-        'EX',
-        300,
-      );
-      const otp = await this.otpService.generateOtp(registerDto.number);
-      await this.otpService.sendOtpToUser(registerDto.number, otp);
-    } catch (err) {
-      Logger.error(err);
-      return err;
+    if (existingUser) {
+      throw new UnauthorizedException('Email or Number already in use');
     }
+    if (registerDto.referral) {
+      await this.referralReward(registerDto.referral);
+    }
+    const hashedPassword = await this.bycrptService.hashPassword(
+      registerDto.password,
+    );
+    const cachedData = { ...registerDto, password: hashedPassword };
+    await this.redisClient.set(
+      `${registerDto.number}`,
+      JSON.stringify(cachedData),
+      'EX',
+      300,
+    );
+    const otp = await this.otpService.generateOtp(registerDto.number);
+    await this.otpService.sendOtpToUser(registerDto.number, otp);
   }
 
   async verify(number: string, otp: string) {
