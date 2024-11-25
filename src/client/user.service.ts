@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { UserUpdateDto } from './dto/user-update.dto';
 import { newId } from 'src/common/uniqueId.utils';
@@ -179,43 +184,6 @@ export class UserService {
     throw Error('Already requested for this event');
   }
 
-  //? not used
-  async userTicketsToBuy(id: string) {
-    const tickets = await this.prisma.ticketPurchase.findMany({
-      where: { userId: id, status: 'UPCOMMING', payment: 'PENDING' },
-      select: {
-        meta: true,
-        status: true,
-        payment: true,
-        createdAt: true,
-        updateAt: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
-            number: true,
-          },
-        },
-        ticket: {
-          select: {
-            title: true,
-            price: true,
-            description: true,
-            event: {
-              select: {
-                title: true,
-                time: true,
-                date: true,
-                image: true,
-              },
-            },
-          },
-        },
-      },
-    });
-    return tickets;
-  }
-
   async userRequests(id: string) {
     // Step 1: Fetch all event requests for the given userId
     const requests = await this.prisma.eventRequest.findMany({
@@ -339,6 +307,31 @@ export class UserService {
 
   async userPayTickets(id: string, ticketIds: string[], callback: string) {
     try {
+      // Validate ticket availability
+      const tickets = await this.prisma.ticket.findMany({
+        where: { id: { in: ticketIds } },
+      });
+
+      if (tickets.length !== ticketIds.length) {
+        throw new BadRequestException('One or more tickets are invalid.');
+      }
+
+      // Check remaining capacity for each ticket
+      for (const ticket of tickets) {
+        const ticketsSold = await this.prisma.ticketPurchase.count({
+          where: { ticketId: ticket.id },
+        });
+
+        const remainingCapacity = ticket.capacity - ticketsSold;
+
+        if (remainingCapacity <= 0) {
+          throw new BadRequestException(
+            `Ticket "${ticket.title}" is sold out and cannot be purchased.`,
+          );
+        }
+      }
+
+      // Proceed to payment if all tickets are available
       const paymentUrl = await this.paymentService.initIntention(
         ticketIds,
         id,
