@@ -160,28 +160,39 @@ export class UserService {
     const shallowData = Array.isArray(data)
       ? JSON.parse(JSON.stringify(data))
       : [JSON.parse(JSON.stringify(data))];
-    const check = await this.prisma.eventRequest.count({
+
+    const ticketsInRequest = shallowData.length;
+    const existingRequests = await this.prisma.eventRequest.findMany({
       where: {
         eventId,
         userId: id,
       },
+      select: {
+        meta: true,
+      },
     });
-    if (!check) {
-      const request = await this.prisma.eventRequest.create({
-        data: {
-          id: newId('ref', 14),
-          user: {
-            connect: { id },
-          },
-          event: {
-            connect: { id: eventId },
-          },
-          meta: shallowData,
-        },
-      });
-      return request;
+
+    const totalTicketsRequested = existingRequests.reduce((sum, req) => {
+      const meta = req.meta as unknown as MetaRequestDto[];
+      return sum + (Array.isArray(meta) ? meta.length : 0);
+    }, 0);
+    if (totalTicketsRequested + ticketsInRequest > 5) {
+      throw new Error('You cannot request more than 5 tickets for this event.');
     }
-    throw Error('Already requested for this event');
+    const request = await this.prisma.eventRequest.create({
+      data: {
+        id: newId('ref', 14),
+        user: {
+          connect: { id },
+        },
+        event: {
+          connect: { id: eventId },
+        },
+        meta: shallowData,
+      },
+    });
+
+    return request;
   }
 
   async userRequests(id: string) {
