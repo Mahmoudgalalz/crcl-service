@@ -149,6 +149,9 @@ export class PaymentService {
               userId,
               id: ticketId,
             },
+            include: {
+              user: true,
+            },
           });
 
           if (!existingTicket) {
@@ -162,6 +165,7 @@ export class PaymentService {
               id: ticketId,
             },
             data: {
+              meta: existingTicket.user,
               payment: status,
               paymentReference: paymentReference.toString(),
             },

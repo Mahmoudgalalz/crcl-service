@@ -336,7 +336,6 @@ export class UserService {
         }
       }
 
-      // Proceed to payment if all tickets are available
       const paymentUrl = await this.paymentService.initIntention(
         ticketIds,
         id,
