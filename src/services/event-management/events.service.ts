@@ -602,7 +602,11 @@ export class EventsManagementService {
           userId,
           payment: 'PENDING',
           status: 'UPCOMMING',
-          meta: elem.meta,
+          meta: {
+            name: elem.name,
+            number: elem.number,
+            email: elem.email,
+          },
           ticketId: elem.ticketId,
         };
       });
