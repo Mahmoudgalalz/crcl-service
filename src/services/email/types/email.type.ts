@@ -14,8 +14,9 @@ export interface TicketEmailProps {
     date: string;
     type: string;
     time: string;
-    qrCodeSVG?: string; // QR Code SVG string
+    location: string;
   };
+  qrCodeSVG?: string; // QR Code SVG string
 }
 
 export interface TicketProps {

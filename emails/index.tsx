@@ -12,8 +12,9 @@ export default function RenderEmail() {
       date: '2024-12-15',
       time: '10:00 AM',
       type: 'VIP',
-      qrCodeSVG: 'https://placehold.co/600x600'.toString(), // Replace with QR code URL
+      location: 'Hello',
     },
+    qrCodeSVG: 'https://placehold.co/600x600'.toString(), // Replace with QR code URL
   };
 
   return <TicketEmail {...emailProps} />;

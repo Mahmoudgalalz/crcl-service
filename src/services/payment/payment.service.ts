@@ -7,6 +7,7 @@ import { newId } from 'src/common/uniqueId.utils';
 import { TicketEmailProps } from '../email/types/email.type';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SendTicketEmailEvent } from '../email/events/sendTicket.event';
+import { format } from 'date-fns';
 
 @Injectable()
 export class PaymentService {
@@ -178,16 +179,19 @@ export class PaymentService {
             },
           });
           
+          const timeString = ticket.ticket.event.time;
+          const date = new Date(`2024-12-25T${timeString}:00`);
+          const formattedTime = format(date, 'hh:mm a');
           const data: TicketEmailProps = {
             recipientName: ticket.meta['name'],
             eventName: ticket.ticket.event.title,
             eventImage: ticket.ticket.event.image,
             ticketDetails: {
               id: ticket.id,
-              date: ticket.ticket.event.date.toString(),
+              date: format(ticket.ticket.event.date, 'MMMM dd, yyyy'),
               type: ticket.ticket.title,
-              time: ticket.ticket.event.time,
-              qrCodeSVG: ''
+              time: formattedTime,
+              location: ticket.ticket.event.location,
             }}
             this.eventEmitter.emit(
               'ticket.paid',

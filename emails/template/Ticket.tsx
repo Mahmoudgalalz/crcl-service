@@ -16,19 +16,21 @@ interface TicketEmailProps {
   ticketDetails: {
     id: string;
     date: string;
+    location: string;
     type: string;
     time: string;
-    qrCodeSVG?: string; // QR Code SVG string
   };
+  qrCodeSVG: string;
 }
 
 export default function TicketEmail({
   recipientName,
   eventName,
   eventImage,
+  qrCodeSVG,
   ticketDetails,
 }: TicketEmailProps) {
-  const { date, time, qrCodeSVG, type } = ticketDetails;
+  const { location, date, time, type } = ticketDetails;
 
   return (
     <Html>
@@ -54,7 +56,8 @@ export default function TicketEmail({
             <strong>Event:</strong> {eventName} <br />
             <strong>Date:</strong> {date} <br />
             <strong>Time:</strong> {time} <br />
-            <strong>type:</strong> {type} <br />
+            <strong>Type:</strong> {type} <br />
+            <strong>Location:</strong> {location} <br />
           </Text>
           <Container style={styles.qrContainer}>
             {/* Render QR code as inline SVG */}

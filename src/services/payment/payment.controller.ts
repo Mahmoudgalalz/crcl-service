@@ -15,7 +15,6 @@ import { User } from '@prisma/client';
 import { PaymentDto } from './dto/payment.dto';
 import { Public, Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
-import { TicketEmailProps } from '../email/types/email.type';
 
 @Controller('payment')
 export class PaymentController {
