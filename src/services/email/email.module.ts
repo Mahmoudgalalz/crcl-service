@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { Resend } from 'resend';
-import { PrismaService } from 'src/prisma.service';
 import { EmailType } from './types/email.type';
 import { Tokens } from 'src/shared/tokens';
 import { EmailQueueProcessor } from './email.queue.processor';
 import { EmailService } from './email.services';
+import { SendTicketEmailEventListener } from './listener/sendTicket.listener';
 
 @Module({
   imports: [
@@ -20,8 +20,7 @@ import { EmailService } from './email.services';
     },
     EmailService,
     EmailQueueProcessor,
-    PrismaService,
+    SendTicketEmailEventListener
   ],
-  exports: [EmailService],
 })
 export class EmailModule {}

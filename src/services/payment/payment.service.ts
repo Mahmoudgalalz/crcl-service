@@ -1,13 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import axios from 'axios';
 import { PAYMENT_WEBHOOK_URL, PUBLIC_PAYMENT_URL } from 'src/shared/constants';
 import { PaymentStatus } from '@prisma/client';
 import { newId } from 'src/common/uniqueId.utils';
+import { TicketEmailProps } from '../email/types/email.type';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SendTicketEmailEvent } from '../email/events/sendTicket.event';
 
 @Injectable()
 export class PaymentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, 
+    private readonly eventEmitter: EventEmitter2) {}
 
   async initIntention(ticketsIds: string[], userId: string, callback: string) {
     const payload = await this.formatPaymentData(userId, ticketsIds, callback);
@@ -161,12 +165,34 @@ export class PaymentService {
             where: {
               id: ticketId,
             },
+            include: {
+              ticket: {
+                include: {
+                  event: true
+                }
+              }
+            },
             data: {
               payment: status,
               paymentReference: paymentReference.toString(),
             },
           });
-
+          
+          const data: TicketEmailProps = {
+            recipientName: ticket.meta['name'],
+            eventName: ticket.ticket.event.title,
+            eventImage: ticket.ticket.event.image,
+            ticketDetails: {
+              id: ticket.id,
+              date: ticket.ticket.event.date.toString(),
+              type: ticket.ticket.title,
+              time: ticket.ticket.event.time,
+              qrCodeSVG: ''
+            }}
+            this.eventEmitter.emit(
+              'ticket.paid',
+              new SendTicketEmailEvent(ticket.meta['email'], data),
+            );
           paid[ticketId] = ticket;
         }
       });
@@ -174,5 +200,15 @@ export class PaymentService {
     } catch (error) {
       Logger.error(error);
     }
+  }
+
+  test(to: string, data){
+    try{
+      this.eventEmitter.emit(
+        'ticket.paid',
+        new SendTicketEmailEvent(to, data),
+      );
+    }
+    catch(err){ Logger.log(err)}
   }
 }

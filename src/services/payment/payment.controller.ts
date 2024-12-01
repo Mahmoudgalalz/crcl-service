@@ -15,6 +15,7 @@ import { User } from '@prisma/client';
 import { PaymentDto } from './dto/payment.dto';
 import { Public, Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
+import { TicketEmailProps } from '../email/types/email.type';
 
 @Controller('payment')
 export class PaymentController {
@@ -92,5 +93,28 @@ export class PaymentController {
       });
       return;
     }
+  }
+
+  @Post('test')
+  @Public()
+  async test() {
+    const ticketEmailData: TicketEmailProps = {
+      recipientName: 'John Doe',
+      eventName: 'Tech Conference 2024',
+      eventImage: 'https://example.com/event-image.jpg', // Replace with your actual URL
+      ticketDetails: {
+        id: 'TCK12345',
+        date: '2024-12-15',
+        type: 'VIP',
+        time: '10:00 AM',
+        qrCodeSVG: `
+          <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+            <rect width="200" height="200" fill="white"/>
+            <path d="M20 20h40v40H20V20zm60 0h20v20H80V20zM20 80h20v20H20V80zm60 40h20v20H80v-20zm40-20h40v40h-40v-40zm-80 60h20v20H20v-20zm80 0h20v20h-20v-20zm40-80h20v20h-20V60zm-40 40h20v20h-20v-20z" fill="black"/>
+          </svg>
+        `, // Replace with actual QR SVG data
+      },
+    };
+    this.paymentService.test('ssss.aaa2002@gmail.com', ticketEmailData);
   }
 }

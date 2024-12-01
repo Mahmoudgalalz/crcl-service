@@ -20,6 +20,10 @@ import { PaymentModule } from './services/payment/payment.module';
 import { NotificationsModule } from './services/notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronModule } from './shared/cron/cron.module';
+import { BullModule } from '@nestjs/bull';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EmailModule } from './services/email/email.module';
+
 @Global()
 @Module({
   imports: [
@@ -29,7 +33,15 @@ import { CronModule } from './shared/cron/cron.module';
     ScheduleModule.forRoot(),
     CronModule,
     AuthModule,
+    EventEmitterModule.forRoot(),
+    BullModule.forRoot({
+      redis: {
+        port: 6379,
+        host: 'localhost',
+      },
+    }),
     NewspaperModule,
+    EmailModule,
     UsersManagmentModule,
     EventsManagementModule,
     UploadModule,
