@@ -201,14 +201,4 @@ export class PaymentService {
       Logger.error(error);
     }
   }
-
-  test(to: string, data){
-    try{
-      this.eventEmitter.emit(
-        'ticket.paid',
-        new SendTicketEmailEvent(to, data),
-      );
-    }
-    catch(err){ Logger.log(err)}
-  }
 }
