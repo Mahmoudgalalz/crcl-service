@@ -61,8 +61,9 @@ export default function TicketEmail({
           </Text>
           <Container style={styles.qrContainer}>
             {/* Render QR code as inline SVG */}
-            <div
-              dangerouslySetInnerHTML={{ __html: qrCodeSVG }}
+            <img
+              alt="QR Code"
+              src={`data:image/jpeg;base64,${qrCodeSVG}`}
               style={styles.qrCode}
             />
           </Container>

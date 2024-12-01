@@ -24,11 +24,10 @@ export class EmailService {
   };
 
   private async generateQRCode(code: string) {
-    return await QRCode.toString(code,{
-      type: 'svg',
-    })
+    return await QRCode.toDataURL(code, {
+      type: 'image/jpeg'
+    });
   }
-
   // private async generateTicketAttachment(data: TicketProps) {
   //   const { html } = await import('satori-html');
   //   const tamplate = html(EventTicket(data));
