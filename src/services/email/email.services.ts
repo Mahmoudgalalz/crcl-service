@@ -9,6 +9,9 @@ import { render } from '@react-email/render';
 import TicketEmail from 'emails/template/Ticket';
 import QRCode from 'qrcode'
 import { SendTicketEmailEvent } from './events/sendTicket.event';
+import { UploadService } from 'src/shared/upload/upload.service';
+import { writeFile } from 'fs/promises';
+import { join } from 'path';
 
 @Injectable()
 export class EmailService {
@@ -16,17 +19,23 @@ export class EmailService {
     @Inject(Tokens.RESEND_CLIENT)
     private readonly _resendClient: Resend,
     @InjectQueue(EmailType.RESEND_EMAIL_HANDLER)
-    private readonly mailQueue: Queue,
+    private readonly mailQueue: Queue
   ) {}
 
   private generateEmail = (template) => {
     return render(template);
   };
+  
+  private dirPath = (hash: string) => {
+    return join(__dirname, '../../..', '../data', hash);
+  };
 
   private async generateQRCode(code: string) {
-    return await QRCode.toDataURL(code, {
-      type: 'image/jpeg'
-    });
+    const QRBuffer = await QRCode.toBuffer(code);
+    const url = process.env.UPLOAD_DOMAIN;
+    const hash = code.substring(6, code.length)+'.png'
+    await writeFile(this.dirPath(hash), QRBuffer);
+    return `${url}/upload/${hash};`
   }
   // private async generateTicketAttachment(data: TicketProps) {
   //   const { html } = await import('satori-html');

@@ -60,7 +60,6 @@ export default function TicketEmail({
             <strong>Location:</strong> {location} <br />
           </Text>
           <Container style={styles.qrContainer}>
-            {/* Render QR code as inline SVG */}
             <img alt="QR Code" src={qrCodeSVG} style={styles.qrCode} />
           </Container>
         </Section>
