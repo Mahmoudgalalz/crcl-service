@@ -35,7 +35,7 @@ export class EmailService {
     const url = process.env.UPLOAD_DOMAIN;
     const hash = code.substring(6, code.length)+'.png'
     await writeFile(this.dirPath(hash), QRBuffer);
-    return `${url}/upload/${hash};`
+    return `${url}/upload/${hash}`
   }
   // private async generateTicketAttachment(data: TicketProps) {
   //   const { html } = await import('satori-html');
