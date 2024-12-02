@@ -174,7 +174,14 @@ export class AuthService {
       300,
     );
     const otp = await this.otpService.generateOtp(registerDto.number);
-    await this.otpService.sendOtpToUser(registerDto.number, otp);
+    await this.otpService.sendOtpToUser(
+      {
+        name: registerDto.name,
+        email: registerDto.email,
+        number: registerDto.number,
+      },
+      otp,
+    );
   }
 
   async verify(number: string, otp: string) {

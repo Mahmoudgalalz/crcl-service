@@ -1,10 +1,15 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 import Redis from 'ioredis';
 import { generateUniqueOtp } from 'src/common/uniqueId.utils';
+import { SendOtpEvent } from 'src/services/email/events/sendOtp.event';
 @Injectable()
 export class OTPService {
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
+    private emitter: EventEmitter2,
+  ) {}
 
   async generateOtp(number: string): Promise<string> {
     const otp = generateUniqueOtp();
@@ -20,13 +25,25 @@ export class OTPService {
     await this.redisClient.del(`otp:${number}`);
     return true;
   }
-  async sendOtpToUser(number: string, otp: string): Promise<void> {
+  async sendOtpToUser(
+    data: { number: string; email: string; name: string },
+    otp: string,
+  ): Promise<void> {
     // Implement your OTP sending logic (e.g., through an SMS service)
-    console.log(`Sending OTP ${otp} to number ${number}`);
-    await this.sendSms(
-      number,
-      `Your Verfication code for \n Crcl Events is: ${otp}`,
-    );
+    const service = process.env.OTP_SERVICE;
+    if (service === 'SMS') {
+      await this.sendSms(
+        data.number,
+        `Your Verfication code for \n Crcl Events is: ${otp}`,
+      );
+      console.log(`Sending OTP ${otp} to number ${data.number}`);
+    } else {
+      this.emitter.emit(
+        'otp.request',
+        new SendOtpEvent(data.email, { recipientName: data.name, otp: otp }),
+      );
+      console.log(`Sending OTP ${otp} to number ${data.email}`);
+    }
   }
 
   private async sendSms(to: string, message: string) {

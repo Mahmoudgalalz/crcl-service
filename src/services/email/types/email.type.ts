@@ -28,3 +28,8 @@ export interface TicketProps {
   organizerName: string;
   ticketOwner: string;
 }
+
+export interface OtpEmailProps {
+  recipientName: string;
+  otp: string;
+}

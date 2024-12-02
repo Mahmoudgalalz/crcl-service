@@ -11,8 +11,10 @@ import { format } from 'date-fns';
 
 @Injectable()
 export class PaymentService {
-  constructor(private readonly prisma: PrismaService, 
-    private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async initIntention(ticketsIds: string[], userId: string, callback: string) {
     const payload = await this.formatPaymentData(userId, ticketsIds, callback);
@@ -169,16 +171,16 @@ export class PaymentService {
             include: {
               ticket: {
                 include: {
-                  event: true
-                }
-              }
+                  event: true,
+                },
+              },
             },
             data: {
               payment: status,
               paymentReference: paymentReference.toString(),
             },
           });
-          
+
           const timeString = ticket.ticket.event.time;
           const date = new Date(`2024-12-25T${timeString}:00`);
           const formattedTime = format(date, 'hh:mm a');
@@ -192,11 +194,12 @@ export class PaymentService {
               type: ticket.ticket.title,
               time: formattedTime,
               location: ticket.ticket.event.location,
-            }}
-            this.eventEmitter.emit(
-              'ticket.paid',
-              new SendTicketEmailEvent(ticket.meta['email'], data),
-            );
+            },
+          };
+          this.eventEmitter.emit(
+            'ticket.paid',
+            new SendTicketEmailEvent(ticket.meta['email'], data),
+          );
           paid[ticketId] = ticket;
         }
       });
