@@ -164,9 +164,12 @@ export class AuthController {
   async sendOtp(@Body() { number }: NumberDto) {
     try {
       const exist = await this.authService.userExist(number);
-      if (exist) {
+      if (exist.number) {
         const otp = await this.otpService.generateOtp(number);
-        await this.otpService.sendOtpToUser(number, otp);
+        await this.otpService.sendOtpToUser(
+          { email: exist.email, name: exist.name, number: exist.number },
+          otp,
+        );
         return new SuccessResponse('OTP sent successfully');
       }
       return new NotFoundException('User Not Exist');

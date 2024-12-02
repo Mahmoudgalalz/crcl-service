@@ -110,11 +110,7 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: { number },
     });
-
-    if (user.id) {
-      return true;
-    }
-    return false;
+    return user;
   }
 
   async userExistById(id: string) {
