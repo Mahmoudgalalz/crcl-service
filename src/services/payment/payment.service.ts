@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import axios from 'axios';
 import { PAYMENT_WEBHOOK_URL, PUBLIC_PAYMENT_URL } from 'src/shared/constants';
@@ -95,12 +95,14 @@ export class PaymentService {
 
     // Convert amount to piastres (rounded integer)
     const amountInPiastres = Math.round(amount * 100);
-
+    const payment_methods = process.env.PAYMENT_METHODS.replace(' ', '').split(
+      ',',
+    );
     // Prepare payment data
     const data = {
       amount: amountInPiastres, // Paymob expects amount in piastres
       currency: 'EGP',
-      payment_methods: ['card', 'wallet'],
+      payment_methods: payment_methods ? payment_methods : ['card', 'wallet'],
       billing_data: {
         first_name: user.name || 'Unknown',
         last_name: '-',
