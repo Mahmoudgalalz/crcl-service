@@ -18,8 +18,8 @@ import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
 import { getFuse } from 'src/shared/auth/shared/fues';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TicketApprovalEmailProps } from '../email/types/email.type';
-import { format } from 'util';
 import { RequestApprovedEvent } from '../email/events/sendOtp.event';
+import { format } from 'date-fns';
 
 interface RequestMetaItem {
   name: string;
