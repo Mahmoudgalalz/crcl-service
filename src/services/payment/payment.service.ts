@@ -126,6 +126,7 @@ export class PaymentService {
     const { userId, ticketsIds } = payment_key_claims.extra;
 
     const status = success ? PaymentStatus.PAID : PaymentStatus.UN_PAID;
+    Logger.log(body.obj);
     try {
       const res = await this.updateTicketStatus(userId, ticketsIds, id, status);
       return { res, id, success, payment_key_claims };
