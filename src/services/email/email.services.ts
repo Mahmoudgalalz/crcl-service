@@ -12,7 +12,8 @@ import { SendTicketEmailEvent } from './events/sendTicket.event';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import OtpEmail from 'emails/template/Otp';
-import { SendOtpEvent } from './events/sendOtp.event';
+import { RequestApprovedEvent, SendOtpEvent } from './events/sendOtp.event';
+import TicketApprovalEmail from 'emails/template/TicketApprovalEmail';
 
 @Injectable()
 export class EmailService {
@@ -105,6 +106,20 @@ export class EmailService {
       from: 'CRCL Events <no-reply@crclevents.com>',
       to,
       subject: `CRCL: your verification code!`,
+      html,
+    };
+    return this.mailQueue.add(EmailType.NOTIFICATION_EMAIL, emailInput, {
+      attempts: 3,
+    });
+  }
+
+  async sendRequestApprovedEmail(event: RequestApprovedEvent) {
+    const { to, data } = event;
+    const html = await this.generateEmail(TicketApprovalEmail(data));
+    const emailInput: ResendEmailInput = {
+      from: 'CRCL Events <no-reply@crclevents.com>',
+      to,
+      subject: `CRCL: Your event request has been approved!`,
       html,
     };
     return this.mailQueue.add(EmailType.NOTIFICATION_EMAIL, emailInput, {

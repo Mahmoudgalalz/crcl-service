@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SendTicketEmailEvent } from '../events/sendTicket.event';
 import { EmailService } from '../email.services';
-import { SendOtpEvent } from '../events/sendOtp.event';
+import { RequestApprovedEvent, SendOtpEvent } from '../events/sendOtp.event';
 
 @Injectable()
 export class SendTicketEmailEventListener {
@@ -15,5 +15,10 @@ export class SendTicketEmailEventListener {
   @OnEvent('otp.request')
   handleOtpCreatedEvent(event: SendOtpEvent) {
     this.emailService.sendOtpEmail(event);
+  }
+
+  @OnEvent('request.approved')
+  handleRequestApprovedEvent(event: RequestApprovedEvent) {
+    this.emailService.sendRequestApprovedEmail(event);
   }
 }

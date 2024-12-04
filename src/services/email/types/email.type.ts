@@ -33,3 +33,22 @@ export interface OtpEmailProps {
   recipientName: string;
   otp: string;
 }
+
+export interface TicketEmail {
+  id: string;
+  type: string;
+  price: number;
+  quantity: number;
+}
+
+export interface TicketApprovalEmailProps {
+  recipientName: string;
+  eventName: string;
+  eventImage: string; // Event image URL
+  eventDetails: {
+    location: string;
+    date: string;
+    time: string;
+  };
+  redirectUrl: string; // URL to redirect to pay
+}

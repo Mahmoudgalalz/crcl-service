@@ -16,6 +16,10 @@ import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import { newId } from 'src/common/uniqueId.utils';
 import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
 import { getFuse } from 'src/shared/auth/shared/fues';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { TicketApprovalEmailProps } from '../email/types/email.type';
+import { format } from 'util';
+import { RequestApprovedEvent } from '../email/events/sendOtp.event';
 
 interface RequestMetaItem {
   name: string;
@@ -27,7 +31,10 @@ interface RequestMetaItem {
 
 @Injectable()
 export class EventsManagementService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async createEvent(data: CreateEventDto): Promise<Event> {
     const id = newId('event', 16);
@@ -395,6 +402,7 @@ export class EventsManagementService {
           return {
             // Normalize phone number by removing spaces, dashes, and other characters
             number: (item.number?.toString() || '')
+              // eslint-disable-next-line no-useless-escape
               .replace(/[\s\-\(\)\.]/g, '')
               .trim(),
             // Normalize email by converting to lowercase and trimming
@@ -420,6 +428,7 @@ export class EventsManagementService {
         // Normalize the search query
         const normalizedQuery = searchQuery
           .toLowerCase()
+          // eslint-disable-next-line no-useless-escape
           .replace(/[\s\-\(\)\.]/g, '')
           .trim();
 
@@ -540,6 +549,25 @@ export class EventsManagementService {
         await this.prisma.ticketPurchase.createMany({
           data: formatedData,
         });
+
+        const timeString = request.event.time;
+        const date = new Date(`2024-12-25T${timeString}:00`);
+        const formattedTime = format(date, 'hh:mm a');
+        const data: TicketApprovalEmailProps = {
+          recipientName: request.user.name,
+          eventName: request.event.title,
+          eventImage: request.event.image,
+          eventDetails: {
+            location: request.event.location,
+            date: format(request.event.date, 'MMMM dd, yyyy'),
+            time: formattedTime,
+          },
+          redirectUrl: 'https://crclevents.com/app',
+        };
+        this.eventEmitter.emit(
+          'request.approved',
+          new RequestApprovedEvent(request.user.email, data),
+        );
         return true;
       } else {
         const request = await this.changeRequestStatus(requestId, status);
@@ -585,6 +613,10 @@ export class EventsManagementService {
     const requestState = await this.prisma.eventRequest.update({
       where: {
         id: requestId,
+      },
+      include: {
+        user: true,
+        event: true,
       },
       data: {
         status,
