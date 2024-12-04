@@ -126,7 +126,6 @@ export class PaymentService {
     const { userId, ticketsIds } = payment_key_claims.extra;
 
     const status = success ? PaymentStatus.PAID : PaymentStatus.UN_PAID;
-    Logger.log(body.obj);
     try {
       const res = await this.updateTicketStatus(userId, ticketsIds, id, status);
       return { res, id, success, payment_key_claims };
@@ -184,25 +183,27 @@ export class PaymentService {
             },
           });
 
-          const timeString = ticket.ticket.event.time;
-          const date = new Date(`2024-12-25T${timeString}:00`);
-          const formattedTime = format(date, 'hh:mm a');
-          const data: TicketEmailProps = {
-            recipientName: ticket.meta['name'],
-            eventName: ticket.ticket.event.title,
-            eventImage: ticket.ticket.event.image,
-            ticketDetails: {
-              id: ticket.id,
-              date: format(ticket.ticket.event.date, 'MMMM dd, yyyy'),
-              type: ticket.ticket.title,
-              time: formattedTime,
-              location: ticket.ticket.event.location,
-            },
-          };
-          this.eventEmitter.emit(
-            'ticket.paid',
-            new SendTicketEmailEvent(ticket.meta['email'], data),
-          );
+          if (status === 'PAID') {
+            const timeString = ticket.ticket.event.time;
+            const date = new Date(`2024-12-25T${timeString}:00`);
+            const formattedTime = format(date, 'hh:mm a');
+            const data: TicketEmailProps = {
+              recipientName: ticket.meta['name'],
+              eventName: ticket.ticket.event.title,
+              eventImage: ticket.ticket.event.image,
+              ticketDetails: {
+                id: ticket.id,
+                date: format(ticket.ticket.event.date, 'MMMM dd, yyyy'),
+                type: ticket.ticket.title,
+                time: formattedTime,
+                location: ticket.ticket.event.location,
+              },
+            };
+            this.eventEmitter.emit(
+              'ticket.paid',
+              new SendTicketEmailEvent(ticket.meta['email'], data),
+            );
+          }
           paid[ticketId] = ticket;
         }
       });
