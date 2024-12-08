@@ -102,15 +102,16 @@ export class AuthService {
           role: 'user',
         });
       }
-      throw new Error("Error, couldn't verify the user with OTP");
+      throw new Error("couldn't verify the user with OTP, request a new OTP");
     }
-    throw new Error("Error, user isn't available");
+    throw new Error("User isn't available");
   }
 
   async userExist(number: string) {
     const user = await this.prisma.user.findFirst({
       where: { number },
     });
+    if (!user) throw new Error("Error, user isn't available");
     return user;
   }
 

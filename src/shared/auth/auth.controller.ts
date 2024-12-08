@@ -176,17 +176,11 @@ export class AuthController {
           .status(HttpStatus.ACCEPTED);
         return;
       }
-      res
-        .send({
-          status: 'success',
-          message: 'You do not have account, please create it',
-        })
-        .status(HttpStatus.FORBIDDEN);
       return;
     } catch (err) {
-      res.send({
-        status: 'error',
-        message: 'something went wrong with server',
+      throw new UnauthorizedException(err?.message, {
+        cause: err,
+        description: err,
       });
     }
   }
