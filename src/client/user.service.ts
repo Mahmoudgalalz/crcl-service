@@ -318,24 +318,43 @@ export class UserService {
 
   async userPayTickets(id: string, ticketIds: string[], callback: string) {
     try {
+      // Fetch all tickets for the provided ticketIds
       const tickets = await this.prisma.ticket.findMany({
         where: { id: { in: ticketIds } },
       });
 
-      for (const ticket of tickets) {
-        const ticketsSold = await this.prisma.ticketPurchase.count({
-          where: { ticketId: ticket.id },
-        });
-
-        const remainingCapacity = ticket.capacity - ticketsSold;
-
-        if (remainingCapacity <= 0) {
-          throw new BadRequestException(
-            `Ticket "${ticket.title}" is sold out and cannot be purchased.`,
-          );
-        }
+      if (tickets.length !== ticketIds.length) {
+        throw new BadRequestException('One or more tickets are invalid.');
       }
 
+      // Fetch sold ticket counts in bulk for better performance
+      const ticketSales = await this.prisma.ticketPurchase.groupBy({
+        by: ['ticketId'],
+        where: { ticketId: { in: ticketIds } },
+        _count: { ticketId: true },
+      });
+
+      // Map to check sold count by ticketId
+      const soldCounts = Object.fromEntries(
+        ticketSales.map((sale) => [sale.ticketId, sale._count.ticketId]),
+      );
+
+      // Check capacity for each ticket
+      const soldOutTickets = tickets.filter((ticket) => {
+        const ticketsSold = soldCounts[ticket.id] || 0;
+        return ticket.capacity - ticketsSold <= 0;
+      });
+
+      if (soldOutTickets.length > 0) {
+        const soldOutTitles = soldOutTickets
+          .map((ticket) => ticket.title)
+          .join(', ');
+        throw new BadRequestException(
+          `The following tickets are sold out and cannot be purchased: ${soldOutTitles}.`,
+        );
+      }
+
+      // Initialize payment intention
       const paymentUrl = await this.paymentService.initIntention(
         ticketIds,
         id,
