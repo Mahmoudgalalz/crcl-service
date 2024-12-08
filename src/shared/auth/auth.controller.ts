@@ -8,11 +8,9 @@ import {
   HttpStatus,
   HttpCode,
   Req,
-  NotFoundException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SuccessResponse } from 'src/common/success.response';
-import { ErrorResponse } from 'src/common/error.response';
 import { Public, Roles } from '../decorators/roles.decorator';
 import { CurrentUser } from '../decorators/user.decorator';
 import { Role } from '../interface/roles';
@@ -161,7 +159,7 @@ export class AuthController {
 
   @Public()
   @Post('user/send-otp')
-  async sendOtp(@Body() { number }: NumberDto) {
+  async sendOtp(@Body() { number }: NumberDto, @Res() res: Response) {
     try {
       const exist = await this.authService.userExist(number);
       if (exist.number) {
@@ -170,11 +168,26 @@ export class AuthController {
           { email: exist.email, name: exist.name, number: exist.number },
           otp,
         );
-        return new SuccessResponse('OTP sent successfully');
+        res
+          .send({
+            status: 'success',
+            message: 'OTP Sent, check your email or sms',
+          })
+          .status(HttpStatus.ACCEPTED);
+        return;
       }
-      return new NotFoundException('User Not Exist');
+      res
+        .send({
+          status: 'success',
+          message: 'You do not have account, please create it',
+        })
+        .status(HttpStatus.FORBIDDEN);
+      return;
     } catch (err) {
-      return new ErrorResponse();
+      res.send({
+        status: 'error',
+        message: 'something went wrong with server',
+      });
     }
   }
 

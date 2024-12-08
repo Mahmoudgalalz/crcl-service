@@ -64,6 +64,7 @@ export class AuthService {
       pass,
       user.password,
     );
+    if (!user.id) return new Error('Wrong credentials');
     if (user && validPassword) {
       if (user.deletedAt) {
         return new Error(
