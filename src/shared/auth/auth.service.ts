@@ -227,6 +227,9 @@ export class AuthService {
       email: user.email,
       userId: user.id,
       role: 'user',
+      extra: {
+        type: user.type,
+      },
     });
   }
 }

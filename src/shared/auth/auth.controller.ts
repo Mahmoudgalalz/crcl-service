@@ -236,10 +236,8 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      const { access_token, refresh_token } = await this.authService.verify(
-        verifyDto.number,
-        verifyDto.otp,
-      );
+      const { access_token, refresh_token, extra } =
+        await this.authService.verify(verifyDto.number, verifyDto.otp);
       res.cookie('refreshToken', refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV !== 'development',
@@ -254,6 +252,7 @@ export class AuthController {
           message: 'Tokens',
           data: {
             access_token,
+            ...extra,
           },
         })
         .status(HttpStatus.ACCEPTED);
