@@ -319,11 +319,19 @@ export class UserService {
   async userPayTickets(id: string, ticketIds: string[], callback: string) {
     try {
       // Fetch all tickets for the provided ticketIds
-      const tickets = await this.prisma.ticket.findMany({
+      const ticketsP = await this.prisma.ticketPurchase.findMany({
         where: { id: { in: ticketIds } },
       });
 
-      if (tickets.length !== ticketIds.length) {
+      const pIds = ticketsP.map((ticket) => {
+        return ticket.ticketId;
+      });
+
+      const tickets = await this.prisma.ticket.findMany({
+        where: { id: { in: pIds } },
+      });
+
+      if (ticketsP.length !== ticketIds.length) {
         throw new BadRequestException('One or more tickets are invalid.');
       }
 
