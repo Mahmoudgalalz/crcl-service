@@ -4,6 +4,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Logger,
   Post,
 } from '@nestjs/common';
 import { SuccessResponse } from 'src/common/success.response';
@@ -25,6 +26,7 @@ export class BoothController {
     @Body() data: walletBoothTransactionDTO,
   ) {
     try {
+      Logger.log(user);
       const initBoothTransaction = await this.userService.BoothInitTransaction(
         user.id,
         data.amount,
