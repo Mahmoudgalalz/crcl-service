@@ -323,15 +323,26 @@ export class UserService {
         where: { id: { in: ticketIds } },
       });
 
-      const pIds = ticketsP.map((ticket) => {
-        return ticket.ticketId;
-      });
+      // Extract ticket IDs from purchases
+      const pIds = ticketsP.map((ticket) => ticket.ticketId);
+
+      // Log ticket purchases for debugging
+      Logger.log(`Fetched ticketsP: ${JSON.stringify(ticketsP)}`);
 
       const tickets = await this.prisma.ticket.findMany({
         where: { id: { in: pIds } },
       });
 
+      // Log fetched tickets for debugging
+      Logger.log(`Fetched tickets: ${JSON.stringify(tickets)}`);
+
       if (ticketsP.length !== ticketIds.length) {
+        const missingTickets = ticketIds.filter(
+          (id) => !ticketsP.some((ticket) => ticket.id === id),
+        );
+        Logger.error(
+          `Invalid tickets detected: ${JSON.stringify(missingTickets)}`,
+        );
         throw new BadRequestException('One or more tickets are invalid.');
       }
 
@@ -341,6 +352,9 @@ export class UserService {
         where: { ticketId: { in: ticketIds } },
         _count: { ticketId: true },
       });
+
+      // Log ticket sales for debugging
+      Logger.log(`Ticket sales: ${JSON.stringify(ticketSales)}`);
 
       // Map to check sold count by ticketId
       const soldCounts = Object.fromEntries(
@@ -357,6 +371,11 @@ export class UserService {
         const soldOutTitles = soldOutTickets
           .map((ticket) => ticket.title)
           .join(', ');
+        Logger.error(
+          `The following tickets are sold out: ${JSON.stringify(
+            soldOutTitles,
+          )}`,
+        );
         throw new BadRequestException(
           `The following tickets are sold out and cannot be purchased: ${soldOutTitles}.`,
         );
@@ -370,7 +389,7 @@ export class UserService {
       );
       return paymentUrl;
     } catch (err) {
-      Logger.error('Payment Error in tickets', err);
+      Logger.error('Payment Error in tickets', err.message || err);
       throw err;
     }
   }
