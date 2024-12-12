@@ -405,7 +405,7 @@ export class UserService {
         throw new Error('Booth user not found');
       }
       if (!boothWallet.wallet || !boothWallet.wallet.id) {
-        throw new Error('Booth user does not have a wallet');
+        await this.UserWallet(id);
       }
 
       // Get the token price
