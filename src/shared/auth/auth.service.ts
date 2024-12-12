@@ -80,6 +80,7 @@ export class AuthService {
         email: user.email,
         userId: user.id,
         role: 'user',
+        extra: { type: user.type },
       });
     }
 
@@ -100,6 +101,7 @@ export class AuthService {
           email: user.email,
           userId: user.id,
           role: 'user',
+          extra: { type: user.type },
         });
       }
       throw new Error("couldn't verify the user with OTP, request a new OTP");

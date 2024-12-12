@@ -120,7 +120,7 @@ export class AuthController {
     @Res() res: Response,
   ) {
     try {
-      const { access_token, refresh_token } =
+      const { access_token, refresh_token, extra } =
         await this.authService.validateUserByEmail(
           loginDto.email,
           loginDto.password,
@@ -139,6 +139,7 @@ export class AuthController {
           message: 'Tokens',
           data: {
             access_token,
+            ...extra,
           },
         })
         .status(HttpStatus.ACCEPTED);
@@ -189,7 +190,7 @@ export class AuthController {
   @Post('user/verify-otp')
   async verifyOtp(@Body() { number, otp }: VerifyOtpDto, @Res() res: Response) {
     try {
-      const { access_token, refresh_token } =
+      const { access_token, refresh_token, extra } =
         await this.authService.validateUserByNumber(number, otp);
       res.cookie('refreshToken', refresh_token, {
         httpOnly: true,
@@ -205,6 +206,7 @@ export class AuthController {
           message: 'Tokens',
           data: {
             access_token,
+            ...extra,
           },
         })
         .status(HttpStatus.ACCEPTED);

@@ -30,20 +30,23 @@ export class JWTService {
     email: string;
     userId: string;
     role: 'user' | 'admin';
+    extra?: Record<string, any>;
   }) {
     const access_token = await this.createAccessToken({
       email: payload.email,
       userId: payload.userId,
       role: payload.role,
+      ...payload.extra,
     });
 
     const refresh_token = await this.createRefreshToken({
       email: payload.email,
       userId: payload.userId,
       role: payload.role,
+      ...payload.extra,
     });
 
-    return { access_token, refresh_token };
+    return { access_token, refresh_token, extra: payload.extra };
   }
 
   decodeRefreshToken(token: string) {
