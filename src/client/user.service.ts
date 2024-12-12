@@ -382,8 +382,10 @@ export class UserService {
     return token.tokenPrice;
   }
   async BoothInitTransaction(id: string, amount: number) {
-    if (!id) throw Error('user id is not exist');
+    if (!id) throw new Error('User ID does not exist');
+
     try {
+      // Fetch the booth wallet details
       const boothWallet = await this.prisma.user.findFirst({
         where: {
           id,
@@ -397,24 +399,36 @@ export class UserService {
           wallet: true,
         },
       });
-      if (boothWallet.wallet.id) {
-        const tokenPrice = await this.tokenPrice();
-        const transaction = await this.prisma.walletTransactions.create({
-          data: {
-            id: newId('transaction', 14),
-            from: 'USER',
-            to: `${boothWallet.name}@${boothWallet.id}`,
-            status: 'PENDING',
-            amount,
-            tokenPrice,
-            walletId: boothWallet.wallet.id,
-          },
-        });
-        return transaction;
+
+      // Check if boothWallet exists and has a wallet
+      if (!boothWallet) {
+        throw new Error('Booth user not found');
       }
+      if (!boothWallet.wallet || !boothWallet.wallet.id) {
+        throw new Error('Booth user does not have a wallet');
+      }
+
+      // Get the token price
+      const tokenPrice = await this.tokenPrice();
+
+      // Create the transaction
+      const transaction = await this.prisma.walletTransactions.create({
+        data: {
+          id: newId('transaction', 14),
+          from: 'USER',
+          to: `${boothWallet.name}@${boothWallet.id}`,
+          status: 'PENDING',
+          amount,
+          tokenPrice,
+          walletId: boothWallet.wallet.id,
+        },
+      });
+
+      return transaction;
     } catch (error) {
-      Logger.error('Payment Error in wallet', error);
-      throw error;
+      // Log the error and rethrow it
+      Logger.error('Payment Error in wallet', error.message || error);
+      throw new Error(`Payment Error: ${error.message || error}`);
     }
   }
 
