@@ -319,11 +319,30 @@ export class UserService {
   async userPayTickets(id: string, ticketIds: string[], callback: string) {
     try {
       // Fetch all tickets for the provided ticketIds
-      const tickets = await this.prisma.ticket.findMany({
+      const ticketsP = await this.prisma.ticketPurchase.findMany({
         where: { id: { in: ticketIds } },
       });
 
-      if (tickets.length !== ticketIds.length) {
+      // Extract ticket IDs from purchases
+      const pIds = ticketsP.map((ticket) => ticket.ticketId);
+
+      // Log ticket purchases for debugging
+      Logger.log(`Fetched ticketsP: ${JSON.stringify(ticketsP)}`);
+
+      const tickets = await this.prisma.ticket.findMany({
+        where: { id: { in: pIds } },
+      });
+
+      // Log fetched tickets for debugging
+      Logger.log(`Fetched tickets: ${JSON.stringify(tickets)}`);
+
+      if (ticketsP.length !== ticketIds.length) {
+        const missingTickets = ticketIds.filter(
+          (id) => !ticketsP.some((ticket) => ticket.id === id),
+        );
+        Logger.error(
+          `Invalid tickets detected: ${JSON.stringify(missingTickets)}`,
+        );
         throw new BadRequestException('One or more tickets are invalid.');
       }
 
@@ -333,6 +352,9 @@ export class UserService {
         where: { ticketId: { in: ticketIds } },
         _count: { ticketId: true },
       });
+
+      // Log ticket sales for debugging
+      Logger.log(`Ticket sales: ${JSON.stringify(ticketSales)}`);
 
       // Map to check sold count by ticketId
       const soldCounts = Object.fromEntries(
@@ -349,6 +371,11 @@ export class UserService {
         const soldOutTitles = soldOutTickets
           .map((ticket) => ticket.title)
           .join(', ');
+        Logger.error(
+          `The following tickets are sold out: ${JSON.stringify(
+            soldOutTitles,
+          )}`,
+        );
         throw new BadRequestException(
           `The following tickets are sold out and cannot be purchased: ${soldOutTitles}.`,
         );
@@ -362,7 +389,7 @@ export class UserService {
       );
       return paymentUrl;
     } catch (err) {
-      Logger.error('Payment Error in tickets', err);
+      Logger.error('Payment Error in tickets', err.message || err);
       throw err;
     }
   }
@@ -374,7 +401,10 @@ export class UserService {
     return token.tokenPrice;
   }
   async BoothInitTransaction(id: string, amount: number) {
+    if (!id) throw new Error('User ID does not exist');
+
     try {
+      // Fetch the booth wallet details
       const boothWallet = await this.prisma.user.findFirst({
         where: {
           id,
@@ -388,24 +418,36 @@ export class UserService {
           wallet: true,
         },
       });
-      if (boothWallet.wallet.id) {
-        const tokenPrice = await this.tokenPrice();
-        const transaction = await this.prisma.walletTransactions.create({
-          data: {
-            id: newId('transaction', 14),
-            from: 'USER',
-            to: `${boothWallet.name}@${boothWallet.id}`,
-            status: 'PENDING',
-            amount,
-            tokenPrice,
-            walletId: boothWallet.wallet.id,
-          },
-        });
-        return transaction;
+
+      // Check if boothWallet exists and has a wallet
+      if (!boothWallet) {
+        throw new Error('Booth user not found');
       }
+      if (!boothWallet.wallet || !boothWallet.wallet.id) {
+        await this.UserWallet(id);
+      }
+
+      // Get the token price
+      const tokenPrice = await this.tokenPrice();
+
+      // Create the transaction
+      const transaction = await this.prisma.walletTransactions.create({
+        data: {
+          id: newId('transaction', 14),
+          from: 'USER',
+          to: `${boothWallet.name}@${boothWallet.id}`,
+          status: 'PENDING',
+          amount,
+          tokenPrice,
+          walletId: boothWallet.wallet.id,
+        },
+      });
+
+      return transaction;
     } catch (error) {
-      Logger.error('Payment Error in wallet', error);
-      throw error;
+      // Log the error and rethrow it
+      Logger.error('Payment Error in wallet', error.message || error);
+      throw new Error(`Payment Error: ${error.message || error}`);
     }
   }
 

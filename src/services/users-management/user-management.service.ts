@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { User, UserStatus, UserType } from '@prisma/client';
-import { customUUID } from 'src/common/uniqueId.utils';
+import { customUUID, newId } from 'src/common/uniqueId.utils';
 import { PrismaService } from 'src/prisma.service';
 import { CreateUserViaAdminDto } from './dto/create-user.dto';
 import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
@@ -20,11 +20,17 @@ export class UsersManagmentService {
     const id = customUUID(20);
     const { password, ...rest } = data;
     const hashedPassword = await this.bycrptService.hashPassword(password);
-    return await this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         id,
         password: hashedPassword,
         ...rest,
+      },
+    });
+    await this.prisma.wallet.create({
+      data: {
+        id: newId('wallet', 16),
+        userId: user.id,
       },
     });
   }
