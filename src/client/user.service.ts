@@ -374,6 +374,7 @@ export class UserService {
     return token.tokenPrice;
   }
   async BoothInitTransaction(id: string, amount: number) {
+    if (!id) throw Error('user id is not exist');
     try {
       const boothWallet = await this.prisma.user.findFirst({
         where: {
