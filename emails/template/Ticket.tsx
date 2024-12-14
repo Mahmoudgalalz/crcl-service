@@ -47,7 +47,7 @@ export default function TicketEmail({
         </Section>
         <Section style={styles.body}>
           <Text style={styles.greeting}>
-            Hello <strong>{recipientName}</strong>,
+            Dear <strong>{recipientName}</strong>,
           </Text>
           <Text style={styles.message}>
             Thank you for your purchase! Here are the details of your ticket:
