@@ -119,7 +119,7 @@ export class EmailService {
     const emailInput: ResendEmailInput = {
       from: 'CRCL Events <no-reply@crclevents.com>',
       to,
-      subject: `CRCL: Your event request has been approved!`,
+      subject: `CRCL: Booking Approved - Time to compelete Your Payment!`,
       html,
     };
     return this.mailQueue.add(EmailType.NOTIFICATION_EMAIL, emailInput, {
