@@ -60,16 +60,15 @@ export default function TicketApprovalEmail({
         </Section>
         <Section style={styles.header}>
           <Text style={styles.title}>
-            🎟️ Your Request for {eventName} Has Been Approved!
+            🎟️ Your Request for {eventName} Has Been Confirmed!
           </Text>
         </Section>
         <Section style={styles.body}>
           <Text style={styles.greeting}>
-            Hello <strong>{recipientName}</strong>,
+            Dear <strong>{recipientName}</strong>,
           </Text>
           <Text style={styles.message}>
-            Your request has been approved. Here are the details of your tickets
-            and the event:
+            Your booking for {eventName} is confirmed! 🎉
           </Text>
           <Text style={styles.details}>
             <strong>Event:</strong> {eventName} <br />
@@ -77,6 +76,17 @@ export default function TicketApprovalEmail({
             <strong>Time:</strong> {time} <br />
             <strong>Location:</strong> {location} <br />
           </Text>
+          <Section>
+            <Text style={styles.details}>
+              Please log into CRCL APP and complete your payment in the
+              "Upcoming - My Tickets" section to secure your sport.
+
+              Once payment is completed, you'll receive your tickets details.
+              See you at the event!
+
+              Best regards,
+            </Text>
+          </Section>
           <Section style={styles.ticketDetails}>
             {/* <Text style={styles.subTitle}>🎫 Ticket Details:</Text> */}
             <Section style={styles.ticketCardsContainer}>
@@ -100,9 +110,9 @@ export default function TicketApprovalEmail({
             </Text> */}
           </Section>
           <Section style={styles.paymentButtonContainer}>
-            <Button style={styles.paymentButton} href={redirectUrl}>
+            {/* <Button style={styles.paymentButton} href={redirectUrl}>
               Check out !
-            </Button>
+            </Button> */}
           </Section>
         </Section>
         <Section style={styles.footer}>
