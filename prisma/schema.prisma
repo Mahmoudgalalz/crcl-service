@@ -50,6 +50,26 @@ model User {
   Notifications Notifications[]
 }
 
+model Invitation {
+  id          String      @id @unique
+  name        String
+  email       String
+  number      String
+
+  //only for paid one
+  ticketId    String?
+  payment     PaymentStatus?
+  paymentReference String?
+
+  type        String // if paid use above, else don't consider them
+  status      InvitationStatus @default(UPCOMMING)
+  eventId     String
+
+  createdAt   DateTime    @default(now())
+  updateAt    DateTime    @updatedAt
+  @@index([eventId, id, ticketId, paymentReference])
+}
+
 model Event {
   id          String          @id @unique
   title       String
@@ -177,6 +197,11 @@ enum TicketStatus {
   UPCOMMING
   ATTENDED
   PAST_DUE
+}
+
+enum InvitationStatus {
+  UPCOMMING
+  ATTENDED
 }
 
 enum RequestStatus {
