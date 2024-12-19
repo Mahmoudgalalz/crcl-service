@@ -39,6 +39,38 @@ export class PaymentService {
     }
   }
 
+  async paymentCallback(body: any) {
+    const { id, success, payment_key_claims } = body.obj;
+    const { userId, ticketsIds, invitationId } = payment_key_claims.extra;
+    const status = success ? PaymentStatus.PAID : PaymentStatus.UN_PAID;
+
+    try {
+      if (invitationId) {
+        const res = await this.updateInvitationStatus(invitationId, status);
+        return { res, id, success, payment_key_claims };
+      } else {
+        const res = await this.updateTicketStatus(
+          userId,
+          ticketsIds,
+          id,
+          status,
+        );
+        return { res, id, success, payment_key_claims };
+      }
+    } catch (error) {
+      return false;
+    }
+  }
+  async usdPrice() {
+    return await this.prisma.walletToken.findFirst({
+      where: {
+        usd_price: {
+          not: null,
+        },
+      },
+    });
+  }
+
   private async formatPaymentData(
     userId: string,
     ticketsIds: string[],
@@ -112,6 +144,7 @@ export class PaymentService {
       extras: {
         userId: user.id,
         ticketsIds,
+        invitationId: null,
       },
       special_reference: newId('transaction', 14),
       notification_url: PAYMENT_WEBHOOK_URL,
@@ -119,28 +152,6 @@ export class PaymentService {
     };
 
     return data;
-  }
-
-  async paymentCallback(body: any) {
-    const { id, success, payment_key_claims } = body.obj;
-    const { userId, ticketsIds } = payment_key_claims.extra;
-
-    const status = success ? PaymentStatus.PAID : PaymentStatus.UN_PAID;
-    try {
-      const res = await this.updateTicketStatus(userId, ticketsIds, id, status);
-      return { res, id, success, payment_key_claims };
-    } catch (error) {
-      return false;
-    }
-  }
-  async usdPrice() {
-    return await this.prisma.walletToken.findFirst({
-      where: {
-        usd_price: {
-          not: null,
-        },
-      },
-    });
   }
 
   private async updateTicketStatus(
@@ -207,6 +218,139 @@ export class PaymentService {
           paid[ticketId] = ticket;
         }
       });
+      return paid;
+    } catch (error) {
+      Logger.error(error);
+    }
+  }
+
+  // Invitation section //
+  async initInvitationIntention(invitationId: string, callback: string) {
+    const payload = await this.formatPaymentInvitationData(
+      invitationId,
+      callback,
+    );
+    if (payload) {
+      const request = await axios.post(
+        'https://accept.paymob.com/v1/intention/',
+        payload,
+        {
+          headers: {
+            Authorization: `Token ${process.env.PAYMENT_SECRET_KEY}`,
+          },
+        },
+      );
+      if (request.status === 201) {
+        const { client_secret } = request.data;
+        const paymentUrl = `${PUBLIC_PAYMENT_URL}?publicKey=${process.env.PAYMENT_PUBLIC_KEY}&clientSecret=${client_secret}`;
+        return paymentUrl;
+      } else {
+        Logger.log(payload);
+        throw Error('Error in payment gateway');
+      }
+    }
+  }
+
+  private async formatPaymentInvitationData(
+    invitationId: string,
+    callback: string,
+  ) {
+    const invitation = await this.prisma.invitation.findFirst({
+      where: {
+        id: invitationId,
+      },
+    });
+
+    const ticketInfo = await this.prisma.ticket.findFirst({
+      where: {
+        id: invitation.ticketId,
+      },
+    });
+
+    // Fetch wallet token prices
+    const prices = await this.prisma.walletToken.findFirst();
+    if (!prices || !prices.usd_price) {
+      throw new Error('Unable to fetch wallet token prices.');
+    }
+
+    // Calculate taxes
+    const usdPrice = prices.usd_price;
+    const taxRate = parseFloat(process.env.TAXES || '2.5'); // Default to 2.5 if TAXES is not set
+    const taxPerTicket = taxRate * usdPrice;
+    const amount = ticketInfo.price + taxPerTicket;
+    // Convert amount to piastres (rounded integer)
+    const amountInPiastres = Math.round(amount * 100);
+
+    const payment_methods = process.env.PAYMENT_METHODS.replace(' ', '').split(
+      ',',
+    );
+    const data = {
+      amount: amountInPiastres, // Paymob expects amount in piastres
+      currency: 'EGP',
+      payment_methods: payment_methods ? payment_methods : ['card', 'wallet'],
+      billing_data: {
+        first_name: invitation.name || 'Unknown',
+        last_name: '-',
+        phone_number: invitation.number || 'N/A',
+        email: invitation.email || 'N/A',
+      },
+      extras: {
+        userId: null,
+        ticketsIds: null,
+        invitationId: invitation.id,
+      },
+      special_reference: newId('transaction', 14),
+      notification_url: PAYMENT_WEBHOOK_URL,
+      redirection_url: callback,
+    };
+
+    return data;
+  }
+
+  private async updateInvitationStatus(
+    invitationId: string,
+    status: PaymentStatus,
+  ) {
+    try {
+      const paid: Record<string, any> = {};
+      const invitation = await this.prisma.invitation.update({
+        where: {
+          id: invitationId,
+        },
+        data: {
+          payment: status,
+        },
+      });
+      const ticket = await this.prisma.ticket.findFirst({
+        where: {
+          id: invitation.ticketId,
+        },
+        include: {
+          event: true,
+        },
+      });
+
+      if (status === 'PAID') {
+        const timeString = ticket.event.time;
+        const date = new Date(`2024-12-25T${timeString}:00`);
+        const formattedTime = format(date, 'hh:mm a');
+        const data: TicketEmailProps = {
+          recipientName: invitation.name,
+          eventName: ticket.event.title,
+          eventImage: ticket.event.image,
+          ticketDetails: {
+            id: ticket.id,
+            date: format(ticket.event.date, 'MMMM dd, yyyy'),
+            type: ticket.title,
+            time: formattedTime,
+            location: ticket.event.location,
+          },
+        };
+        this.eventEmitter.emit(
+          'ticket.paid',
+          new SendTicketEmailEvent(invitation.email, data),
+        );
+      }
       return paid;
     } catch (error) {
       Logger.error(error);

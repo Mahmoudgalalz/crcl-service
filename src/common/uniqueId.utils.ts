@@ -15,6 +15,7 @@ const prefixes = {
   auth: 'auth',
   wallet: 'wal',
   ticket: 'tic',
+  invitations: 'inv',
   ticketPurchase: 'tic_pay',
   event: 'ev',
   ref: 'ref',

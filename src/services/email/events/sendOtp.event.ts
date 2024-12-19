@@ -1,4 +1,8 @@
-import { OtpEmailProps, TicketApprovalEmailProps } from '../types/email.type';
+import {
+  OtpEmailProps,
+  TicketApprovalEmailProps,
+  TicketPayEmailProps,
+} from '../types/email.type';
 
 export class SendOtpEvent {
   constructor(
@@ -11,5 +15,11 @@ export class RequestApprovedEvent {
   constructor(
     public readonly to: string,
     public readonly data: TicketApprovalEmailProps,
+  ) {}
+}
+export class TicketPayEvent {
+  constructor(
+    public readonly to: string,
+    public readonly data: TicketPayEmailProps,
   ) {}
 }

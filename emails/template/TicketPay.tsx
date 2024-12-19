@@ -17,7 +17,7 @@ import * as React from 'react';
 //   quantity: number;
 // }
 
-interface TicketApprovalEmailProps {
+interface TicketPayEmailProps {
   recipientName: string;
   eventName: string;
   eventImage: string; // Event image URL
@@ -26,16 +26,21 @@ interface TicketApprovalEmailProps {
     date: string;
     time: string;
   };
+  ticket: {
+    price: number;
+    type: string;
+  };
   redirectUrl: string; // URL to redirect to pay
 }
 
-export default function TicketApprovalEmail({
+export default function TicketPayEmail({
   recipientName,
   eventName,
   eventImage,
   eventDetails,
+  ticket,
   redirectUrl,
-}: TicketApprovalEmailProps) {
+}: TicketPayEmailProps) {
   const { location, date, time } = eventDetails;
 
   // // Calculate total price and ticket count
@@ -59,16 +64,14 @@ export default function TicketApprovalEmail({
           <Img src={eventImage} alt={eventName} style={styles.eventImage} />
         </Section>
         <Section style={styles.header}>
-          <Text style={styles.title}>
-            🎟️ Your Request for {eventName} Has Been Confirmed!
-          </Text>
+          <Text style={styles.title}>🎟️ Your Invited for {eventName}!</Text>
         </Section>
         <Section style={styles.body}>
           <Text style={styles.greeting}>
             Dear <strong>{recipientName}</strong>,
           </Text>
           <Text style={styles.message}>
-            Your booking for {eventName} is confirmed! 🎉
+            Your invitation for {eventName} is here! 🎉
           </Text>
           <Text style={styles.details}>
             <strong>Event:</strong> {eventName} <br />
@@ -78,28 +81,21 @@ export default function TicketApprovalEmail({
           </Text>
           <Section>
             <Text style={styles.details}>
-              Please log into CRCL APP and complete your payment in the
-              "Upcoming - My Tickets" section to secure your spot. Once payment
-              is completed, you'll receive your tickets details. See you at the
-              event! Best regards,
+              Complete your payment in the, Once payment is completed, you'll
+              receive your tickets details. See you at the event! Best regards,
             </Text>
           </Section>
           <Section style={styles.ticketDetails}>
             {/* <Text style={styles.subTitle}>🎫 Ticket Details:</Text> */}
             <Section style={styles.ticketCardsContainer}>
-              {/* {tickets.map((ticket) => (
-                <Section key={ticket.id} style={styles.ticketCard}>
-                  <Text style={styles.ticketType}>
-                    <strong>{ticket.type} Ticket</strong>
-                  </Text>
-                  <Text style={styles.ticketInfo}>
-                    <strong>Price:</strong> EGP{ticket.price.toFixed(2)} <br />
-                    <strong>Quantity:</strong> {ticket.quantity} <br />
-                    <strong>Subtotal:</strong> EGP
-                    {(ticket.price * ticket.quantity).toFixed(2)}
-                  </Text>
-                </Section>
-              ))} */}
+              <Section style={styles.ticketCard}>
+                <Text style={styles.ticketType}>
+                  <strong>{ticket.type} Ticket</strong>
+                </Text>
+                <Text style={styles.ticketInfo}>
+                  <strong>Price:</strong> EGP{ticket.price.toFixed(2)} <br />
+                </Text>
+              </Section>
             </Section>
             {/* <Text style={styles.total}>
               <strong>Total Tickets:</strong> {totalTickets} <br />
@@ -107,9 +103,9 @@ export default function TicketApprovalEmail({
             </Text> */}
           </Section>
           <Section style={styles.paymentButtonContainer}>
-            {/* <Button style={styles.paymentButton} href={redirectUrl}>
-              Check out !
-            </Button> */}
+            <Button style={styles.paymentButton} href={redirectUrl}>
+              Pay it now!
+            </Button>
           </Section>
         </Section>
         <Section style={styles.footer}>
