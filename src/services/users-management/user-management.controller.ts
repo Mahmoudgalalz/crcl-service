@@ -10,6 +10,9 @@ import {
   Patch,
   Req,
   ParseBoolPipe,
+  Res,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { UsersManagmentService } from 'src/services/users-management/user-management.service';
 import { UserStatus, UserType } from '@prisma/client';
@@ -26,7 +29,7 @@ import { CreateSuperUserViaAdminDto } from './dto/create-admin.dto';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
 import { TopUpDto, UpadteUserViaAdminDto } from './dto/update-user.dto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { UpdateSuperUserViaAdminDto } from './dto/update-admin.dto';
 
 @ApiTags('users')
@@ -88,12 +91,23 @@ export class UsersManagmentController {
   }
 
   @Delete(':id')
-  async deleteUser(@Param('id') userId: string) {
+  async deleteUser(@Res() res: Response, @Param('id') userId: string) {
     try {
       const user = await this.usersService.deleteUser(userId);
-      return new SuccessResponse('Deleted user', user);
+      res.status(HttpStatus.ACCEPTED).send({
+        status: 'success',
+        message: 'Deleted user',
+        data: user,
+      });
+      return;
     } catch (error) {
-      return new ErrorResponse();
+      Logger.log(error);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+        status: 'error',
+        message: 'error deleting a user',
+        error,
+      });
+      return;
     }
   }
 
