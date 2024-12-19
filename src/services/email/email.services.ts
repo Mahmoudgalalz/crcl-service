@@ -12,8 +12,13 @@ import { SendTicketEmailEvent } from './events/sendTicket.event';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import OtpEmail from 'emails/template/Otp';
-import { RequestApprovedEvent, SendOtpEvent } from './events/sendOtp.event';
+import {
+  RequestApprovedEvent,
+  SendOtpEvent,
+  TicketPayEvent,
+} from './events/sendOtp.event';
 import TicketApprovalEmail from 'emails/template/TicketApprovalEmail';
+import TicketPayEmail from 'emails/template/TicketPay';
 
 @Injectable()
 export class EmailService {
@@ -109,6 +114,20 @@ export class EmailService {
       html,
     };
     return this.mailQueue.add(EmailType.NOTIFICATION_EMAIL, emailInput, {
+      attempts: 3,
+    });
+  }
+
+  async sendTicketInvitationEmail(event: TicketPayEvent) {
+    const { to, data } = event;
+    const html = await this.generateEmail(TicketPayEmail(data));
+    const emailInput: ResendEmailInput = {
+      from: 'CRCL Events <no-reply@crclevents.com>',
+      to,
+      subject: `CRCL: Ticket details for ${data.eventName}!`,
+      html,
+    };
+    return this.mailQueue.add(EmailType.TICKET_PAID, emailInput, {
       attempts: 3,
     });
   }

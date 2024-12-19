@@ -277,7 +277,7 @@ export class PaymentService {
     const usdPrice = prices.usd_price;
     const taxRate = parseFloat(process.env.TAXES || '2.5'); // Default to 2.5 if TAXES is not set
     const taxPerTicket = taxRate * usdPrice;
-    const amount = ticketInfo.price * taxPerTicket;
+    const amount = ticketInfo.price + taxPerTicket;
     // Convert amount to piastres (rounded integer)
     const amountInPiastres = Math.round(amount * 100);
 
