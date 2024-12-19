@@ -79,7 +79,7 @@ export default function TicketApprovalEmail({
           <Section>
             <Text style={styles.details}>
               Please log into CRCL APP and complete your payment in the
-              "Upcoming - My Tickets" section to secure your sport. Once payment
+              "Upcoming - My Tickets" section to secure your spot. Once payment
               is completed, you'll receive your tickets details. See you at the
               event! Best regards,
             </Text>
