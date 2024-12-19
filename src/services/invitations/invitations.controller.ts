@@ -20,7 +20,6 @@ export class InvitationsController {
   @Post()
   async listen(@Res() res: Response, @Body() payload: CreateInvitationDto) {
     try {
-      Logger.log(payload);
       const invitation =
         await this.invitationsService.createInvitation(payload);
       res.status(HttpStatus.ACCEPTED).send({
