@@ -70,7 +70,7 @@ export class InvitationsService {
       if (!ticket) throw new NotFoundException('ticket not found');
       const payment = await this.paymentService.initInvitationIntention(
         invitation.id,
-        'https://crclevents.com/',
+        'https://crclevents.com/#UpcomingEvent',
       );
 
       const timeString = event.time;
