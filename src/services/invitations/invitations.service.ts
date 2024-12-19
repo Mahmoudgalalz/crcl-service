@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { newId } from 'src/common/uniqueId.utils';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -67,7 +67,7 @@ export class InvitationsService {
           id: data.ticketId,
         },
       });
-
+      if (!ticket) throw new NotFoundException('ticket not found');
       const payment = await this.paymentService.initInvitationIntention(
         invitation.id,
         'https://crclevents.com/',
