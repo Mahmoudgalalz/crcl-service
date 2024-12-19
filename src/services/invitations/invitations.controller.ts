@@ -24,7 +24,7 @@ export class InvitationsController {
         await this.invitationsService.createInvitation(payload);
       res.status(HttpStatus.ACCEPTED).send({
         status: 'success',
-        message: 'Taxes and usd price',
+        message: 'Invitatation created',
         data: invitation,
       });
       return;

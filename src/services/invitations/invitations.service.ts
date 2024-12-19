@@ -10,11 +10,13 @@ import {
 } from '../email/types/email.type';
 import { format } from 'date-fns';
 import { TicketPayEvent } from '../email/events/sendOtp.event';
+import { PaymentService } from '../payment/payment.service';
 
 @Injectable()
 export class InvitationsService {
   constructor(
     private readonly prisma: PrismaService,
+    private paymentService: PaymentService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -66,6 +68,11 @@ export class InvitationsService {
         },
       });
 
+      const payment = await this.paymentService.initInvitationIntention(
+        invitation.id,
+        'https://crclevents.com/',
+      );
+
       const timeString = event.time;
       const date = new Date(`2024-12-25T${timeString}:00`);
       const formattedTime = format(date, 'hh:mm a');
@@ -82,7 +89,7 @@ export class InvitationsService {
           date: format(event.date, 'MMMM dd, yyyy'),
           time: formattedTime,
         },
-        redirectUrl: 'https://crclevents.com/app',
+        redirectUrl: payment,
       };
       this.eventEmitter.emit(
         'request.creation',
