@@ -23,6 +23,7 @@ import { CronModule } from './shared/cron/cron.module';
 import { BullModule } from '@nestjs/bull';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EmailModule } from './services/email/email.module';
+import { InvitationsModule } from './services/invitations/invitations.module';
 
 @Global()
 @Module({
@@ -42,6 +43,7 @@ import { EmailModule } from './services/email/email.module';
     }),
     NewspaperModule,
     EmailModule,
+    InvitationsModule,
     UsersManagmentModule,
     EventsManagementModule,
     UploadModule,

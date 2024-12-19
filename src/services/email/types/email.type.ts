@@ -52,3 +52,19 @@ export interface TicketApprovalEmailProps {
   };
   redirectUrl: string; // URL to redirect to pay
 }
+
+export interface TicketPayEmailProps {
+  recipientName: string;
+  eventName: string;
+  eventImage: string; // Event image URL
+  eventDetails: {
+    location: string;
+    date: string;
+    time: string;
+  };
+  ticket: {
+    price: number;
+    type: string;
+  };
+  redirectUrl: string; // URL to redirect to pay
+}
