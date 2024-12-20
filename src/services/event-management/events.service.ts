@@ -320,7 +320,8 @@ export class EventsManagementService {
       });
 
       return {
-        data: [...transformedRequests, { invitations }],
+        data: transformedRequests,
+        invitations,
         meta: {
           total: totalRequests,
           page,
