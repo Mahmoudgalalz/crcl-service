@@ -298,14 +298,6 @@ export class EventsManagementService {
         },
       });
 
-      const invitations = await this.prisma.invitation.count({
-        where: {
-          type: {
-            not: 'paid',
-          },
-        },
-      });
-
       // Handle case where there are no results
       if (totalRequests === 0) {
         return {
@@ -318,6 +310,14 @@ export class EventsManagementService {
           },
         };
       }
+
+      const invitations = await this.prisma.invitation.count({
+        where: {
+          type: {
+            not: 'paid',
+          },
+        },
+      });
 
       return {
         data: { ...transformedRequests, invitations },
