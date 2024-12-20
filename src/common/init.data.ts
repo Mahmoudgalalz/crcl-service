@@ -60,12 +60,14 @@ export async function createTempUser(
     }
 
     const hashedPassword = await hashPassword(password);
-    await prisma.superUser.create({
+    await prisma.user.create({
       data: {
         id: 'kroking',
         email,
         password: hashedPassword,
         name,
+        number: '010009955133', // or any appropriate value
+        type: 'USER', // or any appropriate value
       },
     });
     Logger.log('Created Temp User');
