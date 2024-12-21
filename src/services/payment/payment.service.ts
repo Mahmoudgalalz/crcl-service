@@ -289,7 +289,7 @@ export class PaymentService {
         id: invitationId,
         status: 'UPCOMMING',
         payment: 'PENDING',
-        userId: 'kroking',
+        userId: 'kroking0',
         ticketId: ticketInfo.id,
       },
     });
