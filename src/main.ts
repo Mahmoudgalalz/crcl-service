@@ -37,7 +37,7 @@ async function bootstrap() {
   };
 
   await createRootUser('root', process.env.ADMIN, process.env.PASSWORD);
-  await createTempUser('temp-ex', 'kro@kro.com', process.env.PASSWORD);
+  await createTempUser('temp-ex', 'krotemp@kro.com', process.env.PASSWORD);
   await creatRootTokenPrice(Number(process.env.TOKEN_PRICE));
 
   app.use(cookieParser());
