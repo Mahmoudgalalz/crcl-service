@@ -650,33 +650,49 @@ export class UserService {
         },
       };
     }
-    const ticket = await this.prisma.ticket.findUnique({
+    const ticket = await this.prisma.ticketPurchase.findUnique({
       where: {
         id: invitation.ticketId,
       },
       select: {
-        title: true,
-        price: true,
-        description: true,
-        event: {
+        meta: true,
+        ticketId: true,
+        payment: true,
+        status: true,
+        createdAt: true,
+        updateAt: true,
+        user: {
+          select: {
+            name: true,
+            number: true,
+            picture: true,
+            email: true,
+          },
+        },
+        ticket: {
           select: {
             title: true,
-            time: true,
-            date: true,
+            price: true,
+            description: true,
+            event: {
+              select: {
+                title: true,
+                time: true,
+                date: true,
+              },
+            },
           },
         },
       },
     });
 
     return {
-      ticket: {
-        ...ticket,
-        meta: {
-          name: invitation.name,
-          social: null,
-          email: invitation.email,
-          number: invitation.number,
-        },
+      ...ticket,
+      meta: {
+        name: invitation.name,
+        social: null,
+        email: invitation.email,
+        number: invitation.number,
       },
     };
   }
@@ -703,10 +719,9 @@ export class UserService {
       },
     });
     if (invitation.ticketId) {
-      return await this.prisma.ticketPurchase.findUnique({
+      const ticketPurchase = await this.prisma.ticketPurchase.findUnique({
         where: { id: invitation.ticketId },
         select: {
-          meta: true,
           ticketId: true,
           payment: true,
           status: true,
@@ -736,6 +751,15 @@ export class UserService {
           },
         },
       });
+      return {
+        ...ticketPurchase,
+        meta: {
+          name: invitation.name,
+          social: null,
+          email: invitation.email,
+          number: invitation.number,
+        },
+      };
     } else {
       const event = await this.prisma.event.findFirst({
         where: { id: invitation.eventId },
@@ -743,20 +767,18 @@ export class UserService {
 
       return {
         ticket: {
-          ticket: {
-            title: invitation.type,
-            event: {
-              title: event.title,
-              time: event.time,
-              date: event.date,
-            },
+          title: invitation.type,
+          event: {
+            title: event.title,
+            time: event.time,
+            date: event.date,
           },
-          meta: {
-            name: invitation.name,
-            social: null,
-            email: invitation.email,
-            number: invitation.number,
-          },
+        },
+        meta: {
+          name: invitation.name,
+          social: null,
+          email: invitation.email,
+          number: invitation.number,
         },
       };
     }
