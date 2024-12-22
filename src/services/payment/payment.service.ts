@@ -284,6 +284,15 @@ export class PaymentService {
     const payment_methods = process.env.PAYMENT_METHODS.replace(' ', '').split(
       ',',
     );
+    await this.prisma.ticketPurchase.create({
+      data: {
+        id: invitationId,
+        status: 'UPCOMMING',
+        payment: 'PENDING',
+        userId: 'kroking0',
+        ticketId: ticketInfo.id,
+      },
+    });
     const data = {
       amount: amountInPiastres, // Paymob expects amount in piastres
       currency: 'EGP',
@@ -327,6 +336,14 @@ export class PaymentService {
         },
         include: {
           event: true,
+        },
+      });
+      await this.prisma.ticketPurchase.update({
+        where: {
+          id: invitationId,
+        },
+        data: {
+          payment: status,
         },
       });
 

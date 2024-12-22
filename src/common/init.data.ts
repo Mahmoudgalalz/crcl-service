@@ -42,6 +42,41 @@ export async function createRootUser(
   }
 }
 
+export async function createTempUser(
+  name: string,
+  email: string,
+  password: string,
+) {
+  const prisma = new PrismaClient();
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+    if (user) {
+      Logger.log('Temp User Exists');
+      return;
+    }
+
+    const hashedPassword = await hashPassword(password);
+    await prisma.user.create({
+      data: {
+        id: 'kroking0',
+        email,
+        password: hashedPassword,
+        name,
+        number: '010009955133', // or any appropriate value
+        type: 'USER', // or any appropriate value
+      },
+    });
+    Logger.log('Created Temp User');
+    return;
+  } catch (err) {
+    Logger.error('Error in connecting to the database', err);
+  }
+}
+
 export async function creatRootTokenPrice(value: number) {
   const prisma = new PrismaClient();
   try {

@@ -311,8 +311,17 @@ export class EventsManagementService {
         };
       }
 
+      const invitations = await this.prisma.invitation.count({
+        where: {
+          type: {
+            not: 'paid',
+          },
+        },
+      });
+
       return {
         data: transformedRequests,
+        invitations,
         meta: {
           total: totalRequests,
           page,

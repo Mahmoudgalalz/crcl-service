@@ -677,13 +677,9 @@ export class UserService {
         status: 'ATTENDED',
       },
     });
-    return await this.prisma.ticketPurchase.create({
-      data: {
+    return await this.prisma.ticketPurchase.findFirst({
+      where: {
         id: invitation.id,
-        ticketId: invitation.ticketId,
-        payment: invitation.payment,
-        userId: null,
-        status: 'ATTENDED',
       },
       select: {
         meta: true,
