@@ -356,7 +356,7 @@ export class PaymentService {
           eventName: ticket.event.title,
           eventImage: ticket.event.image,
           ticketDetails: {
-            id: ticket.id,
+            id: invitation.id,
             date: format(ticket.event.date, 'MMMM dd, yyyy'),
             type: ticket.title,
             time: formattedTime,
