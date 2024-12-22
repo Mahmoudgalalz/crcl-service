@@ -650,7 +650,7 @@ export class UserService {
     }
     const ticket = await this.prisma.ticketPurchase.findUnique({
       where: {
-        id: invitation.ticketId,
+        id: invitation.id,
       },
       select: {
         ticketId: true,
