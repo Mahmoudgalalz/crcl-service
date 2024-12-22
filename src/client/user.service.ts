@@ -633,20 +633,18 @@ export class UserService {
 
       return {
         ticket: {
-          ticket: {
-            title: invitation.type,
-            event: {
-              title: event.title,
-              time: event.time,
-              date: event.date,
-            },
+          title: invitation.type,
+          event: {
+            title: event.title,
+            time: event.time,
+            date: event.date,
           },
-          meta: {
-            name: invitation.name,
-            social: null,
-            email: invitation.email,
-            number: invitation.number,
-          },
+        },
+        meta: {
+          name: invitation.name,
+          social: null,
+          email: invitation.email,
+          number: invitation.number,
         },
       };
     }
@@ -655,7 +653,6 @@ export class UserService {
         id: invitation.ticketId,
       },
       select: {
-        meta: true,
         ticketId: true,
         payment: true,
         status: true,
