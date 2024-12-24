@@ -36,8 +36,8 @@ model User {
   picture     String?  // Optional URL to user's profile picture
   type        UserType
   wallet      Wallet?
-  notificationToken String?
   tickets     TicketPurchase[]
+  isDeleted   Boolean @default(false)
   requests    EventRequest[]
   favoriteEvents String[]
   status      UserStatus @default(ACTIVE)

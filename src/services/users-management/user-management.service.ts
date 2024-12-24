@@ -194,15 +194,31 @@ export class UsersManagmentService {
 
   async deleteUser(userId: string) {
     try {
-      const user = await this.prisma.user.delete({
+      const user = await this.findUser(userId);
+      if (!user) throw Error('User not found');
+      if (user.type === 'BOOTH') {
+        const deleted = await this.prisma.user.update({
+          where: {
+            id: userId,
+            type: {
+              in: ['BOOTH'],
+            },
+          },
+          data: {
+            deletedAt: Date.now().toString(),
+          },
+        });
+        return deleted;
+      }
+      const deleted = await this.prisma.user.delete({
         where: {
           id: userId,
           type: {
-            in: ['BOOTH', 'READER'],
+            in: ['READER'],
           },
         },
       });
-      return user;
+      return deleted;
     } catch (error) {
       Logger.error('Delete User error ', error);
       throw new Error('Cannot delete this user, or server error');
