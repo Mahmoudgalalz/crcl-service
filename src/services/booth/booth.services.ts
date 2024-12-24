@@ -56,6 +56,7 @@ export class BoothManagementService {
     return await this.prisma.user.findMany({
       where: {
         type: 'BOOTH',
+        deletedAt: null,
       },
       include: {
         wallet: {
