@@ -623,66 +623,36 @@ export class UserService {
     const invitation = await this.prisma.invitation.findUnique({
       where: { id: id },
     });
-    const ticket = await this.prisma.ticket.findUnique({
-      where: {
-        id: invitation.ticketId,
-      },
-      select: {
-        title: true,
-        price: true,
-        description: true,
-        event: {
-          select: {
-            title: true,
-            time: true,
-            date: true,
-          },
-        },
-      },
-    });
     if (!invitation) {
       throw new Error('Ticket not found');
     }
-    return {
-      ticket: {
-        ...ticket,
+    if (invitation.ticketId === null) {
+      const event = await this.prisma.event.findFirst({
+        where: { id: invitation.eventId },
+      });
+
+      return {
+        ticket: {
+          title: invitation.type,
+          event: {
+            title: event.title,
+            time: event.time,
+            date: event.date,
+          },
+        },
         meta: {
           name: invitation.name,
           social: null,
           email: invitation.email,
           number: invitation.number,
         },
-      },
-    };
-  }
-
-  async readerTicketInvitationOps(id: string) {
-    const invitation = await this.prisma.invitation.findUnique({
-      where: { id: id },
-    });
-
-    if (!invitation) {
-      throw new Error('Ticket not found');
+      };
     }
-
-    if (['ATTENDED'].includes(invitation.status)) {
-      throw new Error('Ticket is already used or past due');
-    }
-
-    await this.prisma.invitation.update({
-      where: {
-        id,
-      },
-      data: {
-        status: 'ATTENDED',
-      },
-    });
-    return await this.prisma.ticketPurchase.findFirst({
+    const ticket = await this.prisma.ticketPurchase.findUnique({
       where: {
         id: invitation.id,
       },
       select: {
-        meta: true,
         ticketId: true,
         payment: true,
         status: true,
@@ -712,5 +682,102 @@ export class UserService {
         },
       },
     });
+
+    return {
+      ...ticket,
+      meta: {
+        name: invitation.name,
+        social: null,
+        email: invitation.email,
+        number: invitation.number,
+      },
+    };
+  }
+
+  async readerTicketInvitationOps(id: string) {
+    const invitation = await this.prisma.invitation.findUnique({
+      where: { id: id },
+    });
+
+    if (!invitation) {
+      throw new Error('Ticket not found');
+    }
+
+    if (['ATTENDED'].includes(invitation.status)) {
+      throw new Error('Ticket is already used or past due');
+    }
+
+    await this.prisma.invitation.update({
+      where: {
+        id,
+      },
+      data: {
+        status: 'ATTENDED',
+      },
+    });
+    if (invitation.ticketId) {
+      const ticketPurchase = await this.prisma.ticketPurchase.findUnique({
+        where: { id: invitation.ticketId },
+        select: {
+          ticketId: true,
+          payment: true,
+          status: true,
+          createdAt: true,
+          updateAt: true,
+          user: {
+            select: {
+              name: true,
+              number: true,
+              picture: true,
+              email: true,
+            },
+          },
+          ticket: {
+            select: {
+              title: true,
+              price: true,
+              description: true,
+              event: {
+                select: {
+                  title: true,
+                  time: true,
+                  date: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return {
+        ...ticketPurchase,
+        meta: {
+          name: invitation.name,
+          social: null,
+          email: invitation.email,
+          number: invitation.number,
+        },
+      };
+    } else {
+      const event = await this.prisma.event.findFirst({
+        where: { id: invitation.eventId },
+      });
+
+      return {
+        ticket: {
+          title: invitation.type,
+          event: {
+            title: event.title,
+            time: event.time,
+            date: event.date,
+          },
+        },
+        meta: {
+          name: invitation.name,
+          social: null,
+          email: invitation.email,
+          number: invitation.number,
+        },
+      };
+    }
   }
 }

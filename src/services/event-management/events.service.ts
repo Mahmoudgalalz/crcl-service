@@ -313,6 +313,7 @@ export class EventsManagementService {
 
       const invitations = await this.prisma.invitation.count({
         where: {
+          eventId: eventId,
           type: {
             not: 'paid',
           },
