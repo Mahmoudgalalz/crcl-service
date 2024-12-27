@@ -169,7 +169,7 @@ export class EventsManagementController {
   @Delete('tickets/:id')
   async deleteTicket(@Param('id') ticketId: string, @Res() res: Response) {
     try {
-      await this.eventsService.checkIfTicketBooked(ticketId);
+      // await this.eventsService.checkIfTicketBooked(ticketId);
       const ticket = await this.eventsService.deleteTicket(ticketId);
       return res
         .status(HttpStatus.OK)
