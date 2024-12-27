@@ -101,7 +101,7 @@ export class ClientService {
         tickets: {
           where: {
             deletedAt: {
-              not: null,
+              equals: null,
             },
           },
         },
