@@ -70,7 +70,15 @@ export class EventsManagementService {
   async getEventWithTickets(id: string): Promise<{ event: Event }> {
     const event = await this.prisma.event.findUnique({
       where: { id },
-      include: { tickets: true },
+      include: {
+        tickets: {
+          where: {
+            deletedAt: {
+              not: null,
+            },
+          },
+        },
+      },
     });
 
     if (!event) {
@@ -128,8 +136,11 @@ export class EventsManagementService {
 
   async deleteTicket(id: string) {
     try {
-      return await this.prisma.ticket.delete({
+      return await this.prisma.ticket.update({
         where: { id },
+        data: {
+          deletedAt: Date.now().toString(),
+        },
       });
     } catch (error) {
       console.log(error);

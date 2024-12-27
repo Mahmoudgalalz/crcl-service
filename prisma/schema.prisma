@@ -101,6 +101,7 @@ model Ticket {
   updatedAt   DateTime     @updatedAt
 
   event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  deletedAt   String?
 
   @@index([eventId])
   TicketPurchase TicketPurchase[]
