@@ -97,7 +97,15 @@ export class ClientService {
   }> {
     const event = await this.prisma.event.findUnique({
       where: { id },
-      include: { tickets: true },
+      include: {
+        tickets: {
+          where: {
+            deletedAt: {
+              not: null,
+            },
+          },
+        },
+      },
     });
 
     if (!event || event.status !== 'PUBLISHED') {
