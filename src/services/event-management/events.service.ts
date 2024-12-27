@@ -74,7 +74,7 @@ export class EventsManagementService {
         tickets: {
           where: {
             deletedAt: {
-              not: null,
+              equals: null,
             },
           },
         },
