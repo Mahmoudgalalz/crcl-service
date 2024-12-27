@@ -35,6 +35,7 @@ model User {
   gender      Gender?  // Optional (e.g., "Male", "Female", "Other")
   picture     String?  // Optional URL to user's profile picture
   type        UserType
+  notificationToken String?
   wallet      Wallet?
   tickets     TicketPurchase[]
   isDeleted   Boolean @default(false)
