@@ -8,5 +8,5 @@
 ALTER TABLE "Ticket" ADD COLUMN     "deletedAt" TEXT;
 
 -- AlterTable
-ALTER TABLE "User" DROP COLUMN "notificationToken",
+ALTER TABLE "User"
 ADD COLUMN     "isDeleted" BOOLEAN NOT NULL DEFAULT false;
