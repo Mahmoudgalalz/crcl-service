@@ -12,6 +12,14 @@ export class AppService {
         key: 1,
       },
     });
+    if (!meta) {
+      return await this.prisma.meta.create({
+        data: {
+          key: 1,
+          maintenance: false,
+        },
+      });
+    }
     return meta;
   }
 
