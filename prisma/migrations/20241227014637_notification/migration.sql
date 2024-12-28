@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "User" ADD COLUMN     "notificationToken" TEXT;
+-- ALTER TABLE "User" ADD COLUMN     "notificationToken" TEXT;

@@ -7,6 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model meta {
+  id        String @id @default(uuid())
+  key       Int  @default(1)
+  maintenance   Boolean @default(false)
+  @@index([key])
+}
+
 model SuperUser {
   id        String    @id
   name      String
