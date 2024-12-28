@@ -21,7 +21,7 @@ import {
 } from './dto/event.dto';
 import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { Public, Roles } from 'src/shared/decorators/roles.decorator';
+import { Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
