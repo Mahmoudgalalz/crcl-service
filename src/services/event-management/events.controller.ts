@@ -21,7 +21,7 @@ import {
 } from './dto/event.dto';
 import { CreateTicketDto, UpdateTicketDto } from './dto/tickets.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { Roles } from 'src/shared/decorators/roles.decorator';
+import { Public, Roles } from 'src/shared/decorators/roles.decorator';
 import { Role } from 'src/shared/interface/roles';
 import { SuccessResponse } from 'src/common/success.response';
 import { ErrorResponse } from 'src/common/error.response';
@@ -174,6 +174,18 @@ export class EventsManagementController {
       return res
         .status(HttpStatus.OK)
         .send(new SuccessResponse('Ticket Deleted', ticket));
+    } catch (error) {
+      return res.status(HttpStatus.NOT_ACCEPTABLE).json({
+        message: error.message,
+      });
+    }
+  }
+
+  @Get('export/:id')
+  async exportEventTickets(@Param('id') eventId: string, @Res() res: Response) {
+    try {
+      await this.eventsService.exportEventRequestsToExcel(eventId, res);
+      return res.end();
     } catch (error) {
       return res.status(HttpStatus.NOT_ACCEPTABLE).json({
         message: error.message,

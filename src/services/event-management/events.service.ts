@@ -20,6 +20,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TicketApprovalEmailProps } from '../email/types/email.type';
 import { RequestApprovedEvent } from '../email/events/sendOtp.event';
 import { format } from 'date-fns';
+import ExcelJS from 'exceljs';
+import { Response } from 'express';
 
 interface RequestMetaItem {
   name: string;
@@ -673,5 +675,66 @@ export class EventsManagementService {
     }
 
     return data.map((elem) => elem.ticketId);
+  }
+  async exportEventRequestsToExcel(eventId: string, res: Response) {
+    try {
+      // Fetch all event request details (without pagination)
+      const eventRequests = await this.getEventRequestDetails(
+        eventId,
+        1,
+        1000000,
+      ); // Large page size to get all requests
+
+      // Create a new Excel workbook and add a worksheet
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Event Requests');
+
+      // Define columns for the Excel sheet
+      worksheet.columns = [
+        { header: 'Request ID', key: 'requestId', width: 20 },
+        { header: 'User Name', key: 'userName', width: 25 },
+        { header: 'User Email', key: 'userEmail', width: 30 },
+        { header: 'User Phone', key: 'userPhone', width: 15 },
+        { header: 'Ticket Title', key: 'ticketTitle', width: 25 },
+        { header: 'Ticket Price', key: 'ticketPrice', width: 15 },
+        { header: 'Payment Status', key: 'paymentStatus', width: 15 },
+        { header: 'Purchase Status', key: 'purchaseStatus', width: 15 },
+        { header: 'Payment Reference', key: 'paymentReference', width: 30 },
+        { header: 'Purchased At', key: 'purchasedAt', width: 20 },
+      ];
+
+      // Loop through the data and add rows to the Excel sheet
+      eventRequests.data.forEach((request) => {
+        request.tickets.forEach((ticket) => {
+          worksheet.addRow({
+            requestId: request.id,
+            userName: request.user?.name || 'Unknown User',
+            userEmail: request.user?.email || 'Unknown Email',
+            userPhone: request.user?.number || 'Unknown Phone',
+            ticketTitle: ticket.ticketInfo?.title || 'N/A',
+            ticketPrice: ticket.ticketInfo?.price || 0,
+            paymentStatus: ticket.purchaseStatus?.payment || 'N/A',
+            purchaseStatus: ticket.purchaseStatus?.status || 'N/A',
+            paymentReference: ticket.purchaseStatus?.paymentReference || 'N/A',
+            purchasedAt: ticket.purchaseStatus?.purchasedAt || 'N/A',
+          });
+        });
+      });
+
+      // Set up the response for file download (optional if using Express)
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="event_requests-${eventId}.xlsx"`,
+      );
+
+      await workbook.xlsx.write(res);
+    } catch (error) {
+      Logger.error('Error generating the Excel file:', error);
+      throw new Error('An error occurred while generating the Excel file');
+    }
   }
 }
