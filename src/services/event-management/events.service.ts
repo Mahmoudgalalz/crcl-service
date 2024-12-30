@@ -678,61 +678,98 @@ export class EventsManagementService {
   }
   async exportEventRequestsToExcel(eventId: string, res: Response) {
     try {
-      // Fetch all event request details (without pagination)
-      const eventRequests = await this.getEventRequestDetails(
-        eventId,
-        1,
-        1000000,
-      ); // Large page size to get all requests
+      // Fetch event requests for a given eventId
+      const eventRequests = await this.prisma.eventRequest.findMany({
+        where: {
+          eventId,
+        },
+        include: {
+          event: {
+            include: {
+              tickets: true, // Include tickets associated with the event
+            },
+          },
+        },
+      });
+
+      // Fetch ticket purchase data for the tickets associated with the event
+      const ticketIds =
+        eventRequests[0]?.event?.tickets.map((ticket) => ticket.id) || [];
+      const tickets = await this.prisma.ticketPurchase.findMany({
+        where: {
+          ticketId: {
+            in: ticketIds,
+          },
+        },
+      });
 
       // Create a new Excel workbook and add a worksheet
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Event Requests');
 
-      // Define columns for the Excel sheet
+      // Define the columns for the Excel sheet
       worksheet.columns = [
         { header: 'Request ID', key: 'requestId', width: 20 },
-        { header: 'User Name', key: 'userName', width: 25 },
+        { header: 'User ID', key: 'userId', width: 25 },
+        { header: 'User Name', key: 'userName', width: 30 },
         { header: 'User Email', key: 'userEmail', width: 30 },
-        { header: 'User Phone', key: 'userPhone', width: 15 },
-        { header: 'Ticket Title', key: 'ticketTitle', width: 25 },
+        { header: 'User Phone', key: 'userPhone', width: 20 },
+        { header: 'Ticket Title', key: 'ticketTitle', width: 30 },
         { header: 'Ticket Price', key: 'ticketPrice', width: 15 },
-        { header: 'Payment Status', key: 'paymentStatus', width: 15 },
-        { header: 'Purchase Status', key: 'purchaseStatus', width: 15 },
+        { header: 'Payment Status', key: 'paymentStatus', width: 20 },
+        { header: 'Purchase Status', key: 'purchaseStatus', width: 20 },
         { header: 'Payment Reference', key: 'paymentReference', width: 30 },
         { header: 'Purchased At', key: 'purchasedAt', width: 20 },
       ];
 
-      // Loop through the data and add rows to the Excel sheet
-      eventRequests.data.forEach((request) => {
-        request.tickets.forEach((ticket) => {
+      eventRequests.forEach((request) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-expect-error
+        const user = request.user || {}; // Safeguard in case user data is missing
+
+        // Loop through the tickets for this event
+        request.event.tickets.forEach((ticket) => {
+          // Find the corresponding ticket purchase data
+          const ticketPurchase = tickets.find(
+            (t) => t.ticketId === ticket.id,
+          ) || {
+            payment: 'N/A',
+            status: 'N/A',
+            paymentReference: 'N/A',
+            createdAt: 'N/A',
+          };
+
+          // Add a new row for each ticket associated with the event request
           worksheet.addRow({
             requestId: request.id,
-            userName: request.user?.name || 'Unknown User',
-            userEmail: request.user?.email || 'Unknown Email',
-            userPhone: request.user?.number || 'Unknown Phone',
-            ticketTitle: ticket.ticketInfo?.title || 'N/A',
-            ticketPrice: ticket.ticketInfo?.price || 0,
-            paymentStatus: ticket.purchaseStatus?.payment || 'N/A',
-            purchaseStatus: ticket.purchaseStatus?.status || 'N/A',
-            paymentReference: ticket.purchaseStatus?.paymentReference || 'N/A',
-            purchasedAt: ticket.purchaseStatus?.purchasedAt || 'N/A',
+            userId: request.userId,
+            userName: user.name || 'Unknown User',
+            userEmail: user.email || 'Unknown Email',
+            userPhone: user.number || 'Unknown Phone',
+            ticketTitle: ticket.title || 'N/A',
+            ticketPrice: ticket.price || 0,
+            paymentStatus: ticketPurchase.payment || 'N/A',
+            purchaseStatus: ticketPurchase.status || 'N/A',
+            paymentReference: ticketPurchase.paymentReference || 'N/A',
+            purchasedAt: ticketPurchase.createdAt || 'N/A',
           });
         });
       });
 
-      // Set up the response for file download (optional if using Express)
+      // Set up the response for file download (for Express)
       res.setHeader(
         'Content-Type',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       );
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename="event_requests-${eventId}.xlsx"`,
+        `attachment; filename="event_requests_${eventId}.xlsx"`,
       );
 
+      // Write the workbook to the response stream
       await workbook.xlsx.write(res);
     } catch (error) {
+      // Log the error and throw a user-friendly message
       Logger.error('Error generating the Excel file:', error);
       throw new Error('An error occurred while generating the Excel file');
     }
