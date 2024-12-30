@@ -686,6 +686,11 @@ export class EventsManagementService {
         1000,
       );
 
+      // Validate that we have data to export
+      if (!eventRequests || eventRequests.length === 0) {
+        throw new Error('No data available to export');
+      }
+
       // Create a new Excel workbook and add a worksheet
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Event Requests');
@@ -717,32 +722,42 @@ export class EventsManagementService {
       // Add data rows
       eventRequests.forEach((request) => {
         // For each ticket in the request
-        request.tickets.forEach((ticket) => {
-          worksheet.addRow({
-            requestId: request.id,
-            requestStatus: request.status,
-            requestDate: request.createdAt,
-            userId: request.user?.id || 'N/A',
-            userName: request.user?.name || 'Unknown User',
-            userEmail: request.user?.email || 'N/A',
-            userPhone: request.user?.number || 'N/A',
-            userPicture: request.user?.picture || 'N/A',
-            ticketId: ticket.ticketId,
-            ticketTitle: ticket.ticketInfo.title || 'N/A',
-            ticketPrice: ticket.ticketInfo.price || 0,
-            requesterName: ticket.requestInfo.name,
-            requesterEmail: ticket.requestInfo.email,
-            requesterPhone: ticket.requestInfo.number,
-            requesterSocial: ticket.requestInfo.social,
-            purchaseStatus: ticket.purchaseStatus?.status || 'N/A',
-            paymentStatus: ticket.purchaseStatus?.payment || 'N/A',
-            purchaseId: ticket.purchaseStatus?.purchaseId || 'N/A',
-            paymentReference: ticket.purchaseStatus?.paymentReference || 'N/A',
-            purchaseDate: ticket.purchaseStatus?.purchasedAt
-              ? new Date(ticket.purchaseStatus.purchasedAt).toISOString()
-              : 'N/A',
+        if (request.tickets && request.tickets.length > 0) {
+          request.tickets.forEach((ticket) => {
+            const requestDate = request.createdAt
+              ? new Date(request.createdAt)
+              : new Date();
+            const purchaseDate = ticket.purchaseStatus?.purchasedAt
+              ? new Date(ticket.purchaseStatus.purchasedAt)
+              : null;
+
+            worksheet.addRow({
+              requestId: request.id || 'N/A',
+              requestStatus: request.status || 'N/A',
+              requestDate: requestDate.toLocaleDateString(),
+              userId: request.user?.id || 'N/A',
+              userName: request.user?.name || 'Unknown User',
+              userEmail: request.user?.email || 'N/A',
+              userPhone: request.user?.number || 'N/A',
+              userPicture: request.user?.picture || 'N/A',
+              ticketId: ticket.ticketId || 'N/A',
+              ticketTitle: ticket.ticketInfo?.title || 'N/A',
+              ticketPrice: ticket.ticketInfo?.price || 0,
+              requesterName: ticket.requestInfo?.name || 'N/A',
+              requesterEmail: ticket.requestInfo?.email || 'N/A',
+              requesterPhone: ticket.requestInfo?.number || 'N/A',
+              requesterSocial: ticket.requestInfo?.social || 'N/A',
+              purchaseStatus: ticket.purchaseStatus?.status || 'N/A',
+              paymentStatus: ticket.purchaseStatus?.payment || 'N/A',
+              purchaseId: ticket.purchaseStatus?.purchaseId || 'N/A',
+              paymentReference:
+                ticket.purchaseStatus?.paymentReference || 'N/A',
+              purchaseDate: purchaseDate
+                ? purchaseDate.toLocaleDateString()
+                : 'N/A',
+            });
           });
-        });
+        }
       });
 
       // Apply some styling to the header row
@@ -759,6 +774,9 @@ export class EventsManagementService {
         to: { row: 1, column: worksheet.columns.length },
       };
 
+      // Generate buffer instead of writing directly to response
+      const buffer = await workbook.xlsx.writeBuffer();
+
       // Set up the response headers
       res.setHeader(
         'Content-Type',
@@ -766,11 +784,12 @@ export class EventsManagementService {
       );
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename="event_requests_${eventId}.xlsx"`,
+        `attachment; filename="event_requests_${eventId}_${new Date().toISOString().split('T')[0]}.xlsx"`,
       );
+      res.setHeader('Content-Length', buffer.byteLength);
 
-      // Write the workbook to the response stream
-      await workbook.xlsx.write(res);
+      // Send the buffer
+      res.send(buffer);
     } catch (error) {
       console.error('Error in exportEventRequestsToExcel:', error);
       if (error instanceof Error) {
