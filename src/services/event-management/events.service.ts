@@ -678,30 +678,13 @@ export class EventsManagementService {
   }
   async exportEventRequestsToExcel(eventId: string, res: Response) {
     try {
-      // Fetch event requests for a given eventId
-      const eventRequests = await this.prisma.eventRequest.findMany({
-        where: {
-          eventId,
-        },
-        include: {
-          event: {
-            include: {
-              tickets: true, // Include tickets associated with the event
-            },
-          },
-        },
-      });
-
-      // Fetch ticket purchase data for the tickets associated with the event
-      const ticketIds =
-        eventRequests[0]?.event?.tickets.map((ticket) => ticket.id) || [];
-      const tickets = await this.prisma.ticketPurchase.findMany({
-        where: {
-          ticketId: {
-            in: ticketIds,
-          },
-        },
-      });
+      // Get all event requests using the existing getEventRequestDetails function
+      // Set a large page size to get all records
+      const { data: eventRequests } = await this.getEventRequestDetails(
+        eventId,
+        1,
+        1000,
+      );
 
       // Create a new Excel workbook and add a worksheet
       const workbook = new ExcelJS.Workbook();
@@ -710,53 +693,73 @@ export class EventsManagementService {
       // Define the columns for the Excel sheet
       worksheet.columns = [
         { header: 'Request ID', key: 'requestId', width: 20 },
+        { header: 'Request Status', key: 'requestStatus', width: 20 },
+        { header: 'Request Date', key: 'requestDate', width: 20 },
         { header: 'User ID', key: 'userId', width: 25 },
         { header: 'User Name', key: 'userName', width: 30 },
         { header: 'User Email', key: 'userEmail', width: 30 },
         { header: 'User Phone', key: 'userPhone', width: 20 },
+        { header: 'User Picture', key: 'userPicture', width: 50 },
+        { header: 'Ticket ID', key: 'ticketId', width: 20 },
         { header: 'Ticket Title', key: 'ticketTitle', width: 30 },
         { header: 'Ticket Price', key: 'ticketPrice', width: 15 },
-        { header: 'Payment Status', key: 'paymentStatus', width: 20 },
+        { header: 'Requester Name', key: 'requesterName', width: 30 },
+        { header: 'Requester Email', key: 'requesterEmail', width: 30 },
+        { header: 'Requester Phone', key: 'requesterPhone', width: 20 },
+        { header: 'Requester Social', key: 'requesterSocial', width: 30 },
         { header: 'Purchase Status', key: 'purchaseStatus', width: 20 },
+        { header: 'Payment Status', key: 'paymentStatus', width: 20 },
+        { header: 'Purchase ID', key: 'purchaseId', width: 30 },
         { header: 'Payment Reference', key: 'paymentReference', width: 30 },
-        { header: 'Purchased At', key: 'purchasedAt', width: 20 },
+        { header: 'Purchase Date', key: 'purchaseDate', width: 20 },
       ];
 
+      // Add data rows
       eventRequests.forEach((request) => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-expect-error
-        const user = request.user || {}; // Safeguard in case user data is missing
-
-        // Loop through the tickets for this event
-        request.event.tickets.forEach((ticket) => {
-          // Find the corresponding ticket purchase data
-          const ticketPurchase = tickets.find(
-            (t) => t.ticketId === ticket.id,
-          ) || {
-            payment: 'N/A',
-            status: 'N/A',
-            paymentReference: 'N/A',
-            createdAt: 'N/A',
-          };
-
-          // Add a new row for each ticket associated with the event request
+        // For each ticket in the request
+        request.tickets.forEach((ticket) => {
           worksheet.addRow({
             requestId: request.id,
-            userId: request.userId,
-            userName: user.name || 'Unknown User',
-            userEmail: user.email || 'Unknown Email',
-            userPhone: user.number || 'Unknown Phone',
-            ticketTitle: ticket.title || 'N/A',
-            ticketPrice: ticket.price || 0,
-            paymentStatus: ticketPurchase.payment || 'N/A',
-            purchaseStatus: ticketPurchase.status || 'N/A',
-            paymentReference: ticketPurchase.paymentReference || 'N/A',
-            purchasedAt: ticketPurchase.createdAt || 'N/A',
+            requestStatus: request.status,
+            requestDate: request.createdAt,
+            userId: request.user?.id || 'N/A',
+            userName: request.user?.name || 'Unknown User',
+            userEmail: request.user?.email || 'N/A',
+            userPhone: request.user?.number || 'N/A',
+            userPicture: request.user?.picture || 'N/A',
+            ticketId: ticket.ticketId,
+            ticketTitle: ticket.ticketInfo.title || 'N/A',
+            ticketPrice: ticket.ticketInfo.price || 0,
+            requesterName: ticket.requestInfo.name,
+            requesterEmail: ticket.requestInfo.email,
+            requesterPhone: ticket.requestInfo.number,
+            requesterSocial: ticket.requestInfo.social,
+            purchaseStatus: ticket.purchaseStatus?.status || 'N/A',
+            paymentStatus: ticket.purchaseStatus?.payment || 'N/A',
+            purchaseId: ticket.purchaseStatus?.purchaseId || 'N/A',
+            paymentReference: ticket.purchaseStatus?.paymentReference || 'N/A',
+            purchaseDate: ticket.purchaseStatus?.purchasedAt
+              ? new Date(ticket.purchaseStatus.purchasedAt).toISOString()
+              : 'N/A',
           });
         });
       });
 
-      // Set up the response for file download (for Express)
+      // Apply some styling to the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' },
+      };
+
+      // Auto-filter for all columns
+      worksheet.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: 1, column: worksheet.columns.length },
+      };
+
+      // Set up the response headers
       res.setHeader(
         'Content-Type',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -769,8 +772,13 @@ export class EventsManagementService {
       // Write the workbook to the response stream
       await workbook.xlsx.write(res);
     } catch (error) {
-      // Log the error and throw a user-friendly message
-      Logger.error('Error generating the Excel file:', error);
+      console.error('Error in exportEventRequestsToExcel:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
       throw new Error('An error occurred while generating the Excel file');
     }
   }
