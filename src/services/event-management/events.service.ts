@@ -683,7 +683,7 @@ export class EventsManagementService {
       const { data: eventRequests } = await this.getEventRequestDetails(
         eventId,
         1,
-        1000,
+        1000000,
       );
 
       // Validate that we have data to export
