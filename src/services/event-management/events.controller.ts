@@ -180,4 +180,16 @@ export class EventsManagementController {
       });
     }
   }
+
+  @Get('export/:id')
+  async exportEventTickets(@Param('id') eventId: string, @Res() res: Response) {
+    try {
+      await this.eventsService.exportEventRequestsToExcel(eventId, res);
+      return res.end();
+    } catch (error) {
+      return res.status(HttpStatus.NOT_ACCEPTABLE).json({
+        message: error.message,
+      });
+    }
+  }
 }

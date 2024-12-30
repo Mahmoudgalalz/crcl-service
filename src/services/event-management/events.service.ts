@@ -20,6 +20,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TicketApprovalEmailProps } from '../email/types/email.type';
 import { RequestApprovedEvent } from '../email/events/sendOtp.event';
 import { format } from 'date-fns';
+import ExcelJS from 'exceljs';
+import { Response } from 'express';
 
 interface RequestMetaItem {
   name: string;
@@ -673,5 +675,130 @@ export class EventsManagementService {
     }
 
     return data.map((elem) => elem.ticketId);
+  }
+  async exportEventRequestsToExcel(eventId: string, res: Response) {
+    try {
+      // Get all event requests using the existing getEventRequestDetails function
+      // Set a large page size to get all records
+      const { data: eventRequests } = await this.getEventRequestDetails(
+        eventId,
+        1,
+        1000000,
+      );
+
+      // Validate that we have data to export
+      if (!eventRequests || eventRequests.length === 0) {
+        throw new Error('No data available to export');
+      }
+
+      // Create a new Excel workbook and add a worksheet
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Event Requests');
+
+      // Define the columns for the Excel sheet
+      worksheet.columns = [
+        { header: 'Request ID', key: 'requestId', width: 20 },
+        { header: 'Request Status', key: 'requestStatus', width: 20 },
+        { header: 'Request Date', key: 'requestDate', width: 20 },
+        { header: 'User ID', key: 'userId', width: 25 },
+        { header: 'User Name', key: 'userName', width: 30 },
+        { header: 'User Email', key: 'userEmail', width: 30 },
+        { header: 'User Phone', key: 'userPhone', width: 20 },
+        { header: 'User Picture', key: 'userPicture', width: 50 },
+        { header: 'Ticket ID', key: 'ticketId', width: 20 },
+        { header: 'Ticket Title', key: 'ticketTitle', width: 30 },
+        { header: 'Ticket Price', key: 'ticketPrice', width: 15 },
+        { header: 'Requester Name', key: 'requesterName', width: 30 },
+        { header: 'Requester Email', key: 'requesterEmail', width: 30 },
+        { header: 'Requester Phone', key: 'requesterPhone', width: 20 },
+        { header: 'Requester Social', key: 'requesterSocial', width: 30 },
+        { header: 'Purchase Status', key: 'purchaseStatus', width: 20 },
+        { header: 'Payment Status', key: 'paymentStatus', width: 20 },
+        { header: 'Purchase ID', key: 'purchaseId', width: 30 },
+        { header: 'Payment Reference', key: 'paymentReference', width: 30 },
+        { header: 'Purchase Date', key: 'purchaseDate', width: 20 },
+      ];
+
+      // Add data rows
+      eventRequests.forEach((request) => {
+        // For each ticket in the request
+        if (request.tickets && request.tickets.length > 0) {
+          request.tickets.forEach((ticket) => {
+            const requestDate = request.createdAt
+              ? new Date(request.createdAt)
+              : new Date();
+            const purchaseDate = ticket.purchaseStatus?.purchasedAt
+              ? new Date(ticket.purchaseStatus.purchasedAt)
+              : null;
+
+            worksheet.addRow({
+              requestId: request.id || 'N/A',
+              requestStatus: request.status || 'N/A',
+              requestDate: requestDate.toLocaleDateString(),
+              userId: request.user?.id || 'N/A',
+              userName: request.user?.name || 'Unknown User',
+              userEmail: request.user?.email || 'N/A',
+              userPhone: request.user?.number || 'N/A',
+              userPicture: request.user?.picture || 'N/A',
+              ticketId: ticket.ticketId || 'N/A',
+              ticketTitle: ticket.ticketInfo?.title || 'N/A',
+              ticketPrice: ticket.ticketInfo?.price || 0,
+              requesterName: ticket.requestInfo?.name || 'N/A',
+              requesterEmail: ticket.requestInfo?.email || 'N/A',
+              requesterPhone: ticket.requestInfo?.number || 'N/A',
+              requesterSocial: ticket.requestInfo?.social || 'N/A',
+              purchaseStatus: ticket.purchaseStatus?.status || 'N/A',
+              paymentStatus: ticket.purchaseStatus?.payment || 'N/A',
+              purchaseId: ticket.purchaseStatus?.purchaseId || 'N/A',
+              paymentReference:
+                ticket.purchaseStatus?.paymentReference || 'N/A',
+              purchaseDate: purchaseDate
+                ? purchaseDate.toLocaleDateString()
+                : 'N/A',
+            });
+          });
+        }
+      });
+
+      // Apply some styling to the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' },
+      };
+
+      // Auto-filter for all columns
+      worksheet.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: 1, column: worksheet.columns.length },
+      };
+
+      // Generate buffer instead of writing directly to response
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      // Set up the response headers
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="event_requests_${eventId}_${new Date().toISOString().split('T')[0]}.xlsx"`,
+      );
+      res.setHeader('Content-Length', buffer.byteLength);
+
+      // Send the buffer
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error in exportEventRequestsToExcel:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      throw new Error('An error occurred while generating the Excel file');
+    }
   }
 }
