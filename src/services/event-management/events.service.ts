@@ -679,11 +679,10 @@ export class EventsManagementService {
   async exportEventRequestsToExcel(eventId: string, res: Response) {
     try {
       // Get all event requests using the existing getEventRequestDetails function
-      // Set a large page size to get all records
       const { data: eventRequests } = await this.getEventRequestDetails(
         eventId,
         1,
-        1000000,
+        1000000, // Setting a large page size to get all records
       );
 
       // Validate that we have data to export
