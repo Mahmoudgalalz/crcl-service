@@ -7,11 +7,15 @@ export class CleanUpJob {
   constructor(private readonly prismaService: PrismaService) {}
   private readonly logger = new Logger(CleanUpJob.name);
 
-  @Cron(CronExpression.EVERY_3_HOURS)
+  @Cron(CronExpression.EVERY_3_HOURS, {
+    name: 'CleanUp',
+    timeZone: 'Africa/Cairo',
+  })
   async handleCron() {
     this.logger.debug('CleanUp starting');
 
-    const today = new Date();
+    const today = new Date().getDay() + 1;
+    const endWhen = new Date(new Date(today).setHours(23, 59, 59, 999));
 
     try {
       // End published events that have reached their date
@@ -19,7 +23,7 @@ export class CleanUpJob {
         where: {
           status: 'PUBLISHED',
           date: {
-            lte: today, // Ensures events that occurred today or earlier are updated
+            lte: endWhen, // Ensures events that occurred today or earlier are updated
           },
         },
         data: {
