@@ -577,7 +577,7 @@ export class UserService {
       throw new Error('Ticket not found');
     }
 
-    if (['ATTENDED', 'PAST_DUE'].includes(ticket.status)) {
+    if (['PAST_DUE'].includes(ticket.status)) {
       throw new Error('Ticket is already used or past due');
     }
 
