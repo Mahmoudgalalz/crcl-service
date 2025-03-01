@@ -32,46 +32,26 @@ export class CleanUpJob {
       });
       this.logger.log(`Ended Events: ${publishedEvents.count}`);
 
-      // // Invalidate tickets with pending or unpaid payments or attended status past the update date
-      // const invalidTickets = await this.prismaService.ticketPurchase.updateMany(
-      //   {
-      //     where: {
-      //       payment: {
-      //         in: ['UN_PAID'], // Match pending and unpaid statuses
-      //       },
-      //       updateAt: {
-      //         lte: today, // Only tickets updated before or on today
-      //       },
-      //     },
-      //     data: {
-      //       status: 'PAST_DUE', // Set status to past due
-      //     },
-      //   },
-      // );
+      // Invalidate tickets with pending or unpaid payments or attended status past the update date
+      const invalidTickets = await this.prismaService.ticketPurchase.updateMany(
+        {
+          where: {
+            payment: {
+              in: ['PENDING', 'UN_PAID'], // Match pending and unpaid statuses
+            },
+            ticket: {
+              event: {
+                status: 'ENDED', // Only tickets for events that have ended
+              },
+            },
+          },
+          data: {
+            status: 'PAST_DUE', // Set status to past due
+          },
+        },
+      );
 
-      // const invalidEventEndedTickets =
-      //   await this.prismaService.ticketPurchase.updateMany({
-      //     where: {
-      //       payment: {
-      //         in: ['PENDING'], // Match pending and unpaid statuses
-      //       },
-      //       ticket: {
-      //         event: {
-      //           status: 'ENDED',
-      //         },
-      //       },
-      //       updateAt: {
-      //         lte: today, // Only tickets updated before or on today
-      //       },
-      //     },
-      //     data: {
-      //       status: 'PAST_DUE', // Set status to past due
-      //     },
-      //   });
-      // this.logger.log(`Invalidated Tickets: ${invalidTickets.count}`);
-      // this.logger.log(
-      //   `invalidate EventEnded Tickets: ${invalidEventEndedTickets.count}`,
-      // );
+      this.logger.log(`Invalidated Tickets: ${invalidTickets.count}`);
     } catch (error) {
       // Log any error for debugging
       this.logger.error('Error occurred during CleanUp', error);

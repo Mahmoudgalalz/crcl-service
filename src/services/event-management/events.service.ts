@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/prisma.service';
 import {
   Event,
+  EventStatus,
   PaymentStatus,
   RequestStatus,
   Ticket,
@@ -22,6 +23,7 @@ import { RequestApprovedEvent } from '../email/events/sendOtp.event';
 import { format } from 'date-fns';
 import ExcelJS from 'exceljs';
 import { Response } from 'express';
+import { GlobalNotificationEvent } from './events/global-notification.event';
 
 interface RequestMetaItem {
   name: string;
@@ -49,6 +51,18 @@ export class EventsManagementService {
   }
 
   async updateEvent(id: string, data: UpdateEventDto): Promise<Event> {
+    if (data.status === EventStatus.PUBLISHED) {
+      this.eventEmitter.emit(
+        'notification.send',
+        new GlobalNotificationEvent({
+          topic: 'global',
+          payload: {
+            title: 'Get early-bird tickets for our new event',
+            body: `A new event ${data.title} has been published`,
+          },
+        }),
+      );
+    }
     return await this.prisma.event.update({
       where: { id },
       data,
