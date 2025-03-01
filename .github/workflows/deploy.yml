@@ -21,6 +21,7 @@ jobs:
           cd /root/apps/crcl-service
           git pull origin dev
           pnpm install
+          npx prisma migrate dev
           pnpm build
           pm2 restart ecosystem.config.js
   build:
@@ -40,5 +41,6 @@ jobs:
             cd /root/apps/crcl-service
             git pull origin main
             pnpm install
+            npx prisma migrate dev
             pnpm build
             pm2 restart ecosystem.config.js
