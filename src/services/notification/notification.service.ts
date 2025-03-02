@@ -129,7 +129,7 @@ export class NotificationService {
     title: string;
     message: string;
     notificationId?: string;
-    usersIds?: string[];
+    userIds?: string[];
   }) {
     if (payload.notificationId) {
       const result = await sendNotificationToTopic(payload.notificationId, {
@@ -138,11 +138,11 @@ export class NotificationService {
       });
       return result;
     }
-    if (payload.usersIds) {
+    if (payload.userIds) {
       const users = await this.prisma.user.findMany({
         where: {
           id: {
-            in: payload.usersIds,
+            in: payload.userIds,
           },
         },
         select: {
