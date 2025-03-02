@@ -17,7 +17,7 @@ export class BulkPushNotifiaction {
 
   @IsArray()
   @IsOptional()
-  usersIds?: string[];
+  userIds?: string[];
 
   @IsString()
   @IsOptional()
