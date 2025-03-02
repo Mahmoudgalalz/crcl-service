@@ -20,7 +20,7 @@ import { SendTicketEmailEventListener } from './listener/sendTicket.listener';
     },
     EmailService,
     EmailQueueProcessor,
-    SendTicketEmailEventListener
+    SendTicketEmailEventListener,
   ],
 })
 export class EmailModule {}
