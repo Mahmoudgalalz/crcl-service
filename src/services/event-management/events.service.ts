@@ -81,7 +81,7 @@ export class EventsManagementService {
     return { events, total };
   }
 
-  async getEventWithTickets(id: string): Promise<{ event: Event }> {
+  async getEventWithTickets(id: string) {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
@@ -98,8 +98,40 @@ export class EventsManagementService {
     if (!event) {
       throw new NotFoundException('Event not found');
     }
+    const ticketsAggregate = await this.ticketReminingAggregate(id);
+    return { event, ticketsAggregate };
+  }
 
-    return { event };
+  private async ticketReminingAggregate(eventId: string) {
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        eventId,
+      },
+    });
+    const purchase = await this.prisma.ticketPurchase.findMany({
+      where: {
+        ticketId: {
+          in: tickets.map((t) => t.id),
+        },
+      },
+    });
+
+    const ticketAggregates = tickets.map((ticket) => {
+      const ticketPurchases = purchase.filter((p) => p.ticketId === ticket.id);
+      const paymentStatusCounts = ticketPurchases.reduce(
+        (acc, purchase) => {
+          acc[purchase.payment] = (acc[purchase.payment] || 0) + 1;
+          return acc;
+        },
+        {} as Record<PaymentStatus, number>,
+      );
+      return {
+        ticket: ticket,
+        paymentStatusCounts,
+      };
+    });
+
+    return ticketAggregates;
   }
 
   async searchEvents(
