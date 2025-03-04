@@ -232,4 +232,56 @@ export class AuthService {
       },
     });
   }
+
+  async validateOAuthAndLogin(user: {
+    email: string;
+    phoneNumber: string;
+    displayName: string;
+    photoURL: string;
+  }) {
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        email: user.email,
+      },
+    });
+
+    if (existingUser) {
+      const isOnboarded = existingUser.number !== '0100';
+      return await this.jwtService.createTokens({
+        email: existingUser.email,
+        userId: existingUser.id,
+        role: 'user',
+        extra: {
+          onboarded: isOnboarded,
+          type: existingUser.type,
+        },
+      });
+    }
+    const id = customUUID(20);
+    const newUser = await this.prisma.user.create({
+      data: {
+        id: id,
+        name: user.displayName,
+        email: user.email,
+        number: user.phoneNumber || '0100',
+        picture: user.photoURL,
+        password: await this.bycrptService.hashPassword('defaultPassword'),
+        type: 'USER',
+        wallet: {
+          create: {
+            id: newId('wallet', 16),
+          },
+        },
+      },
+    });
+    return await this.jwtService.createTokens({
+      email: newUser.email,
+      userId: newUser.id,
+      role: 'user',
+      extra: {
+        onboarded: false,
+        type: newUser.type,
+      },
+    });
+  }
 }
