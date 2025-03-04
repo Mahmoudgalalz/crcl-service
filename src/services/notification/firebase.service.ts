@@ -1,7 +1,7 @@
 import admin from 'firebase-admin';
 import path from 'path';
 
-admin.initializeApp({
+export const firebase = admin.initializeApp({
   credential: admin.credential.cert(
     path.join(__dirname, '../../../../crcl-firebase.json'),
   ),

@@ -1,15 +1,8 @@
-import admin from 'firebase-admin';
-import path from 'path';
-
-admin.initializeApp({
-  credential: admin.credential.cert(
-    path.join(__dirname, '../../../../crcl-firebase.json'),
-  ),
-});
+import { firebase } from '../notification/firebase.service';
 
 export async function checkUserExists(token: string) {
   try {
-    const response = await admin.auth().getUser(token);
+    const response = await firebase.auth().getUser(token);
     return { status: 'success', response };
   } catch (error) {
     return { status: 'error', error: error.message };
