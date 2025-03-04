@@ -51,20 +51,21 @@ export class EventsManagementService {
   }
 
   async updateEvent(id: string, data: UpdateEventDto): Promise<Event> {
-    if (data.status === EventStatus.PUBLISHED) {
+    const event = await this.prisma.event.update({
+      where: { id },
+      data,
+    });
+    if (event.status === EventStatus.PUBLISHED) {
       const eventData = new GlobalNotificationEvent({
         topic: 'global',
         payload: {
           title: 'Get early-bird tickets for our new event 🚀',
-          body: `A new event ${data.title} has been published`,
+          body: `A new event ${event.title} has been published`,
         },
       });
       this.eventEmitter.emit('notification.send', eventData);
     }
-    return await this.prisma.event.update({
-      where: { id },
-      data,
-    });
+    return event;
   }
 
   async listAllEvents(
