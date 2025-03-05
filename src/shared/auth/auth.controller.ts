@@ -275,17 +275,21 @@ export class AuthController {
           displayName: response.displayName,
           photoURL: response.photoURL,
         });
-        res
-          .send({
-            status: 'success',
-            message: 'Tokens',
-            data: {
-              access_token: register.access_token,
-              ...register.extra,
-            },
-          })
-          .status(HttpStatus.ACCEPTED);
+        res.status(HttpStatus.ACCEPTED).send({
+          status: 'success',
+          message: 'Tokens',
+          data: {
+            access_token: register.access_token,
+            ...register.extra,
+          },
+        });
+        return;
       }
+      res.status(HttpStatus.UNAUTHORIZED).send({
+        status: 'error',
+        message: 'Token is invalid',
+        data: null,
+      });
     } catch (err) {
       throw new UnauthorizedException(err?.message || 'Verification failed');
     }
