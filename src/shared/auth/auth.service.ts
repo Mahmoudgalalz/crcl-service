@@ -257,7 +257,7 @@ export class AuthService {
         },
       });
     }
-    const id = customUUID(20);
+    const id = newId('firebase', 16);
     const newUser = await this.prisma.user.create({
       data: {
         id: id,
