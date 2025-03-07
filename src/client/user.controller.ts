@@ -31,7 +31,7 @@ export class UserController {
       const updatedUser = await this.userService.update(user.id, data);
       return new SuccessResponse('Updated User', updatedUser);
     } catch (error) {
-      return new ErrorResponse();
+      throw new HttpException(error, HttpStatus.NOT_FOUND);
     }
   }
   @Get()
