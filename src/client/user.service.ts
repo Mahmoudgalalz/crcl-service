@@ -20,6 +20,15 @@ export class UserService {
   ) {}
 
   async update(id: string, data: UserUpdateDto) {
+    const userExist = await this.checkUserExists(id);
+    if (userExist && data.number && userExist.number !== data.number) {
+      const user = await this.prisma.user.findFirst({
+        where: { number: data.number },
+      });
+      if (user) {
+        throw new BadRequestException('Phone number already exists');
+      }
+    }
     if (data.password) {
       const { password, ...restData } = data;
       const hashedPassword = await this.bcryptService.hashPassword(password);
@@ -38,6 +47,13 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not Found');
     }
+    return user;
+  }
+
+  async checkUserExists(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
     return user;
   }
 
