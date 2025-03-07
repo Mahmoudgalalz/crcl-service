@@ -272,7 +272,7 @@ export class AuthController {
         const register = await this.authService.validateOAuthAndLogin({
           phoneNumber: response.phoneNumber || '0100',
           email: response.email,
-          displayName: response.displayName,
+          displayName: response.displayName || 'temp',
           photoURL: response.photoURL,
         });
         res.status(HttpStatus.ACCEPTED).send({
