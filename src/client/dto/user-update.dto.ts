@@ -5,6 +5,7 @@ import {
   IsEmail,
   MaxLength,
   MinLength,
+  IsPhoneNumber,
 } from 'class-validator';
 import { Gender } from '@prisma/client';
 
@@ -38,6 +39,10 @@ export class UserUpdateDto {
   @IsString()
   @IsOptional()
   facebook?: string;
+
+  @IsPhoneNumber()
+  @IsOptional()
+  number?: string;
 
   @IsString()
   @IsOptional()

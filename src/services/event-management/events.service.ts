@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/prisma.service';
 import {
   Event,
+  EventStatus,
   PaymentStatus,
   RequestStatus,
   Ticket,
@@ -22,6 +23,7 @@ import { RequestApprovedEvent } from '../email/events/sendOtp.event';
 import { format } from 'date-fns';
 import ExcelJS from 'exceljs';
 import { Response } from 'express';
+import { GlobalNotificationEvent } from './events/global-notification.event';
 
 interface RequestMetaItem {
   name: string;
@@ -49,10 +51,21 @@ export class EventsManagementService {
   }
 
   async updateEvent(id: string, data: UpdateEventDto): Promise<Event> {
-    return await this.prisma.event.update({
+    const event = await this.prisma.event.update({
       where: { id },
       data,
     });
+    if (event.status === EventStatus.PUBLISHED) {
+      const eventData = new GlobalNotificationEvent({
+        topic: 'global',
+        payload: {
+          title: 'Get early-bird tickets for our new event 🚀',
+          body: `A new event ${event.title} has been published`,
+        },
+      });
+      this.eventEmitter.emit('notification.send', eventData);
+    }
+    return event;
   }
 
   async listAllEvents(
@@ -69,7 +82,7 @@ export class EventsManagementService {
     return { events, total };
   }
 
-  async getEventWithTickets(id: string): Promise<{ event: Event }> {
+  async getEventWithTickets(id: string) {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
@@ -86,8 +99,40 @@ export class EventsManagementService {
     if (!event) {
       throw new NotFoundException('Event not found');
     }
+    const ticketsAggregate = await this.ticketReminingAggregate(id);
+    return { event, ticketsAggregate };
+  }
 
-    return { event };
+  private async ticketReminingAggregate(eventId: string) {
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        eventId,
+      },
+    });
+    const purchase = await this.prisma.ticketPurchase.findMany({
+      where: {
+        ticketId: {
+          in: tickets.map((t) => t.id),
+        },
+      },
+    });
+
+    const ticketAggregates = tickets.map((ticket) => {
+      const ticketPurchases = purchase.filter((p) => p.ticketId === ticket.id);
+      const paymentStatusCounts = ticketPurchases.reduce(
+        (acc, purchase) => {
+          acc[purchase.payment] = (acc[purchase.payment] || 0) + 1;
+          return acc;
+        },
+        {} as Record<PaymentStatus, number>,
+      );
+      return {
+        ticket: ticket,
+        paymentStatusCounts,
+      };
+    });
+
+    return ticketAggregates;
   }
 
   async searchEvents(

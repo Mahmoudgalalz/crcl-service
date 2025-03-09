@@ -19,6 +19,7 @@ import { NumberDto, VerifyOtpDto } from './dto/verify-otp.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { Request, Response } from 'express';
+import { checkUserExists } from 'src/services/oauth/oauth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -257,6 +258,38 @@ export class AuthController {
         })
         .status(HttpStatus.ACCEPTED);
       return;
+    } catch (err) {
+      throw new UnauthorizedException(err?.message || 'Verification failed');
+    }
+  }
+
+  @Public()
+  @Post('oauth')
+  async oauth(@Body() { token }: { token: string }, @Res() res: Response) {
+    try {
+      const { status, response } = await checkUserExists(token);
+      if (status === 'success') {
+        const register = await this.authService.validateOAuthAndLogin({
+          phoneNumber: response.phoneNumber || '0100',
+          email: response.email,
+          displayName: response.displayName || 'temp',
+          photoURL: response.photoURL,
+        });
+        res.status(HttpStatus.ACCEPTED).send({
+          status: 'success',
+          message: 'Tokens',
+          data: {
+            access_token: register.access_token,
+            ...register.extra,
+          },
+        });
+        return;
+      }
+      res.status(HttpStatus.UNAUTHORIZED).send({
+        status: 'error',
+        message: 'Token is invalid',
+        data: null,
+      });
     } catch (err) {
       throw new UnauthorizedException(err?.message || 'Verification failed');
     }

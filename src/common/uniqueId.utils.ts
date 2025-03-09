@@ -21,6 +21,7 @@ const prefixes = {
   ref: 'ref',
   test: 'test',
   transaction: 'tr',
+  firebase: 'fb',
 } as const;
 
 export function newId(
