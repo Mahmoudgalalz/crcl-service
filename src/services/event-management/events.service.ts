@@ -42,10 +42,15 @@ export class EventsManagementService {
 
   async createEvent(data: CreateEventDto): Promise<Event> {
     const id = newId('event', 16);
+    const { coordinates, ...rest } = data;
     return await this.prisma.event.create({
       data: {
         id,
-        ...data,
+        coordinates: {
+          lat: coordinates.lat,
+          lng: coordinates.lng,
+        },
+        ...rest,
       },
     });
   }

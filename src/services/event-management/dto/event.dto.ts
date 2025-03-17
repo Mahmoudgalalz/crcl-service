@@ -38,7 +38,6 @@ export class CreateEventDto {
   status: EventStatus;
 
   @IsObject()
-  @IsJSON()
   coordinates: { lat: number; lng: number };
 
   @IsInt()
