@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { PrismaService } from './prisma.service';
+import { ApplicationStatusDto } from './dto/update-status.dto';
 
 @Injectable()
 export class AppService {
@@ -23,15 +24,13 @@ export class AppService {
     return meta;
   }
 
-  async updateApplicationStatus(maintenance: boolean) {
+  async updateApplicationStatus(data: ApplicationStatusDto) {
     const status = await this.applicationStatus();
     const meta = await this.prisma.meta.update({
       where: {
         id: status.id,
       },
-      data: {
-        maintenance,
-      },
+      data,
     });
     return meta;
   }
