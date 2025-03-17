@@ -6,6 +6,8 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsObject,
+  IsJSON,
 } from 'class-validator';
 import { EventStatus, RequestStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
@@ -34,6 +36,9 @@ export class CreateEventDto {
 
   @IsEnum(EventStatus)
   status: EventStatus;
+
+  @IsObject()
+  coordinates: { lat: number; lng: number };
 
   @IsInt()
   capacity: number;

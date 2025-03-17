@@ -27,9 +27,7 @@ export class AppController {
   @Post('status')
   @Roles(Role.Admin)
   async updateStatus(@Res() res: Response, @Body() body: ApplicationStatusDto) {
-    const meta = await this.appService.updateApplicationStatus(
-      body.maintenance,
-    );
+    const meta = await this.appService.updateApplicationStatus(body);
     res.status(HttpStatus.ACCEPTED).json(meta);
     return;
   }

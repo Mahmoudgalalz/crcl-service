@@ -12,6 +12,8 @@ model meta {
   id        String @id @default(uuid())
   key       Int  @default(1)
   maintenance   Boolean @default(false)
+  iosVersion String?
+  androidVersion String?
   @@index([key])
 }
 
@@ -91,6 +93,7 @@ model Event {
   capacity    Int          // Max number of attendees allowed
   artists     String[]       // Artist or performer name
   tickets     Ticket[]
+  coordinates Json?
   createdBy   String
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -98,6 +101,7 @@ model Event {
   requests   EventRequest[]
   @@index([id, status])
 }
+
 
 model Ticket {
   id          String          @id
